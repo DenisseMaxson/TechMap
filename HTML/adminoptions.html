@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechMap - Opciones Administrador</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+      background: #111649;
+      color: #ffffff;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .admin-options-screen {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #111649;
+    }
+
+    .waves {
+      position: absolute;
+      inset: auto 0 0 0;
+      width: 100%;
+      height: 52%;
+    }
+
+    .waves path {
+      shape-rendering: geometricPrecision;
+    }
+
+    .top-bar {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 44px 1fr 44px;
+      align-items: center;
+      width: min(490px, calc(100vw - 36px));
+      margin: clamp(18px, 4vh, 28px) auto 0;
+    }
+
+    .admin-title {
+      grid-column: 2;
+      font-size: clamp(20px, 2vw, 25px);
+      font-weight: 400;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    .profile-button {
+      grid-column: 3;
+      display: flex;
+      width: 36px;
+      height: 36px;
+      align-items: center;
+      justify-content: center;
+      justify-self: end;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: #ffffff;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .profile-button:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .profile-icon {
+      width: 27px;
+      height: 27px;
+      fill: currentColor;
+    }
+
+    .divider {
+      position: relative;
+      z-index: 2;
+      width: min(490px, calc(100vw - 36px));
+      height: 2px;
+      margin: clamp(10px, 2vh, 16px) auto 0;
+      border: 0;
+      background: rgba(255, 255, 255, 0.78);
+    }
+
+    .options-menu {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(25px, 4.8vh, 34px);
+      margin-top: clamp(36px, 7vh, 50px);
+    }
+
+    .option-button {
+      display: flex;
+      width: clamp(250px, 22vw, 320px);
+      min-height: clamp(42px, 4.6vw, 52px);
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-radius: 10px;
+      background: rgba(43, 127, 188, 0.82);
+      color: #ffffff;
+      font-size: clamp(17px, 1.45vw, 22px);
+      line-height: 1;
+      text-decoration: none;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .option-button:hover {
+      background: rgba(57, 150, 211, 0.9);
+    }
+
+    @media (max-width: 520px) {
+      .top-bar {
+        margin-top: 18px;
+      }
+
+      .waves {
+        height: 56%;
+      }
+
+      .options-menu {
+        margin-top: 7vh;
+      }
+
+      .option-button {
+        width: min(280px, 82vw);
+        font-size: clamp(16px, 5vw, 20px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="admin-options-screen" aria-label="Opciones de administrador">
+    <svg class="waves" viewBox="0 0 1366 420" preserveAspectRatio="none" aria-hidden="true">
+      <path
+        fill="#184f89"
+        d="M0 76 C154 101 293 126 453 115 C625 104 748 46 899 70 C1035 91 1134 97 1366 82 L1366 420 L0 420 Z"
+      />
+      <path
+        fill="#237fb9"
+        d="M0 190 C181 178 372 170 509 196 C670 227 785 262 977 254 C1137 247 1245 225 1366 204 L1366 420 L0 420 Z"
+      />
+      <path
+        fill="#69a1ce"
+        d="M0 318 C170 293 324 284 491 302 C679 321 768 372 956 374 C1115 376 1231 350 1366 322 L1366 420 L0 420 Z"
+      />
+    </svg>
+
+    <header class="top-bar">
+      <h1 class="admin-title">Administrador</h1>
+      <a class="profile-button" href="adminprofile.html" aria-label="Perfil del administrador">
+        <svg class="profile-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 12c2.35 0 4.25-1.9 4.25-4.25S14.35 3.5 12 3.5s-4.25 1.9-4.25 4.25S9.65 12 12 12Zm0 2c-3.95 0-7.5 2.02-7.5 4.25V20h15v-1.75C19.5 16.02 15.95 14 12 14Z"/>
+        </svg>
+      </a>
+    </header>
+
+    <hr class="divider">
+
+    <nav class="options-menu" aria-label="Menu de administrador">
+      <a class="option-button" href="admincompanies.html">Gestionar empresas</a>
+      <a class="option-button" href="#">Gestionar usuarios</a>
+      <a class="option-button" href="#">Exportar listas</a>
+    </nav>
+  </main>
+</body>
+</html>

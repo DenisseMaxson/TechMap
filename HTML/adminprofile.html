@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechMap - Perfil Administrador</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+      background: #111649;
+      color: #ffffff;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .profile-screen {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #111649;
+    }
+
+    .waves {
+      position: absolute;
+      inset: auto 0 0 0;
+      width: 100%;
+      height: 52%;
+    }
+
+    .waves path {
+      shape-rendering: geometricPrecision;
+    }
+
+    .home-link {
+      position: absolute;
+      z-index: 3;
+      top: clamp(16px, 3vh, 24px);
+      left: clamp(18px, 4vw, 28px);
+      display: flex;
+      width: 38px;
+      height: 38px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      color: #ffffff;
+      text-decoration: none;
+    }
+
+    .home-link:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .home-icon {
+      width: 31px;
+      height: 31px;
+      fill: currentColor;
+    }
+
+    .profile-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+      align-items: center;
+      padding-top: clamp(26px, 7vh, 54px);
+      text-align: center;
+    }
+
+    .avatar {
+      display: flex;
+      width: clamp(96px, 16vw, 132px);
+      height: clamp(96px, 16vw, 132px);
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: #ffffff;
+      color: #111649;
+    }
+
+    .avatar-icon {
+      width: 72%;
+      height: 72%;
+      fill: currentColor;
+    }
+
+    .profile-name {
+      margin-top: clamp(14px, 3vh, 22px);
+      font-size: clamp(18px, 2.4vw, 24px);
+      font-weight: 400;
+      line-height: 1.2;
+    }
+
+    .divider {
+      width: min(486px, calc(100vw - 36px));
+      height: 2px;
+      margin-top: clamp(24px, 5vh, 32px);
+      border: 0;
+      background: rgba(255, 255, 255, 0.78);
+    }
+
+    .logout-button {
+      display: flex;
+      width: clamp(148px, 22vw, 210px);
+      min-height: clamp(39px, 5vw, 50px);
+      align-items: center;
+      justify-content: center;
+      margin-top: clamp(76px, 18vh, 118px);
+      border-radius: 8px;
+      background: #3a9bd6;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: clamp(16px, 2vw, 21px);
+      line-height: 1;
+      text-decoration: none;
+    }
+
+    .logout-button:hover {
+      background: #48a9e3;
+      color: #ffffff;
+    }
+
+    @media (max-width: 520px) {
+      .waves {
+        height: 56%;
+      }
+
+      .profile-content {
+        padding-top: 8vh;
+      }
+
+      .logout-button {
+        width: min(210px, 72vw);
+        margin-top: 14vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="profile-screen" aria-label="Perfil del administrador">
+    <svg class="waves" viewBox="0 0 1366 420" preserveAspectRatio="none" aria-hidden="true">
+      <path
+        fill="#184f89"
+        d="M0 76 C154 101 293 126 453 115 C625 104 748 46 899 70 C1035 91 1134 97 1366 82 L1366 420 L0 420 Z"
+      />
+      <path
+        fill="#237fb9"
+        d="M0 190 C181 178 372 170 509 196 C670 227 785 262 977 254 C1137 247 1245 225 1366 204 L1366 420 L0 420 Z"
+      />
+      <path
+        fill="#69a1ce"
+        d="M0 318 C170 293 324 284 491 302 C679 321 768 372 956 374 C1115 376 1231 350 1366 322 L1366 420 L0 420 Z"
+      />
+    </svg>
+
+    <a class="home-link" href="adminoptions.html" aria-label="Volver a opciones del administrador">
+      <svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 10.4 12 3l9 7.4v9.1a1.5 1.5 0 0 1-1.5 1.5H15v-6h-6v6H4.5A1.5 1.5 0 0 1 3 19.5v-9.1Z"/>
+        <path d="M19.7 3.5h-3.2v2.15l3.2 2.63V3.5Z"/>
+      </svg>
+    </a>
+
+    <section class="profile-content">
+      <div class="avatar" aria-hidden="true">
+        <svg class="avatar-icon" viewBox="0 0 24 24">
+          <path d="M12 12c2.56 0 4.63-2.07 4.63-4.63S14.56 2.75 12 2.75 7.38 4.82 7.38 7.37 9.45 12 12 12Zm0 1.7c-4.31 0-8.18 2.2-8.18 4.64v1.91h16.36v-1.91c0-2.44-3.87-4.64-8.18-4.64Z"/>
+        </svg>
+      </div>
+
+      <h1 class="profile-name">Administrador</h1>
+      <hr class="divider">
+      <a class="logout-button" href="index.html">Cerrar Sesi&oacute;n</a>
+    </section>
+  </main>
+</body>
+</html>
