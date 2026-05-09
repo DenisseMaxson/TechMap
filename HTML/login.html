@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechMap - Login</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+      background: #244594;
+      color: #ffffff;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .login-screen {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: linear-gradient(115deg, #69a1ce 0%, #1380bd 100%);
+    }
+
+    .mountains {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .mountains path {
+      shape-rendering: geometricPrecision;
+    }
+
+    .foreground-fill {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -1px;
+      height: 34%;
+      background: #111649;
+    }
+
+    .login-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 22vh;
+      text-align: center;
+    }
+
+    .logo-mark {
+      position: relative;
+      width: clamp(106px, 12vw, 148px);
+      height: clamp(91px, 10.5vw, 126px);
+      margin-bottom: 10px;
+    }
+
+    .monitor {
+      position: absolute;
+      left: 5%;
+      top: 2%;
+      width: 92%;
+      height: 80%;
+      border: clamp(4px, 0.42vw, 6px) solid #ffffff;
+      border-radius: 5px;
+    }
+
+    .monitor::after {
+      content: "";
+      position: absolute;
+      right: 7%;
+      bottom: 9%;
+      width: 5%;
+      height: 7%;
+      background: #ffffff;
+      border-radius: 1px;
+    }
+
+    .stand {
+      position: absolute;
+      left: 39%;
+      top: 80%;
+      width: 24%;
+      height: 14%;
+      background: #ffffff;
+    }
+
+    .base {
+      position: absolute;
+      left: 27%;
+      top: 92%;
+      width: 50%;
+      height: 8%;
+      background: #ffffff;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .pin {
+      position: absolute;
+      left: 35%;
+      top: 12%;
+      width: 32%;
+      height: 48%;
+    }
+
+    .pin::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border: clamp(4px, 0.42vw, 6px) solid #ffffff;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+    }
+
+    .pin::after {
+      content: "";
+      position: absolute;
+      left: 38%;
+      top: 26%;
+      width: 22%;
+      height: 18%;
+      border: clamp(3px, 0.28vw, 4px) solid #ffffff;
+      border-radius: 50%;
+      background: transparent;
+    }
+
+    .brand-name {
+      color: #ffffff;
+      font-size: clamp(42px, 5.5vw, 74px);
+      font-weight: 800;
+      line-height: 0.95;
+      letter-spacing: 0;
+      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.35);
+    }
+
+    .welcome {
+      margin-top: 18px;
+      font-size: clamp(25px, 2.4vw, 34px);
+      font-weight: 400;
+      line-height: 1.15;
+    }
+
+    .login-label {
+      margin-top: 7px;
+      font-size: clamp(21px, 2vw, 29px);
+      font-weight: 400;
+      line-height: 1.2;
+    }
+
+    .role-actions {
+      display: flex;
+      justify-content: center;
+      gap: clamp(30px, 4vw, 58px);
+      width: min(760px, 90vw);
+      margin-top: 7vh;
+    }
+
+    .role-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: clamp(230px, 25vw, 330px);
+      min-height: clamp(50px, 5vw, 67px);
+      border: 0;
+      border-radius: 13px;
+      background: #3793d0;
+      color: #ffffff;
+      font-size: clamp(25px, 2.4vw, 34px);
+      line-height: 1;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .role-button:hover {
+      background: #43a3df;
+    }
+
+    @media (max-width: 650px) {
+      .login-content {
+        padding-top: 16vh;
+      }
+
+      .role-actions {
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+        margin-top: 5vh;
+      }
+
+      .role-button {
+        width: min(330px, 78vw);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="login-screen" aria-label="Inicio de sesi&oacute;n de TechMap">
+    <svg class="mountains" viewBox="0 0 1366 768" preserveAspectRatio="none" aria-hidden="true">
+      <path
+        fill="#1d518b"
+        d="M0 268 C62 176 121 117 226 123 C343 130 443 183 571 164 C705 145 780 103 883 80 C986 57 1053 105 1112 178 C1194 279 1280 312 1366 268 L1366 768 L0 768 Z"
+      />
+      <path
+        fill="#31598e"
+        d="M0 248 C66 162 133 100 248 118 C373 137 461 171 589 151 C717 131 769 109 879 68 C991 26 1092 101 1148 192 C1213 297 1291 337 1366 310 L1366 768 L0 768 Z"
+        opacity="0.9"
+      />
+      <path
+        fill="#111649"
+        d="M0 333 C89 293 137 304 217 315 C312 328 397 386 490 363 C589 338 639 286 744 318 C831 345 903 387 974 422 C1085 476 1224 505 1366 530 L1366 768 L0 768 Z"
+      />
+    </svg>
+    <div class="foreground-fill"></div>
+
+    <section class="login-content">
+      <div class="logo-mark" aria-hidden="true">
+        <div class="monitor"></div>
+        <div class="pin"></div>
+        <div class="stand"></div>
+        <div class="base"></div>
+      </div>
+
+      <h1 class="brand-name">TechMap</h1>
+      <p class="welcome">Bienvenido</p>
+      <p class="login-label">Iniciar sesi&oacute;n como:</p>
+
+      <div class="role-actions" aria-label="Seleccionar tipo de usuario">
+        <a class="role-button" href="adminhome.html">Administrador</a>
+        <a class="role-button" href="empresahome.html">Empresa</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
