@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechMap - Login Empresa</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+      background: #3385bd;
+      color: #ffffff;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .company-login-screen {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #3385bd;
+    }
+
+    .waves {
+      position: absolute;
+      inset: auto 0 0 0;
+      width: 100%;
+      height: 52%;
+    }
+
+    .waves path {
+      shape-rendering: geometricPrecision;
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+      align-items: center;
+      padding-top: clamp(38px, 8vh, 43px);
+      text-align: center;
+    }
+
+    .company-title {
+      font-size: clamp(24px, 3vw, 27px);
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .divider {
+      width: min(438px, 72vw);
+      height: 2px;
+      margin-top: clamp(34px, 7vh, 36px);
+      border: 0;
+      background: rgba(255, 255, 255, 0.86);
+    }
+
+    .login-label {
+      margin-top: clamp(34px, 7vh, 36px);
+      font-size: clamp(24px, 3vw, 28px);
+      font-weight: 400;
+      line-height: 1.2;
+    }
+
+    .role-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 240px));
+      justify-content: center;
+      gap: clamp(56px, 17vw, 135px);
+      width: min(640px, calc(100vw - 48px));
+      margin-top: clamp(78px, 15vh, 82px);
+    }
+
+    .role-button {
+      display: flex;
+      min-height: 51px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      background: #1d6093;
+      color: #ffffff;
+      font-size: clamp(24px, 3vw, 27px);
+      line-height: 1;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .role-button:hover {
+      background: #2673ac;
+    }
+
+    @media (max-width: 680px) {
+      body {
+        overflow-y: auto;
+      }
+
+      .company-login-screen {
+        min-height: 100vh;
+        overflow-y: auto;
+      }
+
+      .content {
+        padding-top: 42px;
+      }
+
+      .waves {
+        height: 58%;
+      }
+
+      .role-actions {
+        grid-template-columns: minmax(0, 280px);
+        gap: 22px;
+        margin-top: 54px;
+      }
+
+      .role-button {
+        white-space: normal;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="company-login-screen" aria-label="Seleccionar tipo de acceso de empresa">
+    <svg class="waves" viewBox="0 0 1366 420" preserveAspectRatio="none" aria-hidden="true">
+      <path
+        fill="#1e72a7"
+        d="M0 76 C154 101 293 126 453 115 C625 104 748 46 899 70 C1035 91 1134 97 1366 82 L1366 420 L0 420 Z"
+      />
+      <path
+        fill="#2698d5"
+        d="M0 190 C181 178 372 170 509 196 C670 227 785 262 977 254 C1137 247 1245 225 1366 204 L1366 420 L0 420 Z"
+      />
+      <path
+        fill="#58b4ec"
+        d="M0 318 C170 293 324 284 491 302 C679 321 768 372 956 374 C1115 376 1231 350 1366 322 L1366 420 L0 420 Z"
+      />
+    </svg>
+
+    <section class="content">
+      <h1 class="company-title">Bienvenido, empresa</h1>
+      <hr class="divider">
+      <p class="login-label">Iniciar sesi&oacute;n como:</p>
+
+      <nav class="role-actions" aria-label="Seleccionar rol de empresa">
+        <a class="role-button" href="empresahome.html">TI/contabilidad</a>
+        <a class="role-button" href="empresahome.html">Jefe de area</a>
+      </nav>
+    </section>
+  </main>
+</body>
+</html>
