@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechMap - BD de Empresas</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+      background: #111649;
+      color: #ffffff;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .company-export-screen {
+      position: relative;
+      width: 100vw;
+      min-height: 100vh;
+      overflow: hidden;
+      background: #111649;
+      padding-bottom: 36px;
+    }
+
+    .waves {
+      position: absolute;
+      inset: auto 0 0 0;
+      width: 100%;
+      height: 52%;
+    }
+
+    .waves path {
+      shape-rendering: geometricPrecision;
+    }
+
+    .top-bar {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 44px 1fr 44px;
+      align-items: center;
+      width: min(582px, calc(100vw - 44px));
+      margin: 20px auto 0;
+    }
+
+    .back-link,
+    .profile-link {
+      display: flex;
+      width: 38px;
+      height: 38px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      color: #ffffff;
+      text-decoration: none;
+    }
+
+    .profile-link {
+      justify-self: end;
+    }
+
+    .back-link:hover,
+    .profile-link:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .top-icon {
+      width: 30px;
+      height: 30px;
+      fill: currentColor;
+    }
+
+    .page-title {
+      font-size: clamp(19px, 2.1vw, 23px);
+      font-weight: 400;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    .divider {
+      position: relative;
+      z-index: 2;
+      width: min(582px, calc(100vw - 44px));
+      height: 2px;
+      margin: 17px auto 0;
+      border: 0;
+      background: rgba(255, 255, 255, 0.82);
+    }
+
+    .company-grid {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 235px));
+      justify-content: center;
+      gap: 18px 26px;
+      width: min(520px, calc(100vw - 48px));
+      margin: 27px auto 0;
+    }
+
+    .company-card {
+      display: flex;
+      min-height: 116px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      border: 1px solid rgba(106, 174, 226, 0.32);
+      border-radius: 11px;
+      background: rgba(42, 125, 188, 0.58);
+      color: #ffffff;
+      padding: 11px 14px 13px;
+    }
+
+    .company-card:hover {
+      background: rgba(55, 145, 207, 0.66);
+    }
+
+    .company-name {
+      width: 100%;
+      color: #ffffff;
+      font-size: clamp(20px, 2.4vw, 22px);
+      font-weight: 400;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    .export-button {
+      display: grid;
+      width: 106px;
+      min-height: 43px;
+      grid-template-rows: auto auto;
+      align-items: center;
+      justify-items: center;
+      gap: 2px;
+      margin-top: 24px;
+      border: 0;
+      border-radius: 8px;
+      background: rgba(58, 153, 216, 0.86);
+      color: #ffffff;
+      font-size: 13px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .export-button:hover {
+      background: rgba(68, 169, 229, 0.95);
+    }
+
+    .export-icon {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    @media (max-width: 620px) {
+      body {
+        overflow-y: auto;
+      }
+
+      .company-export-screen {
+        overflow-y: auto;
+      }
+
+      .top-bar {
+        margin-top: 14px;
+      }
+
+      .waves {
+        height: 58%;
+      }
+
+      .company-grid {
+        grid-template-columns: minmax(0, 270px);
+        margin-top: 24px;
+      }
+
+      .company-card {
+        min-height: 124px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="company-export-screen" aria-label="Exportar bases de datos de empresas">
+    <svg class="waves" viewBox="0 0 1366 420" preserveAspectRatio="none" aria-hidden="true">
+      <path
+        fill="#184f89"
+        d="M0 76 C154 101 293 126 453 115 C625 104 748 46 899 70 C1035 91 1134 97 1366 82 L1366 420 L0 420 Z"
+      />
+      <path
+        fill="#237fb9"
+        d="M0 190 C181 178 372 170 509 196 C670 227 785 262 977 254 C1137 247 1245 225 1366 204 L1366 420 L0 420 Z"
+      />
+      <path
+        fill="#69a1ce"
+        d="M0 318 C170 293 324 284 491 302 C679 321 768 372 956 374 C1115 376 1231 350 1366 322 L1366 420 L0 420 Z"
+      />
+    </svg>
+
+    <header class="top-bar">
+      <a class="back-link" href="exportlists.html" aria-label="Volver a exportar listas">
+        <svg class="top-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8.1 7.3H4.7l3.8-3.8L7.1 2.1.9 8.3l6.2 6.2 1.4-1.4-3.8-3.8h3.4c4.2 0 7.6 3.4 7.6 7.6V20h2v-3.1c0-5.3-4.3-9.6-9.6-9.6Z"/>
+        </svg>
+      </a>
+
+      <h1 class="page-title">BD de empresas</h1>
+
+      <a class="profile-link" href="adminprofile.html" aria-label="Perfil del administrador">
+        <svg class="top-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 12c2.35 0 4.25-1.9 4.25-4.25S14.35 3.5 12 3.5s-4.25 1.9-4.25 4.25S9.65 12 12 12Zm0 2c-3.95 0-7.5 2.02-7.5 4.25V20h15v-1.75C19.5 16.02 15.95 14 12 14Z"/>
+        </svg>
+      </a>
+    </header>
+
+    <hr class="divider">
+
+    <section class="company-grid" aria-label="Empresas disponibles para exportar">
+      <article class="company-card">
+        <h2 class="company-name">Empresa 1</h2>
+        <button class="export-button" type="button" data-company-id="1">
+          <span>Exportar</span>
+          <svg class="export-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 3h9l5 5v4h-2V9h-4V5H7v14h6v2H5V3Zm10.5 11.5L19 18l-3.5 3.5-1.4-1.4 1.1-1.1H10v-2h5.2l-1.1-1.1 1.4-1.4Z"/>
+          </svg>
+        </button>
+      </article>
+
+      <article class="company-card">
+        <h2 class="company-name">Empresa 2</h2>
+        <button class="export-button" type="button" data-company-id="2">
+          <span>Exportar</span>
+          <svg class="export-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 3h9l5 5v4h-2V9h-4V5H7v14h6v2H5V3Zm10.5 11.5L19 18l-3.5 3.5-1.4-1.4 1.1-1.1H10v-2h5.2l-1.1-1.1 1.4-1.4Z"/>
+          </svg>
+        </button>
+      </article>
+
+      <article class="company-card">
+        <h2 class="company-name">Empresa 3</h2>
+        <button class="export-button" type="button" data-company-id="3">
+          <span>Exportar</span>
+          <svg class="export-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 3h9l5 5v4h-2V9h-4V5H7v14h6v2H5V3Zm10.5 11.5L19 18l-3.5 3.5-1.4-1.4 1.1-1.1H10v-2h5.2l-1.1-1.1 1.4-1.4Z"/>
+          </svg>
+        </button>
+      </article>
+
+      <article class="company-card">
+        <h2 class="company-name">Empresa 4</h2>
+        <button class="export-button" type="button" data-company-id="4">
+          <span>Exportar</span>
+          <svg class="export-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 3h9l5 5v4h-2V9h-4V5H7v14h6v2H5V3Zm10.5 11.5L19 18l-3.5 3.5-1.4-1.4 1.1-1.1H10v-2h5.2l-1.1-1.1 1.4-1.4Z"/>
+          </svg>
+        </button>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
