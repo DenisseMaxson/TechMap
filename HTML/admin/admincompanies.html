@@ -119,6 +119,18 @@
       background: #bad7f2;
     }
 
+    .company-card.selected {
+      background: #d3e6f7;
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.32);
+    }
+
+    .empty-message {
+      grid-column: 1 / -1;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 15px;
+      text-align: center;
+    }
+
     .company-name {
       display: block;
       margin-bottom: 10px;
@@ -279,42 +291,18 @@
     <hr class="divider">
 
     <section class="content">
-      <div class="company-list" aria-label="Lista de empresas">
-        <button class="company-card" type="button">
-          <span class="company-name">Empresa</span>
-          <span class="company-detail"><strong>ID:</strong></span>
-          <span class="company-detail"><strong>Ubicaci&oacute;n:</strong></span>
-          <span class="company-detail"><strong>Usuarios:</strong></span>
-          <span class="company-detail"><strong>Equipos:</strong></span>
-        </button>
+      <div class="company-list" aria-label="Lista de empresas" id="companyList"></div>
 
-        <button class="company-card" type="button">
-          <span class="company-name">Empresa</span>
-          <span class="company-detail"><strong>ID:</strong></span>
-          <span class="company-detail"><strong>Ubicaci&oacute;n:</strong></span>
-          <span class="company-detail"><strong>Usuarios:</strong></span>
-          <span class="company-detail"><strong>Equipos:</strong></span>
-        </button>
-
-        <button class="company-card" type="button">
-          <span class="company-name">Empresa</span>
-          <span class="company-detail"><strong>ID:</strong></span>
-          <span class="company-detail"><strong>Ubicaci&oacute;n:</strong></span>
-          <span class="company-detail"><strong>Usuarios:</strong></span>
-          <span class="company-detail"><strong>Equipos:</strong></span>
-        </button>
-      </div>
-
-      <form class="company-form">
+      <form class="company-form" id="companyForm">
         <div class="form-grid">
           <label class="field-group">
             <span class="field-label">Nombre de empresa:</span>
-            <input class="text-input" type="text" name="nombre_empresa">
+            <input class="text-input" type="text" name="nombre" required>
           </label>
 
           <label class="field-group">
-            <span class="field-label">ID o n&uacute;mero de empresa:</span>
-            <input class="text-input" type="text" name="numero_empresa">
+            <span class="field-label">RFC:</span>
+            <input class="text-input" type="text" name="rfc">
           </label>
 
           <label class="field-group full">
@@ -323,24 +311,142 @@
           </label>
 
           <label class="field-group">
-            <span class="field-label">Cantidad de usuarios:</span>
-            <input class="text-input" type="number" name="cantidad_usuarios" min="0">
+            <span class="field-label">Tel&eacute;fono:</span>
+            <input class="text-input" type="tel" name="telefono">
           </label>
 
           <label class="field-group">
-            <span class="field-label">Equipos registrados:</span>
-            <input class="text-input" type="number" name="equipos_registrados" min="0">
+            <span class="field-label">Correo de contacto:</span>
+            <input class="text-input" type="email" name="correo_contacto">
           </label>
         </div>
       </form>
 
       <div class="actions" aria-label="Acciones de empresa">
-        <button class="action-button" type="button">Editar</button>
-        <button class="action-button" type="button">Agregar</button>
-        <button class="action-button" type="button">Eliminar</button>
-        <button class="action-button" type="button">Limpiar</button>
+        <button class="action-button" type="button" id="editButton">Editar</button>
+        <button class="action-button" type="button" id="addButton">Agregar</button>
+        <button class="action-button" type="button" id="deleteButton">Eliminar</button>
+        <button class="action-button" type="button" id="clearButton">Limpiar</button>
       </div>
     </section>
   </main>
+  <script>
+    const API_URL = 'http://localhost:3000/api/empresas';
+    const companyList = document.getElementById('companyList');
+    const companyForm = document.getElementById('companyForm');
+    let companies = [];
+    let selectedCompanyId = null;
+
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    }[char]));
+
+    const formData = () => Object.fromEntries(new FormData(companyForm).entries());
+
+    const request = async (url, options = {}) => {
+      const response = await fetch(url, {
+        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+        ...options
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Error en la solicitud');
+      return data;
+    };
+
+    const renderCompanies = () => {
+      companyList.innerHTML = '';
+
+      if (!companies.length) {
+        companyList.innerHTML = '<p class="empty-message">No hay empresas registradas.</p>';
+        return;
+      }
+
+      companies.forEach((company) => {
+        const card = document.createElement('button');
+        card.className = `company-card${company.id === selectedCompanyId ? ' selected' : ''}`;
+        card.type = 'button';
+        card.innerHTML = `
+          <span class="company-name">${escapeHtml(company.nombre || 'Empresa sin nombre')}</span>
+          <span class="company-detail"><strong>ID:</strong> ${escapeHtml(company.id || '')}</span>
+          <span class="company-detail"><strong>Ubicaci&oacute;n:</strong> ${escapeHtml(company.ubicacion || 'Sin ubicaci&oacute;n')}</span>
+          <span class="company-detail"><strong>Usuarios:</strong> ${company.cantidad_usuarios || 0}</span>
+          <span class="company-detail"><strong>RFC:</strong> ${escapeHtml(company.rfc || 'Sin RFC')}</span>
+        `;
+        card.addEventListener('click', () => selectCompany(company));
+        companyList.appendChild(card);
+      });
+    };
+
+    const loadCompanies = async () => {
+      try {
+        companies = await request(API_URL);
+        renderCompanies();
+      } catch (error) {
+        companyList.innerHTML = `<p class="empty-message">${error.message}</p>`;
+      }
+    };
+
+    const selectCompany = (company) => {
+      selectedCompanyId = company.id;
+      companyForm.nombre.value = company.nombre || '';
+      companyForm.rfc.value = company.rfc || '';
+      companyForm.ubicacion.value = company.ubicacion || '';
+      companyForm.telefono.value = company.telefono || '';
+      companyForm.correo_contacto.value = company.correo_contacto || '';
+      renderCompanies();
+    };
+
+    const clearForm = () => {
+      selectedCompanyId = null;
+      companyForm.reset();
+      renderCompanies();
+    };
+
+    document.getElementById('addButton').addEventListener('click', async () => {
+      try {
+        await request(`${API_URL}/insert`, { method: 'POST', body: JSON.stringify(formData()) });
+        clearForm();
+        await loadCompanies();
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+
+    document.getElementById('editButton').addEventListener('click', async () => {
+      if (!selectedCompanyId) return alert('Selecciona una empresa para editar.');
+      try {
+        await request(`${API_URL}/update`, {
+          method: 'PUT',
+          body: JSON.stringify({ id: selectedCompanyId, ...formData() })
+        });
+        clearForm();
+        await loadCompanies();
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+
+    document.getElementById('deleteButton').addEventListener('click', async () => {
+      if (!selectedCompanyId) return alert('Selecciona una empresa para eliminar.');
+      if (!confirm('¿Eliminar esta empresa?')) return;
+      try {
+        await request(`${API_URL}/delete`, {
+          method: 'DELETE',
+          body: JSON.stringify({ id: selectedCompanyId })
+        });
+        clearForm();
+        await loadCompanies();
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+
+    document.getElementById('clearButton').addEventListener('click', clearForm);
+    loadCompanies();
+  </script>
 </body>
 </html>

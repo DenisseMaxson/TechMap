@@ -119,6 +119,18 @@
       background: #bad7f2;
     }
 
+    .user-card.selected {
+      background: #d3e6f7;
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.32);
+    }
+
+    .empty-message {
+      grid-column: 1 / -1;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 15px;
+      text-align: center;
+    }
+
     .user-name {
       display: block;
       margin-bottom: 10px;
@@ -281,37 +293,13 @@
     <hr class="divider">
 
     <section class="content">
-      <div class="user-list" aria-label="Lista de usuarios">
-        <button class="user-card" type="button">
-          <span class="user-name">Nombre completo</span>
-          <span class="user-detail"><strong>Rol:</strong></span>
-          <span class="user-detail"><strong>Empresa:</strong></span>
-          <span class="user-detail"><strong>Estado:</strong></span>
-          <span class="user-detail"><strong>Correo (opcional):</strong></span>
-        </button>
+      <div class="user-list" aria-label="Lista de usuarios" id="userList"></div>
 
-        <button class="user-card" type="button">
-          <span class="user-name">Nombre completo</span>
-          <span class="user-detail"><strong>Rol:</strong></span>
-          <span class="user-detail"><strong>Empresa:</strong></span>
-          <span class="user-detail"><strong>Estado:</strong></span>
-          <span class="user-detail"><strong>Correo (opcional):</strong></span>
-        </button>
-
-        <button class="user-card" type="button">
-          <span class="user-name">Nombre completo</span>
-          <span class="user-detail"><strong>Rol:</strong></span>
-          <span class="user-detail"><strong>Empresa:</strong></span>
-          <span class="user-detail"><strong>Estado:</strong></span>
-          <span class="user-detail"><strong>Correo (opcional):</strong></span>
-        </button>
-      </div>
-
-      <form class="user-form">
+      <form class="user-form" id="userForm">
         <div class="form-grid">
           <label class="field-group full">
             <span class="field-label">Nombre completo:</span>
-            <input class="text-input" type="text" name="nombre_completo">
+            <input class="text-input" type="text" name="nombre_completo" required>
           </label>
 
           <label class="field-group">
@@ -326,7 +314,9 @@
 
           <label class="field-group">
             <span class="field-label">Empresa:</span>
-            <input class="text-input" type="text" name="empresa">
+            <select class="select-input" name="empresa_id" id="companySelect">
+              <option value="">Sin empresa</option>
+            </select>
           </label>
 
           <label class="field-group">
@@ -347,12 +337,144 @@
       </form>
 
       <div class="actions" aria-label="Acciones de usuario">
-        <button class="action-button" type="button">Editar</button>
-        <button class="action-button" type="button">Agregar</button>
-        <button class="action-button" type="button">Eliminar</button>
-        <button class="action-button" type="button">Limpiar</button>
+        <button class="action-button" type="button" id="editButton">Editar</button>
+        <button class="action-button" type="button" id="addButton">Agregar</button>
+        <button class="action-button" type="button" id="deleteButton">Eliminar</button>
+        <button class="action-button" type="button" id="clearButton">Limpiar</button>
       </div>
     </section>
   </main>
+  <script>
+    const USERS_API = 'http://localhost:3000/api/usuarios';
+    const COMPANIES_API = 'http://localhost:3000/api/empresas';
+    const userList = document.getElementById('userList');
+    const userForm = document.getElementById('userForm');
+    const companySelect = document.getElementById('companySelect');
+    let users = [];
+    let companies = [];
+    let selectedUserId = null;
+
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    }[char]));
+
+    const request = async (url, options = {}) => {
+      const response = await fetch(url, {
+        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+        ...options
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Error en la solicitud');
+      return data;
+    };
+
+    const formData = () => Object.fromEntries(new FormData(userForm).entries());
+
+    const renderCompanies = () => {
+      companySelect.innerHTML = '<option value="">Sin empresa</option>';
+      companies.forEach((company) => {
+        const option = document.createElement('option');
+        option.value = company.id;
+        option.textContent = company.nombre;
+        companySelect.appendChild(option);
+      });
+    };
+
+    const renderUsers = () => {
+      userList.innerHTML = '';
+
+      if (!users.length) {
+        userList.innerHTML = '<p class="empty-message">No hay usuarios registrados.</p>';
+        return;
+      }
+
+      users.forEach((user) => {
+        const card = document.createElement('button');
+        card.className = `user-card${user.id === selectedUserId ? ' selected' : ''}`;
+        card.type = 'button';
+        card.innerHTML = `
+          <span class="user-name">${escapeHtml(user.nombre_completo || 'Usuario sin nombre')}</span>
+          <span class="user-detail"><strong>Rol:</strong> ${escapeHtml(user.rol || 'Sin rol')}</span>
+          <span class="user-detail"><strong>Empresa:</strong> ${escapeHtml(user.nombre_empresa || 'Sin empresa')}</span>
+          <span class="user-detail"><strong>Estado:</strong> ${escapeHtml(user.estado || 'activo')}</span>
+          <span class="user-detail"><strong>Correo (opcional):</strong> ${escapeHtml(user.correo || 'Sin correo')}</span>
+        `;
+        card.addEventListener('click', () => selectUser(user));
+        userList.appendChild(card);
+      });
+    };
+
+    const loadData = async () => {
+      try {
+        [companies, users] = await Promise.all([request(COMPANIES_API), request(USERS_API)]);
+        renderCompanies();
+        renderUsers();
+      } catch (error) {
+        userList.innerHTML = `<p class="empty-message">${error.message}</p>`;
+      }
+    };
+
+    const selectUser = (user) => {
+      selectedUserId = user.id;
+      userForm.nombre_completo.value = user.nombre_completo || '';
+      userForm.rol.value = user.rol || '';
+      userForm.empresa_id.value = user.empresa_id || '';
+      userForm.estado.value = user.estado || 'activo';
+      userForm.correo.value = user.correo || '';
+      renderUsers();
+    };
+
+    const clearForm = () => {
+      selectedUserId = null;
+      userForm.reset();
+      renderUsers();
+    };
+
+    document.getElementById('addButton').addEventListener('click', async () => {
+      try {
+        await request(`${USERS_API}/insert`, { method: 'POST', body: JSON.stringify(formData()) });
+        clearForm();
+        await loadData();
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+
+    document.getElementById('editButton').addEventListener('click', async () => {
+      if (!selectedUserId) return alert('Selecciona un usuario para editar.');
+      try {
+        await request(`${USERS_API}/update`, {
+          method: 'PUT',
+          body: JSON.stringify({ id: selectedUserId, ...formData() })
+        });
+        clearForm();
+        await loadData();
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+
+    document.getElementById('deleteButton').addEventListener('click', async () => {
+      if (!selectedUserId) return alert('Selecciona un usuario para eliminar.');
+      if (!confirm('¿Eliminar este usuario?')) return;
+      try {
+        await request(`${USERS_API}/delete`, {
+          method: 'DELETE',
+          body: JSON.stringify({ id: selectedUserId })
+        });
+        clearForm();
+        await loadData();
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+
+    document.getElementById('clearButton').addEventListener('click', clearForm);
+    loadData();
+  </script>
 </body>
 </html>

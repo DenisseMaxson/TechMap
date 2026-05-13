@@ -3,6 +3,7 @@ const router     = express.Router();
 const controller = require('../CONTROLLERS/empresaController');
 
 router.get   ('/',        controller.getAll);
+router.get   ('/:id/export', controller.exportEmpresa);
 router.post  ('/insert',  controller.insert);
 router.put   ('/update',  controller.update);
 router.delete('/delete',  controller.delete);
