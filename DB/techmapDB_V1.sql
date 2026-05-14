@@ -342,8 +342,8 @@ INSERT INTO bitacora (usuario_id, empresa_id, accion, modulo, detalle) VALUES
   (2, 1,    'alta_equipo',       'inventario',    'Equipo registrado: Laptop Desarrollo 01'),
   (2, 1,    'solicitud_baja',    'inventario',    'Solicitud de baja iniciada: Switch Principal'),
   (3, 1,    'aprobacion_baja',   'aprobaciones',  'Baja aprobada por Contabilidad: Switch Principal');
-
-  -- Agrega estos campos a tu tabla actual de 'equipos'
+  
+-- Agrega estos campos a tu tabla actual de 'equipos'
 ALTER TABLE equipos 
 ADD COLUMN direccion_mac VARCHAR(17) UNIQUE AFTER numero_serie,
 ADD COLUMN direccion_ip VARCHAR(15) AFTER direccion_mac,
@@ -354,3 +354,4 @@ ADD COLUMN lugar_compra VARCHAR(200) AFTER fecha_adquisicion;
 -- Índices clave para búsquedas rápidas de hardware
 CREATE INDEX idx_equipos_mac ON equipos (direccion_mac);
 CREATE INDEX idx_equipos_serie ON equipos (numero_serie);
+
