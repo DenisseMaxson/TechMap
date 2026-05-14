@@ -236,3 +236,28 @@ BEGIN
 END //
 
 DELIMITER ;
+
+DELIMITER //
+
+DROP PROCEDURE IF EXISTS sp_get_dashboard_stats //
+CREATE PROCEDURE sp_get_dashboard_stats(IN p_empresa_id INT)
+BEGIN
+    -- 1. Total de equipos activos
+    SELECT COUNT(*) AS total_equipos FROM equipos 
+    WHERE empresa_id = p_empresa_id AND estado = 'activo';
+
+    -- 2. Conteo por tipo de equipo (para una gráfica de pay)
+    SELECT tipo, COUNT(*) AS cantidad FROM equipos 
+    WHERE empresa_id = p_empresa_id AND estado = 'activo'
+    GROUP BY tipo;
+
+    -- 3. Bajas pendientes de autorización
+    SELECT COUNT(*) AS bajas_pendientes FROM solicitudes_baja 
+    WHERE empresa_id = p_empresa_id AND estado = 'pendiente';
+
+    -- 4. Valor total del inventario
+    SELECT SUM(valor_contable) AS valor_total FROM equipos 
+    WHERE empresa_id = p_empresa_id AND estado = 'activo';
+END //
+
+DELIMITER ;

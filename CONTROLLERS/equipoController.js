@@ -67,3 +67,20 @@ module.exports = {
     update: updateEquipo, 
     delete: deleteEquipo 
 };
+
+const getDashboardStats = (req, res) => {
+    const { empresa_id } = req.params;
+    const sql = 'CALL sp_get_dashboard_stats(?)';
+
+    db.query(sql, [empresa_id], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        // Los resultados de un CALL en mysql2 vienen como un array de arrays
+        res.json({
+            resumen: results[0][0],        // Total equipos
+            por_tipo: results[1],         // Lista por tipo
+            bajas: results[2][0],         // Bajas pendientes
+            financiero: results[3][0]     // Valor total
+        });
+    });
+};
