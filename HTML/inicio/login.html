@@ -4,19 +4,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TechMap - Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;800&display=swap" rel="stylesheet">
   <style>
-    * {
+    *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
+    :root {
+      --navy:  #111649;
+      --blue1: #1380bd;
+      --blue2: #244594;
+      --blue3: #3793d0;
+      --sky:   #69a1ce;
+      --white: #ffffff;
+    }
+
     body {
       min-height: 100vh;
       overflow: hidden;
-      background: #244594;
-      color: #ffffff;
-      font-family: Arial, Helvetica, sans-serif;
+      background: var(--navy);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
     }
 
     .login-screen {
@@ -24,204 +36,281 @@
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      background: linear-gradient(115deg, #69a1ce 0%, #1380bd 100%);
+      background: linear-gradient(135deg, #1a3a7a 0%, #1380bd 55%, #69a1ce 100%);
     }
 
+    /* ── Estrellas ── */
+    .stars {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .star {
+      position: absolute;
+      background: rgba(255,255,255,0.55);
+      border-radius: 50%;
+      animation: twinkle var(--d, 3s) ease-in-out infinite var(--delay, 0s);
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.2; transform: scale(1); }
+      50%       { opacity: 1;   transform: scale(1.4); }
+    }
+
+    /* ── Montañas ── */
     .mountains {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
-    }
-
-    .mountains path {
-      shape-rendering: geometricPrecision;
+      z-index: 1;
     }
 
     .foreground-fill {
       position: absolute;
-      left: 0;
-      right: 0;
-      bottom: -1px;
+      left: 0; right: 0; bottom: -1px;
       height: 34%;
-      background: #111649;
+      background: var(--navy);
+      z-index: 2;
     }
 
+    .horizon-glow {
+      position: absolute;
+      left: 0; right: 0;
+      bottom: 33.5%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent 0%, rgba(55,147,208,0.6) 30%, rgba(105,161,206,0.9) 50%, rgba(55,147,208,0.6) 70%, transparent 100%);
+      z-index: 3;
+      filter: blur(1px);
+    }
+
+    /* ── Contenido ── */
     .login-content {
       position: relative;
-      z-index: 2;
+      z-index: 4;
       display: flex;
       min-height: 100vh;
       flex-direction: column;
       align-items: center;
-      padding-top: 22vh;
+      padding-top: 19vh;
       text-align: center;
+      animation: fadeDown 0.9s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-24px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
+    /* ── Logo ── */
     .logo-mark {
       position: relative;
-      width: clamp(106px, 12vw, 148px);
-      height: clamp(91px, 10.5vw, 126px);
-      margin-bottom: 10px;
+      width: clamp(96px, 11vw, 136px);
+      height: clamp(82px, 9.5vw, 116px);
+      margin-bottom: 12px;
+      filter: drop-shadow(0 0 16px rgba(55,147,208,0.45));
     }
-
     .monitor {
       position: absolute;
-      left: 5%;
-      top: 2%;
-      width: 92%;
-      height: 80%;
-      border: clamp(4px, 0.42vw, 6px) solid #ffffff;
-      border-radius: 5px;
+      left: 5%; top: 2%;
+      width: 92%; height: 80%;
+      border: clamp(3px, 0.4vw, 5px) solid var(--white);
+      border-radius: 4px;
     }
-
     .monitor::after {
       content: "";
       position: absolute;
-      right: 7%;
-      bottom: 9%;
-      width: 5%;
-      height: 7%;
-      background: #ffffff;
+      right: 8%; bottom: 10%;
+      width: 5%; height: 7%;
+      background: var(--white);
       border-radius: 1px;
     }
-
     .stand {
       position: absolute;
-      left: 39%;
-      top: 80%;
-      width: 24%;
-      height: 14%;
-      background: #ffffff;
+      left: 39%; top: 80%;
+      width: 24%; height: 14%;
+      background: var(--white);
     }
-
     .base {
       position: absolute;
-      left: 27%;
-      top: 92%;
-      width: 50%;
-      height: 8%;
-      background: #ffffff;
-      border-radius: 8px 8px 0 0;
+      left: 27%; top: 92%;
+      width: 50%; height: 8%;
+      background: var(--white);
+      border-radius: 6px 6px 0 0;
     }
-
     .pin {
       position: absolute;
-      left: 35%;
-      top: 12%;
-      width: 32%;
-      height: 48%;
+      left: 35%; top: 12%;
+      width: 32%; height: 48%;
     }
-
     .pin::before {
       content: "";
       position: absolute;
       inset: 0;
-      border: clamp(4px, 0.42vw, 6px) solid #ffffff;
+      border: clamp(3px, 0.4vw, 5px) solid var(--white);
       border-radius: 50% 50% 50% 0;
       transform: rotate(-45deg);
     }
-
     .pin::after {
       content: "";
       position: absolute;
-      left: 38%;
-      top: 26%;
-      width: 22%;
-      height: 18%;
-      border: clamp(3px, 0.28vw, 4px) solid #ffffff;
+      left: 38%; top: 26%;
+      width: 22%; height: 18%;
+      border: clamp(2px, 0.28vw, 4px) solid var(--white);
       border-radius: 50%;
-      background: transparent;
     }
 
+    /* ── Textos ── */
     .brand-name {
-      color: #ffffff;
-      font-size: clamp(42px, 5.5vw, 74px);
+      font-size: clamp(40px, 6vw, 78px);
       font-weight: 800;
-      line-height: 0.95;
-      letter-spacing: 0;
-      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.35);
+      letter-spacing: -1px;
+      line-height: 1;
+      color: var(--white);
+      text-shadow: 0 2px 28px rgba(55,147,208,0.5);
     }
 
     .welcome {
-      margin-top: 18px;
-      font-size: clamp(25px, 2.4vw, 34px);
-      font-weight: 400;
-      line-height: 1.15;
+      margin-top: 16px;
+      font-size: clamp(20px, 2vw, 28px);
+      font-weight: 300;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: 0.02em;
     }
 
     .login-label {
-      margin-top: 7px;
-      font-size: clamp(21px, 2vw, 29px);
-      font-weight: 400;
-      line-height: 1.2;
+      margin-top: 6px;
+      font-size: clamp(13px, 1.2vw, 17px);
+      font-weight: 300;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
     }
 
+    /* ── Botones de rol ── */
     .role-actions {
       display: flex;
       justify-content: center;
-      gap: clamp(30px, 4vw, 58px);
-      width: min(760px, 90vw);
-      margin-top: 7vh;
+      gap: clamp(20px, 3vw, 48px);
+      width: min(780px, 90vw);
+      margin-top: 6vh;
+      animation: fadeUp 0.9s 0.25s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     .role-button {
+      position: relative;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: clamp(230px, 25vw, 330px);
-      min-height: clamp(50px, 5vw, 67px);
-      border: 0;
-      border-radius: 13px;
-      background: #3793d0;
-      color: #ffffff;
-      font-size: clamp(25px, 2.4vw, 34px);
-      line-height: 1;
+      gap: 10px;
+      width: clamp(210px, 22vw, 300px);
+      min-height: clamp(110px, 12vw, 148px);
+      background: rgba(55,147,208,0.14);
+      border: 1.5px solid rgba(105,161,206,0.45);
+      border-radius: 18px;
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: clamp(18px, 1.8vw, 24px);
+      font-weight: 500;
       text-decoration: none;
       cursor: pointer;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: background 0.25s, border-color 0.25s, transform 0.2s;
+      overflow: hidden;
     }
 
+    /* Brillo hover interno */
+    .role-button::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.1) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.25s;
+      border-radius: inherit;
+    }
+    .role-button:hover::before { opacity: 1; }
+
     .role-button:hover {
-      background: #43a3df;
+      background: rgba(55,147,208,0.32);
+      border-color: rgba(255,255,255,0.5);
+      transform: translateY(-4px);
+    }
+    .role-button:active {
+      transform: translateY(-1px);
+    }
+
+    /* Icono SVG dentro del botón */
+    .role-icon {
+      width: clamp(32px, 3.5vw, 44px);
+      height: clamp(32px, 3.5vw, 44px);
+      stroke: rgba(255,255,255,0.85);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .role-button span {
+      font-size: clamp(16px, 1.6vw, 22px);
+      font-weight: 500;
+    }
+
+    .role-sub {
+      font-size: clamp(11px, 0.9vw, 13px) !important;
+      font-weight: 300 !important;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 0.04em;
     }
 
     @media (max-width: 650px) {
-      .login-content {
-        padding-top: 16vh;
-      }
-
+      .login-content { padding-top: 14vh; }
       .role-actions {
         flex-direction: column;
         align-items: center;
-        gap: 18px;
-        margin-top: 5vh;
+        gap: 16px;
+        margin-top: 4vh;
       }
-
       .role-button {
-        width: min(330px, 78vw);
+        width: min(300px, 78vw);
+        min-height: 80px;
+        flex-direction: row;
+        padding: 0 24px;
+        gap: 16px;
       }
     }
   </style>
 </head>
 <body>
-  <main class="login-screen" aria-label="Inicio de sesi&oacute;n de TechMap">
-    <svg class="mountains" viewBox="0 0 1366 768" preserveAspectRatio="none" aria-hidden="true">
-      <path
-        fill="#1d518b"
-        d="M0 268 C62 176 121 117 226 123 C343 130 443 183 571 164 C705 145 780 103 883 80 C986 57 1053 105 1112 178 C1194 279 1280 312 1366 268 L1366 768 L0 768 Z"
-      />
-      <path
-        fill="#31598e"
-        d="M0 248 C66 162 133 100 248 118 C373 137 461 171 589 151 C717 131 769 109 879 68 C991 26 1092 101 1148 192 C1213 297 1291 337 1366 310 L1366 768 L0 768 Z"
-        opacity="0.9"
-      />
-      <path
-        fill="#111649"
-        d="M0 333 C89 293 137 304 217 315 C312 328 397 386 490 363 C589 338 639 286 744 318 C831 345 903 387 974 422 C1085 476 1224 505 1366 530 L1366 768 L0 768 Z"
-      />
-    </svg>
-    <div class="foreground-fill"></div>
+  <main class="login-screen" aria-label="Inicio de sesión de TechMap">
 
+    <!-- Estrellas -->
+    <div class="stars" id="stars" aria-hidden="true"></div>
+
+    <!-- Montañas -->
+    <svg class="mountains" viewBox="0 0 1366 768" preserveAspectRatio="none" aria-hidden="true">
+      <path fill="#1d518b"
+        d="M0 280 C80 180 160 120 270 128 C390 137 480 188 610 168 C748 148 820 108 928 84
+           C1032 60 1100 112 1160 188 C1240 288 1310 318 1366 280 L1366 768 L0 768 Z"/>
+      <path fill="#2a5c8f" opacity="0.85"
+        d="M0 255 C90 160 170 96 285 118 C415 142 505 175 635 155
+           C765 134 818 112 930 70 C1045 26 1140 108 1198 198
+           C1265 308 1320 342 1366 318 L1366 768 L0 768 Z"/>
+      <path fill="#111649"
+        d="M0 348 C95 304 148 318 232 330 C330 344 418 402 514 378
+           C616 352 668 298 776 332 C866 360 938 404 1010 440
+           C1120 496 1258 524 1366 548 L1366 768 L0 768 Z"/>
+    </svg>
+
+    <div class="horizon-glow" aria-hidden="true"></div>
+    <div class="foreground-fill" aria-hidden="true"></div>
+
+    <!-- Contenido -->
     <section class="login-content">
       <div class="logo-mark" aria-hidden="true">
         <div class="monitor"></div>
@@ -232,13 +321,54 @@
 
       <h1 class="brand-name">TechMap</h1>
       <p class="welcome">Bienvenido</p>
-      <p class="login-label">Iniciar sesi&oacute;n como:</p>
+      <p class="login-label">Iniciar sesión como</p>
 
       <div class="role-actions" aria-label="Seleccionar tipo de usuario">
-        <a class="role-button" href="../admin/adminhome.html">Administrador</a>
-        <a class="role-button" href="../empresa/companylogin.html">Empresa</a>
+
+        <!-- Administrador -->
+        <a class="role-button" href="../admin/adminhome.html" aria-label="Entrar como administrador">
+          <!-- Icono usuario con escudo -->
+          <svg class="role-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2l3 4h5l-1.5 5L21 14l-9 5-9-5 2.5-3L4 6h5z"/>
+            <circle cx="12" cy="9" r="2.5"/>
+          </svg>
+          <span>Administrador</span>
+          <span class="role-sub">Ing. Gerardo</span>
+        </a>
+
+        <!-- Empresa -->
+        <a class="role-button" href="../empresa/companylogin.html" aria-label="Entrar como empresa">
+          <!-- Icono edificio -->
+          <svg class="role-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M9 3v18M15 9v12"/>
+            <rect x="6" y="12" width="2" height="2"/>
+            <rect x="11" y="12" width="2" height="2"/>
+          </svg>
+          <span>Empresa</span>
+          <span class="role-sub">TI · Contabilidad · Jefe de área</span>
+        </a>
+
       </div>
     </section>
   </main>
+
+  <script>
+    const container = document.getElementById('stars');
+    for (let i = 0; i < 55; i++) {
+      const s = document.createElement('div');
+      s.className = 'star';
+      const size = Math.random() < 0.25 ? 3 : 2;
+      s.style.cssText = `
+        left:${Math.random()*100}%;
+        top:${Math.random()*60}%;
+        width:${size}px; height:${size}px;
+        --d:${2.5+Math.random()*3}s;
+        --delay:-${Math.random()*4}s;
+        opacity:${0.3+Math.random()*0.5};
+      `;
+      container.appendChild(s);
+    }
+  </script>
 </body>
 </html>

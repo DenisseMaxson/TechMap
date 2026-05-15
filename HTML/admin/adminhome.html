@@ -4,19 +4,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TechMap - Administrador</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
   <style>
-    * {
+    *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
+    :root {
+      --navy:  #111649;
+      --blue1: #1d69a0;
+      --blue2: #237fb9;
+      --blue3: #3793d0;
+      --sky:   #69a1ce;
+      --white: #ffffff;
+    }
+
     body {
       min-height: 100vh;
       overflow: hidden;
-      background: #111649;
-      color: #ffffff;
-      font-family: Arial, Helvetica, sans-serif;
+      background: var(--navy);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
     }
 
     .admin-screen {
@@ -26,145 +38,334 @@
       height: 100vh;
       justify-content: center;
       overflow: hidden;
-      background: #111649;
+      background: var(--navy);
     }
 
+    /* ── Partículas flotantes ── */
+    .particles {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(55,147,208,0.18);
+      animation: floatUp var(--d, 8s) ease-in-out infinite var(--delay, 0s);
+    }
+    @keyframes floatUp {
+      0%   { transform: translateY(0) scale(1);   opacity: 0; }
+      20%  { opacity: 1; }
+      80%  { opacity: 0.6; }
+      100% { transform: translateY(-80px) scale(1.15); opacity: 0; }
+    }
+
+    /* ── Ondas ── */
     .waves {
       position: absolute;
       inset: auto 0 0 0;
       width: 100%;
       height: 52%;
+      z-index: 1;
     }
 
-    .waves path {
-      shape-rendering: geometricPrecision;
-    }
-
+    /* ── Formulario ── */
     .admin-form {
       position: relative;
       z-index: 2;
       display: flex;
-      width: min(590px, 82vw);
+      width: min(520px, 88vw);
       flex-direction: column;
       align-items: center;
-      padding-top: clamp(34px, 8vh, 76px);
+      padding-top: clamp(28px, 7vh, 68px);
       text-align: center;
+      animation: fadeDown 0.85s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-22px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
+    /* ── Logo pequeño ── */
+    .logo-mark {
+      position: relative;
+      width: clamp(52px, 6vw, 72px);
+      height: clamp(44px, 5.2vw, 62px);
+      margin-bottom: 14px;
+      filter: drop-shadow(0 0 12px rgba(55,147,208,0.4));
+    }
+    .monitor {
+      position: absolute;
+      left: 5%; top: 2%;
+      width: 92%; height: 80%;
+      border: 2.5px solid var(--white);
+      border-radius: 3px;
+    }
+    .monitor::after {
+      content: "";
+      position: absolute;
+      right: 8%; bottom: 10%;
+      width: 5%; height: 7%;
+      background: var(--white);
+      border-radius: 1px;
+    }
+    .stand {
+      position: absolute;
+      left: 39%; top: 80%;
+      width: 24%; height: 14%;
+      background: var(--white);
+    }
+    .base {
+      position: absolute;
+      left: 27%; top: 92%;
+      width: 50%; height: 8%;
+      background: var(--white);
+      border-radius: 4px 4px 0 0;
+    }
+    .pin {
+      position: absolute;
+      left: 35%; top: 12%;
+      width: 32%; height: 48%;
+    }
+    .pin::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border: 2.5px solid var(--white);
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+    }
+    .pin::after {
+      content: "";
+      position: absolute;
+      left: 38%; top: 26%;
+      width: 22%; height: 18%;
+      border: 2px solid var(--white);
+      border-radius: 50%;
+    }
+
+    /* ── Título ── */
     .admin-title {
-      font-size: clamp(22px, 2.4vw, 34px);
+      font-size: clamp(20px, 2.2vw, 30px);
       font-weight: 700;
+      letter-spacing: -0.3px;
       line-height: 1.2;
+      color: var(--white);
     }
 
+    .admin-subtitle {
+      margin-top: 5px;
+      font-size: clamp(12px, 1vw, 14px);
+      font-weight: 300;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+    }
+
+    /* ── Divisor ── */
     .divider {
-      width: min(362px, 68vw);
-      height: 2px;
-      margin-top: clamp(30px, 7vh, 50px);
+      width: min(340px, 68vw);
+      height: 1px;
+      margin-top: clamp(22px, 5vh, 38px);
       border: 0;
-      background: rgba(255, 255, 255, 0.78);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
     }
 
+    /* ── Card del formulario ── */
+    .form-card {
+      width: 100%;
+      margin-top: clamp(24px, 4.5vh, 36px);
+      background: rgba(55,147,208,0.1);
+      border: 1px solid rgba(105,161,206,0.25);
+      border-radius: 20px;
+      padding: clamp(24px, 4vh, 36px) clamp(28px, 5vw, 48px);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      animation: fadeUp 0.85s 0.2s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Campos ── */
     .field-group {
-      width: min(297px, 72vw);
-      margin-top: clamp(32px, 6vh, 48px);
+      width: 100%;
+      text-align: left;
     }
-
     .field-group + .field-group {
-      margin-top: clamp(28px, 5vh, 38px);
+      margin-top: clamp(18px, 3.5vh, 28px);
     }
 
     .field-label {
       display: block;
-      margin-bottom: 12px;
-      font-size: clamp(21px, 2.2vw, 31px);
+      margin-bottom: 8px;
+      font-size: clamp(13px, 1.1vw, 15px);
       font-weight: 400;
-      line-height: 1.15;
+      letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      stroke: rgba(255,255,255,0.45);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
     }
 
     .text-input {
       width: 100%;
-      height: clamp(42px, 5vw, 54px);
-      border: 0;
+      height: clamp(42px, 5vw, 52px);
+      border: 1px solid rgba(105,161,206,0.35);
       border-radius: 11px;
-      outline: 0;
-      background: rgba(112, 149, 194, 0.74);
-      color: #ffffff;
-      font-size: clamp(18px, 1.8vw, 24px);
-      padding: 0 18px;
-      text-align: center;
+      outline: none;
+      background: rgba(17,22,73,0.55);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: clamp(14px, 1.3vw, 17px);
+      padding: 0 16px 0 42px;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-
+    .text-input::placeholder {
+      color: rgba(255,255,255,0.25);
+    }
     .text-input:focus {
-      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.22);
+      border-color: rgba(105,161,206,0.7);
+      box-shadow: 0 0 0 3px rgba(55,147,208,0.18);
     }
 
+    /* ── Botón submit ── */
     .submit-button {
-      width: min(198px, 62vw);
-      min-height: clamp(42px, 5vw, 54px);
-      margin-top: clamp(33px, 6vh, 48px);
-      border: 0;
+      width: 100%;
+      min-height: clamp(42px, 5vw, 52px);
+      margin-top: clamp(24px, 4.5vh, 36px);
+      border: 1.5px solid rgba(105,161,206,0.4);
       border-radius: 11px;
-      background: #1d69a0;
-      color: #ffffff;
-      font-size: clamp(20px, 2.1vw, 28px);
-      line-height: 1;
+      background: rgba(29,105,160,0.55);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: clamp(15px, 1.4vw, 18px);
+      font-weight: 500;
+      letter-spacing: 0.04em;
       cursor: pointer;
+      backdrop-filter: blur(6px);
+      transition: background 0.22s, border-color 0.22s, transform 0.18s;
     }
-
     .submit-button:hover {
-      background: #2780bd;
+      background: rgba(35,127,185,0.75);
+      border-color: rgba(255,255,255,0.4);
+      transform: translateY(-2px);
+    }
+    .submit-button:active {
+      transform: translateY(0);
     }
 
     @media (max-width: 520px) {
-      .admin-form {
-        width: 88vw;
-        padding-top: 8vh;
-      }
-
-      .waves {
-        height: 56%;
-      }
-
-      .field-group {
-        width: min(310px, 82vw);
-      }
+      .admin-form { width: 90vw; padding-top: 6vh; }
+      .waves { height: 56%; }
+      .form-card { padding: 22px 20px; }
     }
   </style>
 </head>
 <body>
-  <main class="admin-screen" aria-label="Inicio de sesi&oacute;n de administrador">
+  <main class="admin-screen" aria-label="Inicio de sesión de administrador">
+
+    <!-- Partículas -->
+    <div class="particles" id="particles" aria-hidden="true"></div>
+
+    <!-- Ondas -->
     <svg class="waves" viewBox="0 0 1366 420" preserveAspectRatio="none" aria-hidden="true">
-      <path
-        fill="#184f89"
-        d="M0 76 C154 101 293 126 453 115 C625 104 748 46 899 70 C1035 91 1134 97 1366 82 L1366 420 L0 420 Z"
-      />
-      <path
-        fill="#237fb9"
-        d="M0 190 C181 178 372 170 509 196 C670 227 785 262 977 254 C1137 247 1245 225 1366 204 L1366 420 L0 420 Z"
-      />
-      <path
-        fill="#69a1ce"
-        d="M0 318 C170 293 324 284 491 302 C679 321 768 372 956 374 C1115 376 1231 350 1366 322 L1366 420 L0 420 Z"
-      />
+      <path fill="#184f89"
+        d="M0 76 C154 101 293 126 453 115 C625 104 748 46 899 70
+           C1035 91 1134 97 1366 82 L1366 420 L0 420 Z"/>
+      <path fill="#237fb9"
+        d="M0 190 C181 178 372 170 509 196 C670 227 785 262 977 254
+           C1137 247 1245 225 1366 204 L1366 420 L0 420 Z"/>
+      <path fill="#69a1ce"
+        d="M0 318 C170 293 324 284 491 302 C679 321 768 372 956 374
+           C1115 376 1231 350 1366 322 L1366 420 L0 420 Z"/>
     </svg>
 
+    <!-- Formulario -->
     <form class="admin-form" action="adminoptions.html">
+
+      <!-- Logo -->
+      <div class="logo-mark" aria-hidden="true">
+        <div class="monitor"></div>
+        <div class="pin"></div>
+        <div class="stand"></div>
+        <div class="base"></div>
+      </div>
+
       <h1 class="admin-title">Bienvenido, administrador</h1>
+      <p class="admin-subtitle">Acceso restringido &mdash; Ing. Gerardo</p>
+
       <hr class="divider">
 
-      <label class="field-group">
-        <span class="field-label">Usuario</span>
-        <input class="text-input" type="text" name="usuario" autocomplete="username">
-      </label>
+      <!-- Card -->
+      <div class="form-card">
 
-      <label class="field-group">
-        <span class="field-label">Contrase&ntilde;a</span>
-        <input class="text-input" type="password" name="contrasena" autocomplete="current-password">
-      </label>
+        <label class="field-group">
+          <span class="field-label">Usuario</span>
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            </svg>
+            <input class="text-input" type="text" name="usuario"
+                   placeholder="Ingresa tu usuario"
+                   autocomplete="username">
+          </div>
+        </label>
 
-      <button class="submit-button" type="submit">Iniciar sesi&oacute;n</button>
+        <label class="field-group">
+          <span class="field-label">Contraseña</span>
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="5" y="11" width="14" height="10" rx="2"/>
+              <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+              <circle cx="12" cy="16" r="1.2" fill="rgba(255,255,255,0.45)" stroke="none"/>
+            </svg>
+            <input class="text-input" type="password" name="contrasena"
+                   placeholder="Ingresa tu contraseña"
+                   autocomplete="current-password">
+          </div>
+        </label>
+
+        <button class="submit-button" type="submit">Iniciar sesión</button>
+
+      </div>
     </form>
   </main>
+
+  <script>
+    const pc = document.getElementById('particles');
+    for (let i = 0; i < 18; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = 6 + Math.random() * 18;
+      p.style.cssText = `
+        left:${Math.random()*100}%;
+        bottom:${Math.random()*45}%;
+        width:${size}px; height:${size}px;
+        --d:${6+Math.random()*8}s;
+        --delay:-${Math.random()*8}s;
+      `;
+      pc.appendChild(p);
+    }
+  </script>
 </body>
 </html>
