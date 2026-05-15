@@ -4,19 +4,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TechMap - Exportar Listas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * {
+    *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
+    :root {
+      --navy:  #111649;
+      --blue1: #184f89;
+      --blue2: #237fb9;
+      --blue3: #3793d0;
+      --sky:   #69a1ce;
+      --white: #ffffff;
+    }
+
     body {
       min-height: 100vh;
       overflow: hidden;
-      background: #111649;
-      color: #ffffff;
-      font-family: Arial, Helvetica, sans-serif;
+      background: var(--navy);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
     }
 
     .export-screen {
@@ -24,29 +36,54 @@
       width: 100vw;
       min-height: 100vh;
       overflow: hidden;
-      background: #111649;
+      background: var(--navy);
       padding-bottom: 34px;
     }
 
+    /* ── Partículas ── */
+    .particles {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(55,147,208,0.15);
+      animation: floatUp var(--d,8s) ease-in-out infinite var(--delay,0s);
+    }
+    @keyframes floatUp {
+      0%   { transform: translateY(0) scale(1);    opacity: 0; }
+      20%  { opacity: 0.8; }
+      80%  { opacity: 0.4; }
+      100% { transform: translateY(-90px) scale(1.1); opacity: 0; }
+    }
+
+    /* ── Ondas ── */
     .waves {
       position: absolute;
       inset: auto 0 0 0;
       width: 100%;
       height: 52%;
+      z-index: 1;
     }
 
-    .waves path {
-      shape-rendering: geometricPrecision;
-    }
-
+    /* ── Top bar ── */
     .top-bar {
       position: relative;
       z-index: 2;
       display: grid;
       grid-template-columns: 44px 1fr 44px;
       align-items: center;
-      width: min(582px, calc(100vw - 44px));
+      width: min(600px, calc(100vw - 44px));
       margin: 20px auto 0;
+      animation: fadeDown 0.75s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     .home-link,
@@ -56,169 +93,237 @@
       height: 38px;
       align-items: center;
       justify-content: center;
-      border-radius: 8px;
-      color: #ffffff;
+      border: 1px solid rgba(105,161,206,0.25);
+      border-radius: 10px;
+      background: rgba(55,147,208,0.1);
+      color: var(--white);
       text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
     }
-
-    .profile-link {
-      justify-self: end;
-    }
-
+    .profile-link { justify-self: end; }
     .home-link:hover,
     .profile-link:hover {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(55,147,208,0.25);
+      border-color: rgba(105,161,206,0.5);
     }
-
     .top-icon {
-      width: 30px;
-      height: 30px;
-      fill: currentColor;
+      width: 22px;
+      height: 22px;
+      fill: rgba(255,255,255,0.85);
     }
 
     .page-title {
-      font-size: clamp(19px, 2.1vw, 23px);
-      font-weight: 400;
-      line-height: 1.2;
+      font-size: clamp(17px, 1.8vw, 22px);
+      font-weight: 700;
       text-align: center;
+      letter-spacing: -0.2px;
     }
 
+    /* ── Divisor ── */
     .divider {
       position: relative;
       z-index: 2;
-      width: min(582px, calc(100vw - 44px));
-      height: 2px;
-      margin: 17px auto 0;
+      width: min(600px, calc(100vw - 44px));
+      height: 1px;
+      margin: 10px auto 0;
       border: 0;
-      background: rgba(255, 255, 255, 0.82);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
     }
 
+    /* ── Subtítulo ── */
+    .section-sub {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      margin-top: 24px;
+      font-size: clamp(11px, 1vw, 13px);
+      font-weight: 300;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      animation: fadeDown 0.75s 0.1s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    /* ── Cards de exportación ── */
     .export-options {
       position: relative;
       z-index: 2;
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 235px));
+      grid-template-columns: repeat(2, minmax(0, 260px));
       justify-content: center;
-      gap: clamp(24px, 4.8vw, 30px);
-      width: min(560px, calc(100vw - 48px));
-      margin: 40px auto 0;
+      gap: clamp(20px, 4vw, 32px);
+      width: min(600px, calc(100vw - 48px));
+      margin: 28px auto 0;
+      animation: fadeUp 0.8s 0.2s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     .export-card {
+      position: relative;
       display: flex;
-      min-height: 194px;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      border: 1px solid rgba(106, 174, 226, 0.35);
-      border-radius: 11px;
-      background: rgba(42, 125, 188, 0.58);
-      color: #ffffff;
-      padding: 24px 18px 7px;
+      min-height: 210px;
+      border: 1px solid rgba(106,174,226,0.28);
+      border-radius: 18px;
+      background: rgba(42,125,188,0.14);
+      color: var(--white);
+      padding: 28px 20px 20px;
       text-decoration: none;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      overflow: hidden;
+      transition: background 0.25s, border-color 0.25s, transform 0.2s;
+    }
+
+    /* Línea superior de acento */
+    .export-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 18px 18px 0 0;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .export-card.card-users::before  { background: linear-gradient(90deg, #237fb9, #69a1ce); }
+    .export-card.card-db::before     { background: linear-gradient(90deg, #1d69a0, #3793d0); }
+
+    /* Brillo interno hover */
+    .export-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.07) 0%, transparent 65%);
+      opacity: 0;
+      transition: opacity 0.25s;
+      border-radius: inherit;
     }
 
     .export-card:hover {
-      background: rgba(55, 145, 207, 0.68);
+      background: rgba(55,145,207,0.28);
+      border-color: rgba(105,161,206,0.55);
+      transform: translateY(-5px);
     }
+    .export-card:hover::before { opacity: 1; }
+    .export-card:hover::after  { opacity: 1; }
+    .export-card:active { transform: translateY(-2px); }
 
-    .card-icon {
+    /* ── Icono de la card ── */
+    .card-icon-wrap {
       display: flex;
-      width: 68px;
-      height: 68px;
+      width: 64px;
+      height: 64px;
       align-items: center;
       justify-content: center;
-      margin-bottom: 13px;
-      color: #ffffff;
+      border-radius: 16px;
+      margin-bottom: 16px;
+      transition: transform 0.2s;
+    }
+    .export-card:hover .card-icon-wrap { transform: scale(1.08); }
+
+    .card-icon-wrap.icon-users { background: rgba(35,127,185,0.3); border: 1px solid rgba(105,161,206,0.35); }
+    .card-icon-wrap.icon-db    { background: rgba(29,105,160,0.3); border: 1px solid rgba(55,147,208,0.35); }
+
+    .card-icon-wrap svg {
+      width: 32px;
+      height: 32px;
+      stroke: rgba(255,255,255,0.9);
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
-    .card-icon svg {
-      width: 100%;
-      height: 100%;
-      fill: currentColor;
-    }
-
+    /* ── Textos de la card ── */
     .card-title {
-      min-height: 25px;
-      color: #ffffff;
-      font-size: clamp(18px, 2.1vw, 21px);
-      font-weight: 400;
-      line-height: 1.15;
+      font-size: clamp(16px, 1.6vw, 20px);
+      font-weight: 600;
       text-align: center;
+      color: var(--white);
+      line-height: 1.2;
+      margin-bottom: 6px;
     }
 
-    .arrow-button {
+    .card-desc {
+      font-size: clamp(10px, 0.9vw, 12px);
+      font-weight: 300;
+      text-align: center;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.4;
+      letter-spacing: 0.02em;
+    }
+
+    /* ── Botón flecha dentro de la card ── */
+    .card-cta {
       display: flex;
-      width: 106px;
-      height: 43px;
       align-items: center;
-      justify-content: center;
-      margin-top: 16px;
-      border-radius: 8px;
-      background: rgba(58, 153, 216, 0.82);
-      color: #ffffff;
+      gap: 6px;
+      margin-top: auto;
+      padding-top: 18px;
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: color 0.2s;
     }
-
-    .arrow-button svg {
-      width: 37px;
-      height: 37px;
-      fill: currentColor;
+    .export-card:hover .card-cta { color: rgba(255,255,255,0.9); }
+    .card-cta svg {
+      width: 16px; height: 16px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 0.2s;
     }
+    .export-card:hover .card-cta svg { transform: translateX(4px); }
 
     @media (max-width: 620px) {
-      body {
-        overflow-y: auto;
-      }
-
-      .export-screen {
-        overflow-y: auto;
-      }
-
-      .top-bar {
-        margin-top: 14px;
-      }
-
-      .waves {
-        height: 58%;
-      }
-
+      body { overflow-y: auto; }
+      .export-screen { overflow-y: auto; }
+      .top-bar { margin-top: 14px; }
+      .waves { height: 58%; }
       .export-options {
-        grid-template-columns: minmax(0, 260px);
-        margin-top: 28px;
+        grid-template-columns: minmax(0, 280px);
+        margin-top: 22px;
       }
-
-      .export-card {
-        min-height: 180px;
-      }
+      .export-card { min-height: 180px; }
     }
   </style>
 </head>
 <body>
   <main class="export-screen" aria-label="Exportar listas">
+
+    <!-- Partículas -->
+    <div class="particles" id="particles" aria-hidden="true"></div>
+
+    <!-- Ondas -->
     <svg class="waves" viewBox="0 0 1366 420" preserveAspectRatio="none" aria-hidden="true">
-      <path
-        fill="#184f89"
-        d="M0 76 C154 101 293 126 453 115 C625 104 748 46 899 70 C1035 91 1134 97 1366 82 L1366 420 L0 420 Z"
-      />
-      <path
-        fill="#237fb9"
-        d="M0 190 C181 178 372 170 509 196 C670 227 785 262 977 254 C1137 247 1245 225 1366 204 L1366 420 L0 420 Z"
-      />
-      <path
-        fill="#69a1ce"
-        d="M0 318 C170 293 324 284 491 302 C679 321 768 372 956 374 C1115 376 1231 350 1366 322 L1366 420 L0 420 Z"
-      />
+      <path fill="#184f89"
+        d="M0 76 C154 101 293 126 453 115 C625 104 748 46 899 70
+           C1035 91 1134 97 1366 82 L1366 420 L0 420 Z"/>
+      <path fill="#237fb9"
+        d="M0 190 C181 178 372 170 509 196 C670 227 785 262 977 254
+           C1137 247 1245 225 1366 204 L1366 420 L0 420 Z"/>
+      <path fill="#69a1ce"
+        d="M0 318 C170 293 324 284 491 302 C679 321 768 372 956 374
+           C1115 376 1231 350 1366 322 L1366 420 L0 420 Z"/>
     </svg>
 
+    <!-- Top bar -->
     <header class="top-bar">
-      <a class="home-link" href="adminhome.html" aria-label="Volver al inicio de administrador">
+      <a class="home-link" href="adminoptions.html" aria-label="Volver a opciones">
         <svg class="top-icon" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M8.1 7.3H4.7l3.8-3.8L7.1 2.1.9 8.3l6.2 6.2 1.4-1.4-3.8-3.8h3.4c4.2 0 7.6 3.4 7.6 7.6V20h2v-3.1c0-5.3-4.3-9.6-9.6-9.6Z"/>
+          <path d="M9.7 5.3 3 12l6.7 6.7 1.4-1.4L6.8 13H21v-2H6.8l4.3-4.3-1.4-1.4Z"/>
         </svg>
       </a>
-
       <h1 class="page-title">Exportar listas</h1>
-
       <a class="profile-link" href="adminprofile.html" aria-label="Perfil del administrador">
         <svg class="top-icon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 12c2.35 0 4.25-1.9 4.25-4.25S14.35 3.5 12 3.5s-4.25 1.9-4.25 4.25S9.65 12 12 12Zm0 2c-3.95 0-7.5 2.02-7.5 4.25V20h15v-1.75C19.5 16.02 15.95 14 12 14Z"/>
@@ -227,36 +332,67 @@
     </header>
 
     <hr class="divider">
+    <p class="section-sub">Selecciona el tipo de exportación</p>
 
-    <section class="export-options" aria-label="Opciones de exportaci&oacute;n">
-      <a class="export-card" href="exportuserbd.html" aria-label="Exportar listas de usuarios">
-        <span class="card-icon" aria-hidden="true">
+    <!-- Cards -->
+    <section class="export-options" aria-label="Opciones de exportación">
+
+      <!-- Card: Listas de usuarios -->
+      <a class="export-card card-users" href="exportuserbd.html"
+         aria-label="Exportar listas de usuarios">
+        <div class="card-icon-wrap icon-users" aria-hidden="true">
           <svg viewBox="0 0 24 24">
-            <path d="M12 2.8a9.2 9.2 0 1 0 0 18.4 9.2 9.2 0 0 0 0-18.4Zm0 2a7.2 7.2 0 0 1 4.96 12.42c-.54-1.34-2.76-2.38-4.96-2.38s-4.42 1.04-4.96 2.38A7.2 7.2 0 0 1 12 4.8Zm0 8.2c1.65 0 2.98-1.34 2.98-2.98S13.65 7.04 12 7.04s-2.98 1.34-2.98 2.98S10.35 13 12 13Z"/>
+            <circle cx="9" cy="7" r="3"/>
+            <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            <path d="M21 20c0-3.3-1.8-6-5-6"/>
           </svg>
-        </span>
+        </div>
         <span class="card-title">Listas de usuarios</span>
-        <span class="arrow-button" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19Zm0 2a7.5 7.5 0 1 1 0 15 7.5 7.5 0 0 1 0-15Zm1.6 3.55-1.42 1.41L13.73 11H7.5v2h6.23l-1.55 1.54 1.42 1.41L17.55 12 13.6 8.05Z"/>
-          </svg>
+        <span class="card-desc">Exporta el listado de usuarios por empresa con nombre, correo, rol y estado</span>
+        <span class="card-cta">
+          Exportar
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </span>
       </a>
 
-      <a class="export-card" href="exportcompanybd.html" aria-label="Exportar base de datos de empresa">
-        <span class="card-icon" aria-hidden="true">
+      <!-- Card: BD de empresa -->
+      <a class="export-card card-db" href="exportcompanybd.html"
+         aria-label="Exportar base de datos de empresa">
+        <div class="card-icon-wrap icon-db" aria-hidden="true">
           <svg viewBox="0 0 24 24">
-            <path d="M5.5 4h13A1.5 1.5 0 0 1 20 5.5V9H4V5.5A1.5 1.5 0 0 1 5.5 4Zm-1.5 7h16v4H4v-4Zm0 6h16v1.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5V17Z"/>
+            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+            <path d="M3 5v4c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
+            <path d="M3 9v4c0 1.66 4.03 3 9 3s9-1.34 9-3V9"/>
+            <path d="M3 13v4c0 1.66 4.03 3 9 3s9-1.34 9-3v-4"/>
           </svg>
-        </span>
+        </div>
         <span class="card-title">BD de empresa</span>
-        <span class="arrow-button" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19Zm0 2a7.5 7.5 0 1 1 0 15 7.5 7.5 0 0 1 0-15Zm1.6 3.55-1.42 1.41L13.73 11H7.5v2h6.23l-1.55 1.54 1.42 1.41L17.55 12 13.6 8.05Z"/>
-          </svg>
+        <span class="card-desc">Exporta la base de datos completa de una empresa bajo solicitud formal</span>
+        <span class="card-cta">
+          Exportar
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </span>
       </a>
+
     </section>
   </main>
+
+  <script>
+    const pc = document.getElementById('particles');
+    for (let i = 0; i < 16; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = 5 + Math.random() * 16;
+      p.style.cssText = `
+        left:${Math.random()*100}%;
+        bottom:${Math.random()*48}%;
+        width:${size}px; height:${size}px;
+        --d:${6+Math.random()*8}s;
+        --delay:-${Math.random()*8}s;
+      `;
+      pc.appendChild(p);
+    }
+  </script>
 </body>
 </html>

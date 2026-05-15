@@ -4,47 +4,65 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TechMap - Gestionar Empresas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * {
+    *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
+    :root {
+      --navy:   #111649;
+      --blue1:  #184f89;
+      --blue2:  #237fb9;
+      --blue3:  #3793d0;
+      --sky:    #69a1ce;
+      --card-bg:#a9c9ec;
+      --white:  #ffffff;
+    }
+
     body {
       min-height: 100vh;
-      background: #111649;
-      color: #ffffff;
-      font-family: Arial, Helvetica, sans-serif;
+      background: var(--navy);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
     }
 
     .companies-screen {
       position: relative;
       min-height: 100vh;
-      overflow: hidden;
-      background: #111649;
-      padding-bottom: 24px;
+      overflow-x: hidden;
+      background: var(--navy);
+      padding-bottom: 32px;
     }
 
+    /* ── Ondas ── */
     .waves {
-      position: absolute;
+      position: fixed;
       inset: auto 0 0 0;
       width: 100%;
       height: 52%;
+      z-index: 0;
+      pointer-events: none;
     }
 
-    .waves path {
-      shape-rendering: geometricPrecision;
-    }
-
+    /* ── Top bar ── */
     .top-bar {
       position: relative;
       z-index: 2;
       display: grid;
       grid-template-columns: 44px 1fr 44px;
       align-items: center;
-      width: min(486px, calc(100vw - 32px));
+      width: min(960px, calc(100vw - 32px));
       margin: 14px auto 0;
+      animation: fadeDown 0.7s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     .back-link,
@@ -54,233 +72,278 @@
       height: 38px;
       align-items: center;
       justify-content: center;
-      border-radius: 8px;
-      color: #ffffff;
+      border: 1px solid rgba(105,161,206,0.25);
+      border-radius: 10px;
+      background: rgba(55,147,208,0.1);
+      color: var(--white);
       text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
     }
-
-    .profile-link {
-      justify-self: end;
-    }
-
+    .profile-link { justify-self: end; }
     .back-link:hover,
     .profile-link:hover {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(55,147,208,0.25);
+      border-color: rgba(105,161,206,0.5);
     }
-
     .top-icon {
-      width: 29px;
-      height: 29px;
-      fill: currentColor;
+      width: 22px;
+      height: 22px;
+      fill: rgba(255,255,255,0.85);
     }
 
     .page-title {
-      font-size: clamp(18px, 2.2vw, 23px);
-      font-weight: 400;
-      line-height: 1.2;
+      font-size: clamp(17px, 1.8vw, 22px);
+      font-weight: 700;
       text-align: center;
+      letter-spacing: -0.2px;
     }
 
+    /* ── Divisor ── */
     .divider {
       position: relative;
       z-index: 2;
-      width: min(486px, calc(100vw - 32px));
-      height: 2px;
-      margin: 7px auto 0;
+      width: min(960px, calc(100vw - 32px));
+      height: 1px;
+      margin: 8px auto 0;
       border: 0;
-      background: rgba(255, 255, 255, 0.78);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
     }
 
+    /* ── Contenido ── */
     .content {
       position: relative;
       z-index: 2;
-      width: min(900px, calc(100vw - 34px));
-      margin: 17px auto 0;
+      width: min(960px, calc(100vw - 32px));
+      margin: 18px auto 0;
+      animation: fadeUp 0.75s 0.15s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
+    /* ── Cards de empresas ── */
     .company-list {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: clamp(14px, 3vw, 28px);
+      gap: clamp(12px, 2vw, 20px);
+      margin-bottom: 18px;
     }
 
     .company-card {
-      min-height: 112px;
-      border: 0;
-      border-radius: 20px;
-      background: #a9c9ec;
-      color: #0e173b;
-      padding: 11px 12px;
+      position: relative;
+      min-height: 118px;
+      border: 1px solid rgba(169,201,236,0.35);
+      border-radius: 16px;
+      background: rgba(169,201,236,0.14);
+      color: var(--white);
+      padding: 14px 16px;
       text-align: left;
       cursor: pointer;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: background 0.2s, border-color 0.2s, transform 0.18s;
+      overflow: hidden;
     }
-
+    .company-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--blue2), var(--sky));
+      border-radius: 16px 16px 0 0;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
     .company-card:hover {
-      background: #bad7f2;
+      background: rgba(169,201,236,0.24);
+      border-color: rgba(169,201,206,0.55);
+      transform: translateY(-2px);
     }
-
+    .company-card:hover::before { opacity: 1; }
     .company-card.selected {
-      background: #d3e6f7;
-      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.32);
+      background: rgba(169,201,236,0.28);
+      border-color: rgba(255,255,255,0.45);
+      box-shadow: 0 0 0 2px rgba(55,147,208,0.35);
     }
+    .company-card.selected::before { opacity: 1; }
 
     .empty-message {
       grid-column: 1 / -1;
-      color: rgba(255, 255, 255, 0.86);
-      font-size: 15px;
+      color: rgba(255,255,255,0.55);
+      font-size: 14px;
+      font-weight: 300;
       text-align: center;
+      padding: 24px 0;
     }
 
     .company-name {
       display: block;
-      margin-bottom: 10px;
-      color: #0c1435;
-      font-size: clamp(15px, 1.7vw, 20px);
-      font-weight: 400;
-      line-height: 1.1;
+      margin-bottom: 8px;
+      color: var(--white);
+      font-size: clamp(13px, 1.3vw, 16px);
+      font-weight: 600;
+      line-height: 1.2;
     }
 
     .company-detail {
-      display: block;
-      margin-top: 4px;
-      font-size: clamp(11px, 1.1vw, 14px);
-      line-height: 1.18;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 3px;
+      font-size: clamp(10px, 0.95vw, 12px);
+      color: rgba(255,255,255,0.65);
+      line-height: 1.3;
     }
-
     .company-detail strong {
-      font-weight: 400;
+      font-weight: 500;
+      color: rgba(255,255,255,0.85);
     }
 
+    /* ── Formulario ── */
     .company-form {
-      width: min(790px, 86vw);
-      margin: 10px auto 0;
-      border-radius: 10px;
-      background: rgba(69, 92, 158, 0.72);
-      padding: 15px clamp(18px, 5vw, 54px) 16px;
+      width: 100%;
+      border: 1px solid rgba(105,161,206,0.25);
+      border-radius: 16px;
+      background: rgba(55,100,180,0.18);
+      padding: 18px clamp(16px, 3vw, 32px) 20px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .form-section-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.38);
+      margin-bottom: 14px;
     }
 
     .form-grid {
       display: grid;
-      grid-template-columns: 1fr 0.78fr;
-      gap: 12px 24px;
+      grid-template-columns: 1fr 0.75fr;
+      gap: 10px 20px;
     }
 
     .field-group {
       display: flex;
-      min-width: 0;
       flex-direction: column;
       text-align: left;
+      min-width: 0;
     }
-
-    .field-group.full {
-      grid-column: 1 / -1;
-    }
+    .field-group.full { grid-column: 1 / -1; }
 
     .field-label {
       margin-bottom: 5px;
-      color: rgba(255, 255, 255, 0.9);
-      font-size: clamp(11px, 1vw, 13px);
-      line-height: 1.1;
+      font-size: clamp(11px, 0.9vw, 13px);
+      font-weight: 400;
+      color: rgba(255,255,255,0.65);
+      letter-spacing: 0.04em;
     }
 
     .text-input {
       width: 100%;
-      height: 25px;
-      border: 0;
+      height: 34px;
+      border: 1px solid rgba(105,161,206,0.3);
       border-radius: 8px;
-      outline: 0;
-      background: #dedede;
-      color: #111649;
-      font-size: 14px;
-      padding: 0 10px;
+      outline: none;
+      background: rgba(17,22,73,0.55);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: clamp(12px, 1vw, 14px);
+      padding: 0 12px;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-
+    .text-input::placeholder { color: rgba(255,255,255,0.22); }
     .text-input:focus {
-      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.22);
+      border-color: rgba(105,161,206,0.65);
+      box-shadow: 0 0 0 3px rgba(55,147,208,0.15);
     }
 
+    /* ── Botones de acción ── */
     .actions {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 14px;
-      width: min(745px, 82vw);
-      margin: 14px auto 0;
+      gap: 10px;
+      margin-top: 12px;
     }
 
     .action-button {
-      min-height: 20px;
-      border: 0;
-      border-radius: 7px;
-      background: #3293cc;
-      color: #ffffff;
-      font-size: 12px;
-      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 36px;
+      border: 1px solid rgba(105,161,206,0.3);
+      border-radius: 9px;
+      background: rgba(35,127,185,0.25);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: clamp(12px, 1vw, 14px);
+      font-weight: 500;
       cursor: pointer;
+      backdrop-filter: blur(6px);
+      transition: background 0.2s, border-color 0.2s, transform 0.15s;
     }
-
     .action-button:hover {
-      background: #43a3df;
+      background: rgba(55,147,208,0.42);
+      border-color: rgba(255,255,255,0.35);
+      transform: translateY(-1px);
+    }
+    .action-button:active { transform: translateY(0); }
+
+    /* colores individuales de botones */
+    .action-button.btn-edit   { border-color: rgba(55,147,208,0.4); }
+    .action-button.btn-add    { background: rgba(22,110,82,0.35); border-color: rgba(80,200,140,0.35); }
+    .action-button.btn-add:hover { background: rgba(22,110,82,0.55); }
+    .action-button.btn-delete { background: rgba(160,40,40,0.3); border-color: rgba(220,80,80,0.35); }
+    .action-button.btn-delete:hover { background: rgba(160,40,40,0.5); }
+    .action-button.btn-clear  { background: rgba(80,80,120,0.28); border-color: rgba(140,140,200,0.3); }
+
+    .btn-icon {
+      width: 15px; height: 15px;
+      stroke: rgba(255,255,255,0.8);
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
     }
 
     @media (max-width: 760px) {
-      .companies-screen {
-        overflow-y: auto;
-      }
-
-      .company-list {
-        grid-template-columns: 1fr;
-      }
-
-      .company-card {
-        min-height: 128px;
-      }
-
-      .company-form {
-        width: 100%;
-      }
-
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .actions {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        width: 100%;
-      }
-
-      .action-button {
-        min-height: 36px;
-        font-size: 14px;
-      }
+      .companies-screen { overflow-y: auto; }
+      .company-list { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .field-group.full { grid-column: 1; }
+      .actions { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
 <body>
   <main class="companies-screen" aria-label="Gestionar empresas">
+
+    <!-- Ondas fijas -->
     <svg class="waves" viewBox="0 0 1366 420" preserveAspectRatio="none" aria-hidden="true">
-      <path
-        fill="#184f89"
-        d="M0 76 C154 101 293 126 453 115 C625 104 748 46 899 70 C1035 91 1134 97 1366 82 L1366 420 L0 420 Z"
-      />
-      <path
-        fill="#237fb9"
-        d="M0 190 C181 178 372 170 509 196 C670 227 785 262 977 254 C1137 247 1245 225 1366 204 L1366 420 L0 420 Z"
-      />
-      <path
-        fill="#69a1ce"
-        d="M0 318 C170 293 324 284 491 302 C679 321 768 372 956 374 C1115 376 1231 350 1366 322 L1366 420 L0 420 Z"
-      />
+      <path fill="#184f89"
+        d="M0 76 C154 101 293 126 453 115 C625 104 748 46 899 70
+           C1035 91 1134 97 1366 82 L1366 420 L0 420 Z"/>
+      <path fill="#237fb9"
+        d="M0 190 C181 178 372 170 509 196 C670 227 785 262 977 254
+           C1137 247 1245 225 1366 204 L1366 420 L0 420 Z"/>
+      <path fill="#69a1ce"
+        d="M0 318 C170 293 324 284 491 302 C679 321 768 372 956 374
+           C1115 376 1231 350 1366 322 L1366 420 L0 420 Z"/>
     </svg>
 
+    <!-- Top bar -->
     <header class="top-bar">
       <a class="back-link" href="adminoptions.html" aria-label="Volver a opciones">
         <svg class="top-icon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M9.7 5.3 3 12l6.7 6.7 1.4-1.4L6.8 13H21v-2H6.8l4.3-4.3-1.4-1.4Z"/>
         </svg>
       </a>
-
       <h1 class="page-title">Gestionar Empresas</h1>
-
       <a class="profile-link" href="adminprofile.html" aria-label="Perfil del administrador">
         <svg class="top-icon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 12c2.35 0 4.25-1.9 4.25-4.25S14.35 3.5 12 3.5s-4.25 1.9-4.25 4.25S9.65 12 12 12Zm0 2c-3.95 0-7.5 2.02-7.5 4.25V20h15v-1.75C19.5 16.02 15.95 14 12 14Z"/>
@@ -290,46 +353,68 @@
 
     <hr class="divider">
 
+    <!-- Contenido -->
     <section class="content">
-      <div class="company-list" aria-label="Lista de empresas" id="companyList"></div>
 
+      <!-- Lista de cards -->
+      <div class="company-list" id="companyList" aria-label="Lista de empresas"></div>
+
+      <!-- Formulario -->
       <form class="company-form" id="companyForm">
+        <p class="form-section-label">Datos de la empresa</p>
         <div class="form-grid">
+
           <label class="field-group">
-            <span class="field-label">Nombre de empresa:</span>
-            <input class="text-input" type="text" name="nombre" required>
+            <span class="field-label">Nombre de empresa</span>
+            <input class="text-input" type="text" name="nombre" placeholder="Ej. Tecnologías Solución SA" required>
           </label>
 
           <label class="field-group">
-            <span class="field-label">RFC:</span>
-            <input class="text-input" type="text" name="rfc">
+            <span class="field-label">RFC</span>
+            <input class="text-input" type="text" name="rfc" placeholder="Ej. TSS210301AB1">
           </label>
 
           <label class="field-group full">
-            <span class="field-label">Ubicaci&oacute;n:</span>
-            <input class="text-input" type="text" name="ubicacion">
+            <span class="field-label">Ubicación</span>
+            <input class="text-input" type="text" name="ubicacion" placeholder="Ciudad, Estado">
           </label>
 
           <label class="field-group">
-            <span class="field-label">Tel&eacute;fono:</span>
-            <input class="text-input" type="tel" name="telefono">
+            <span class="field-label">Teléfono</span>
+            <input class="text-input" type="tel" name="telefono" placeholder="10 dígitos">
           </label>
 
           <label class="field-group">
-            <span class="field-label">Correo de contacto:</span>
-            <input class="text-input" type="email" name="correo_contacto">
+            <span class="field-label">Correo de contacto</span>
+            <input class="text-input" type="email" name="correo_contacto" placeholder="correo@empresa.com">
           </label>
+
         </div>
       </form>
 
+      <!-- Acciones -->
       <div class="actions" aria-label="Acciones de empresa">
-        <button class="action-button" type="button" id="editButton">Editar</button>
-        <button class="action-button" type="button" id="addButton">Agregar</button>
-        <button class="action-button" type="button" id="deleteButton">Eliminar</button>
-        <button class="action-button" type="button" id="clearButton">Limpiar</button>
+        <button class="action-button btn-edit" type="button" id="editButton">
+          <svg class="btn-icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Editar
+        </button>
+        <button class="action-button btn-add" type="button" id="addButton">
+          <svg class="btn-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+          Agregar
+        </button>
+        <button class="action-button btn-delete" type="button" id="deleteButton">
+          <svg class="btn-icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Eliminar
+        </button>
+        <button class="action-button btn-clear" type="button" id="clearButton">
+          <svg class="btn-icon" viewBox="0 0 24 24"><path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+          Limpiar
+        </button>
       </div>
+
     </section>
   </main>
+
   <script>
     const API_URL = 'http://localhost:3000/api/empresas';
     const companyList = document.getElementById('companyList');
@@ -337,13 +422,8 @@
     let companies = [];
     let selectedCompanyId = null;
 
-    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#039;'
-    }[char]));
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) =>
+      ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
 
     const formData = () => Object.fromEntries(new FormData(companyForm).entries());
 
@@ -359,12 +439,10 @@
 
     const renderCompanies = () => {
       companyList.innerHTML = '';
-
       if (!companies.length) {
         companyList.innerHTML = '<p class="empty-message">No hay empresas registradas.</p>';
         return;
       }
-
       companies.forEach((company) => {
         const card = document.createElement('button');
         card.className = `company-card${company.id === selectedCompanyId ? ' selected' : ''}`;
@@ -372,9 +450,9 @@
         card.innerHTML = `
           <span class="company-name">${escapeHtml(company.nombre || 'Empresa sin nombre')}</span>
           <span class="company-detail"><strong>ID:</strong> ${escapeHtml(company.id || '')}</span>
-          <span class="company-detail"><strong>Ubicaci&oacute;n:</strong> ${escapeHtml(company.ubicacion || 'Sin ubicaci&oacute;n')}</span>
-          <span class="company-detail"><strong>Usuarios:</strong> ${company.cantidad_usuarios || 0}</span>
-          <span class="company-detail"><strong>RFC:</strong> ${escapeHtml(company.rfc || 'Sin RFC')}</span>
+          <span class="company-detail"><strong>Ubicación:</strong> ${escapeHtml(company.ubicacion || '—')}</span>
+          <span class="company-detail"><strong>RFC:</strong> ${escapeHtml(company.rfc || '—')}</span>
+          <span class="company-detail"><strong>Contacto:</strong> ${escapeHtml(company.correo_contacto || '—')}</span>
         `;
         card.addEventListener('click', () => selectCompany(company));
         companyList.appendChild(card);
@@ -392,10 +470,10 @@
 
     const selectCompany = (company) => {
       selectedCompanyId = company.id;
-      companyForm.nombre.value = company.nombre || '';
-      companyForm.rfc.value = company.rfc || '';
-      companyForm.ubicacion.value = company.ubicacion || '';
-      companyForm.telefono.value = company.telefono || '';
+      companyForm.nombre.value          = company.nombre          || '';
+      companyForm.rfc.value             = company.rfc             || '';
+      companyForm.ubicacion.value       = company.ubicacion       || '';
+      companyForm.telefono.value        = company.telefono        || '';
       companyForm.correo_contacto.value = company.correo_contacto || '';
       renderCompanies();
     };
@@ -411,9 +489,7 @@
         await request(`${API_URL}/insert`, { method: 'POST', body: JSON.stringify(formData()) });
         clearForm();
         await loadCompanies();
-      } catch (error) {
-        alert(error.message);
-      }
+      } catch (error) { alert(error.message); }
     });
 
     document.getElementById('editButton').addEventListener('click', async () => {
@@ -425,9 +501,7 @@
         });
         clearForm();
         await loadCompanies();
-      } catch (error) {
-        alert(error.message);
-      }
+      } catch (error) { alert(error.message); }
     });
 
     document.getElementById('deleteButton').addEventListener('click', async () => {
@@ -440,9 +514,7 @@
         });
         clearForm();
         await loadCompanies();
-      } catch (error) {
-        alert(error.message);
-      }
+      } catch (error) { alert(error.message); }
     });
 
     document.getElementById('clearButton').addEventListener('click', clearForm);
