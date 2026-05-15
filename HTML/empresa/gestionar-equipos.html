@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechMap - Gestionar equipos</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      background: #3385bd;
+      color: #ffffff;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .equipment-screen {
+      position: relative;
+      min-height: 100vh;
+      overflow: hidden;
+      padding-bottom: 24px;
+      background: #3385bd;
+    }
+
+    .waves {
+      position: absolute;
+      inset: auto 0 0 0;
+      width: 100%;
+      height: 62%;
+    }
+
+    .waves path {
+      shape-rendering: geometricPrecision;
+    }
+
+    .top-bar {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 42px 1fr 42px;
+      align-items: center;
+      width: min(584px, calc(100vw - 40px));
+      margin: 20px auto 0;
+    }
+
+    .top-link {
+      display: inline-flex;
+      width: 34px;
+      height: 34px;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      text-decoration: none;
+    }
+
+    .top-icon {
+      width: 31px;
+      height: 31px;
+      fill: currentColor;
+    }
+
+    .back-icon {
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 3;
+    }
+
+    .page-title {
+      text-align: center;
+      font-size: clamp(22px, 3.6vw, 24px);
+      font-weight: 400;
+      line-height: 1.2;
+    }
+
+    .divider {
+      position: relative;
+      z-index: 2;
+      width: min(584px, calc(100vw - 40px));
+      height: 2px;
+      margin: 18px auto 19px;
+      border: 0;
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+      width: min(584px, calc(100vw - 40px));
+      margin: 0 auto;
+    }
+
+    .equipment-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 19px;
+      min-height: 96px;
+      margin-bottom: 25px;
+    }
+
+    .equipment-card {
+      display: flex;
+      min-height: 96px;
+      flex-direction: column;
+      gap: 7px;
+      border: 1px solid #07124f;
+      border-radius: 28px;
+      background: #a9c8ef;
+      color: #06133f;
+      padding: 10px 14px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .equipment-card:hover,
+    .equipment-card.selected {
+      background: #bfd8f4;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.72);
+    }
+
+    .equipment-name {
+      display: block;
+      overflow: hidden;
+      text-align: center;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 18px;
+      line-height: 1.1;
+    }
+
+    .equipment-detail {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      line-height: 1.15;
+    }
+
+    .equipment-form {
+      border-radius: 14px;
+      background: rgba(73, 119, 189, 0.82);
+      padding: 15px clamp(18px, 5vw, 34px) 18px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px 31px;
+    }
+
+    .field-group {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .field-group.full {
+      grid-column: 1 / -1;
+    }
+
+    .field-label {
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .text-input,
+    .select-input {
+      width: 100%;
+      height: 29px;
+      border: 0;
+      border-radius: 9px;
+      outline: 0;
+      background: #dcdcdc;
+      color: #06133f;
+      font-size: 13px;
+      padding: 0 11px;
+    }
+
+    .text-input:focus,
+    .select-input:focus {
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.26);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin: 12px 6px 0;
+    }
+
+    .action-button {
+      min-height: 26px;
+      border: 0;
+      border-radius: 9px;
+      background: #2c98d1;
+      color: #ffffff;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .action-button:hover {
+      background: #3aa8df;
+    }
+
+    .empty-message {
+      grid-column: 1 / -1;
+      align-self: center;
+      padding: 16px;
+      border-radius: 12px;
+      background: rgba(169, 200, 239, 0.72);
+      color: #06133f;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    @media (max-width: 720px) {
+      .equipment-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .form-grid {
+        gap: 12px 18px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .top-bar,
+      .divider,
+      .content {
+        width: min(420px, calc(100vw - 28px));
+      }
+
+      .equipment-list,
+      .form-grid,
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .equipment-card {
+        border-radius: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="equipment-screen" aria-label="Gestionar equipos">
+    <svg class="waves" viewBox="0 0 624 405" preserveAspectRatio="none" aria-hidden="true">
+      <path
+        fill="#2b61ad"
+        d="M0 196 C94 205 166 223 254 184 C328 152 383 139 459 185 C515 219 560 220 624 184 L624 405 L0 405 Z"
+      />
+      <path
+        fill="#2e4aa9"
+        d="M0 302 C76 326 129 314 191 273 C256 230 322 286 389 306 C463 328 541 317 624 300 L624 405 L0 405 Z"
+      />
+      <path
+        fill="#1b2476"
+        d="M0 352 C104 357 197 345 277 343 C378 341 454 363 624 344 L624 405 L0 405 Z"
+      />
+    </svg>
+
+    <header class="top-bar">
+      <a class="top-link" href="opciones-ti-contabilidad.html" aria-label="Regresar">
+        <svg class="top-icon back-icon" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M12 8 5 15l7 7" />
+          <path d="M6 15h14a7 7 0 1 1 0 14" />
+        </svg>
+      </a>
+
+      <h1 class="page-title">Gestionar Equipos</h1>
+
+      <span class="top-link" aria-hidden="true">
+        <svg class="top-icon" viewBox="0 0 24 24">
+          <path d="M12 12c2.35 0 4.25-1.9 4.25-4.25S14.35 3.5 12 3.5s-4.25 1.9-4.25 4.25S9.65 12 12 12Zm0 2c-3.95 0-7.5 2.02-7.5 4.25V20h15v-1.75C19.5 16.02 15.95 14 12 14Z"/>
+        </svg>
+      </span>
+    </header>
+
+    <hr class="divider">
+
+    <section class="content">
+      <div class="equipment-list" aria-label="Lista de equipos" id="equipmentList"></div>
+
+      <form class="equipment-form" id="equipmentForm">
+        <div class="form-grid">
+          <label class="field-group">
+            <span class="field-label">Nombre:</span>
+            <input class="text-input" type="text" name="nombre" required>
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Tipo de equipo:</span>
+            <select class="select-input" name="tipo" required>
+              <option value="">Seleccionar</option>
+              <option value="Portatil">Portatil</option>
+              <option value="PC">PC</option>
+              <option value="Servidor">Servidor</option>
+              <option value="Impresora">Impresora</option>
+              <option value="Monitor">Monitor</option>
+              <option value="Router">Router</option>
+              <option value="Switch">Switch</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Numero de serie:</span>
+            <input class="text-input" type="text" name="numero_serie" required>
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Modelo:</span>
+            <input class="text-input" type="text" name="modelo">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Direccion MAC:</span>
+            <input class="text-input" type="text" name="direccion_mac" placeholder="AA:BB:CC:DD:EE:FF">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Direccion IP:</span>
+            <input class="text-input" type="text" name="direccion_ip" placeholder="192.168.1.10">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Area:</span>
+            <input class="text-input" type="text" name="area">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">En donde se encuentra:</span>
+            <input class="text-input" type="text" name="ubicacion_fisica">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Encargado del equipo:</span>
+            <input class="text-input" type="text" name="encargado_equipo">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Fecha de compra:</span>
+            <input class="text-input" type="date" name="fecha_compra">
+          </label>
+
+          <label class="field-group full">
+            <span class="field-label">Donde se compro:</span>
+            <input class="text-input" type="text" name="lugar_compra">
+          </label>
+        </div>
+      </form>
+
+      <div class="actions" aria-label="Acciones de equipo">
+        <button class="action-button" type="button" id="editButton">Editar</button>
+        <button class="action-button" type="button" id="addButton">Agregar</button>
+        <button class="action-button" type="button" id="deleteButton">Eliminar</button>
+        <button class="action-button" type="button" id="clearButton">Limpiar</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'techmap_equipos_empresa';
+    const equipmentList = document.getElementById('equipmentList');
+    const equipmentForm = document.getElementById('equipmentForm');
+    let selectedEquipmentId = null;
+
+    const sampleEquipment = [
+      {
+        id: 'EQ-001',
+        nombre: 'Dell Latitude',
+        tipo: 'Portatil',
+        numero_serie: 'SN-DELL-001',
+        modelo: 'Latitude 5520',
+        direccion_mac: 'AA:BB:CC:11:22:33',
+        direccion_ip: '192.168.1.25',
+        area: 'TI',
+        ubicacion_fisica: 'Oficina TI Piso 2',
+        encargado_equipo: 'Tyler Joseph',
+        fecha_compra: '2022-03-15',
+        lugar_compra: 'Dell Mexico'
+      },
+      {
+        id: 'EQ-002',
+        nombre: 'HP EliteDesk',
+        tipo: 'PC',
+        numero_serie: 'SN-HP-002',
+        modelo: 'EliteDesk 800',
+        direccion_mac: 'AA:BB:CC:44:55:66',
+        direccion_ip: '192.168.1.36',
+        area: 'Contabilidad',
+        ubicacion_fisica: 'Contabilidad',
+        encargado_equipo: 'Denisse Valadez',
+        fecha_compra: '2021-08-10',
+        lugar_compra: 'HP Store'
+      },
+      {
+        id: 'EQ-003',
+        nombre: 'Cisco Catalyst',
+        tipo: 'Switch',
+        numero_serie: 'SN-CISCO-003',
+        modelo: 'Catalyst 2960',
+        direccion_mac: 'AA:BB:CC:77:88:99',
+        direccion_ip: '192.168.1.2',
+        area: 'Redes',
+        ubicacion_fisica: 'Cuarto de redes',
+        encargado_equipo: 'Andrea Monreal',
+        fecha_compra: '2020-01-20',
+        lugar_compra: 'Cisco Partner'
+      }
+    ];
+
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    }[char]));
+
+    const loadEquipment = () => {
+      const savedEquipment = localStorage.getItem(STORAGE_KEY);
+      if (!savedEquipment) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sampleEquipment));
+        return [...sampleEquipment];
+      }
+      return JSON.parse(savedEquipment);
+    };
+
+    let equipment = loadEquipment();
+
+    const saveEquipment = () => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(equipment));
+    };
+
+    const formData = () => Object.fromEntries(new FormData(equipmentForm).entries());
+
+    const createId = () => `EQ-${Date.now().toString().slice(-6)}`;
+
+    const renderEquipment = () => {
+      equipmentList.innerHTML = '';
+
+      if (!equipment.length) {
+        equipmentList.innerHTML = '<p class="empty-message">No hay equipos registrados.</p>';
+        return;
+      }
+
+      equipment.forEach((item) => {
+        const card = document.createElement('button');
+        card.className = `equipment-card${item.id === selectedEquipmentId ? ' selected' : ''}`;
+        card.type = 'button';
+        card.innerHTML = `
+          <span class="equipment-name">${escapeHtml(item.nombre || 'Dispositivo')}</span>
+          <span class="equipment-detail"><strong>Num. Serie:</strong> ${escapeHtml(item.numero_serie || 'Sin serie')}</span>
+          <span class="equipment-detail"><strong>Tipo:</strong> ${escapeHtml(item.tipo || 'Sin tipo')}</span>
+          <span class="equipment-detail"><strong>Area:</strong> ${escapeHtml(item.area || 'Sin area')}</span>
+          <span class="equipment-detail"><strong>IP:</strong> ${escapeHtml(item.direccion_ip || 'Sin IP')}</span>
+          <span class="equipment-detail"><strong>Encargado:</strong> ${escapeHtml(item.encargado_equipo || 'Sin encargado')}</span>
+        `;
+        card.addEventListener('click', () => selectEquipment(item));
+        equipmentList.appendChild(card);
+      });
+    };
+
+    const selectEquipment = (item) => {
+      selectedEquipmentId = item.id;
+      equipmentForm.nombre.value = item.nombre || '';
+      equipmentForm.tipo.value = item.tipo || '';
+      equipmentForm.numero_serie.value = item.numero_serie || '';
+      equipmentForm.modelo.value = item.modelo || '';
+      equipmentForm.direccion_mac.value = item.direccion_mac || '';
+      equipmentForm.direccion_ip.value = item.direccion_ip || '';
+      equipmentForm.area.value = item.area || '';
+      equipmentForm.ubicacion_fisica.value = item.ubicacion_fisica || '';
+      equipmentForm.encargado_equipo.value = item.encargado_equipo || '';
+      equipmentForm.fecha_compra.value = item.fecha_compra || '';
+      equipmentForm.lugar_compra.value = item.lugar_compra || '';
+      renderEquipment();
+    };
+
+    const clearForm = () => {
+      selectedEquipmentId = null;
+      equipmentForm.reset();
+      renderEquipment();
+    };
+
+    document.getElementById('addButton').addEventListener('click', () => {
+      if (!equipmentForm.reportValidity()) return;
+      equipment = [{ id: createId(), ...formData() }, ...equipment];
+      saveEquipment();
+      clearForm();
+    });
+
+    document.getElementById('editButton').addEventListener('click', () => {
+      if (!selectedEquipmentId) return alert('Selecciona un equipo para editar.');
+      if (!equipmentForm.reportValidity()) return;
+      equipment = equipment.map((item) => (
+        item.id === selectedEquipmentId ? { ...item, ...formData() } : item
+      ));
+      saveEquipment();
+      clearForm();
+    });
+
+    document.getElementById('deleteButton').addEventListener('click', () => {
+      if (!selectedEquipmentId) return alert('Selecciona un equipo para eliminar.');
+      if (!confirm('¿Eliminar este equipo?')) return;
+      equipment = equipment.filter((item) => item.id !== selectedEquipmentId);
+      saveEquipment();
+      clearForm();
+    });
+
+    document.getElementById('clearButton').addEventListener('click', clearForm);
+
+    renderEquipment();
+  </script>
+</body>
+</html>

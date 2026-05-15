@@ -9,7 +9,7 @@ app.use(express.json());
 // Rutas
 const empresaRoutes  = require('./ROUTES/empresaRoutes');
 const usuarioRoutes  = require('./ROUTES/usuarioRoutes');
-const equipoRoutes  = require('./ROUTES/equipoRoutes');
+const equipoRoutes  = require('./ROUTES/equiposRoutes');
 
 app.use('/api/empresas', empresaRoutes);
 app.use('/api/usuarios', usuarioRoutes);

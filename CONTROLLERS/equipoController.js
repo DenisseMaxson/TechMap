@@ -61,13 +61,6 @@ const deleteEquipo = (req, res) => {
     });
 };
 
-module.exports = { 
-    getEquiposByEmpresa, 
-    insert: insertEquipo, 
-    update: updateEquipo, 
-    delete: deleteEquipo 
-};
-
 const getDashboardStats = (req, res) => {
     const { empresa_id } = req.params;
     const sql = 'CALL sp_get_dashboard_stats(?)';
@@ -83,4 +76,12 @@ const getDashboardStats = (req, res) => {
             financiero: results[3][0]     // Valor total
         });
     });
+};
+
+module.exports = {
+    getEquiposByEmpresa,
+    getDashboardStats,
+    insert: insertEquipo,
+    update: updateEquipo,
+    delete: deleteEquipo
 };
