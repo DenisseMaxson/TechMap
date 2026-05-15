@@ -180,24 +180,52 @@
       />
     </svg>
 
-    <form class="company-form" action="opciones-ti-contabilidad.html">
+    <form class="company-form" id="loginForm">
       <h1 class="company-title">Bienvenido, empresa</h1>
       <p class="role-title">TI/contabilidad</p>
       <hr class="divider">
 
       <label class="field-group">
         <span class="field-label">Usuario</span>
-        <input class="text-input" type="text" name="usuario" autocomplete="username">
+        <input class="text-input" type="text" name="usuario" autocomplete="username" required>
       </label>
 
       <label class="field-group">
         <span class="field-label">Contrase&ntilde;a</span>
-        <input class="text-input" type="password" name="contrasena" autocomplete="current-password">
+        <input class="text-input" type="password" name="contrasena" autocomplete="current-password" required>
       </label>
 
       <button class="submit-button" type="submit">Iniciar sesi&oacute;n</button>
       <a class="back-link" href="companylogin.html">Regresar</a>
     </form>
   </main>
+  <script>
+    const LOGIN_API = 'http://localhost:3000/api/usuarios/login';
+    const loginForm = document.getElementById('loginForm');
+
+    loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      try {
+        const response = await fetch(LOGIN_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            usuario: loginForm.usuario.value.trim(),
+            password: loginForm.contrasena.value,
+            roles_permitidos: ['ti', 'contabilidad']
+          })
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'No se pudo iniciar sesión');
+
+        localStorage.setItem('techmap_session', JSON.stringify(data.usuario));
+        window.location.href = 'opciones-ti-contabilidad.html';
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+  </script>
 </body>
 </html>

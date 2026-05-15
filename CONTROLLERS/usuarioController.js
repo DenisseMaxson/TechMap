@@ -1,8 +1,10 @@
 const db = require('../DB/connection');
+const bcrypt = require('bcryptjs');
 
 const getAll = (req, res) => {
   const sql = `
-    SELECT u.*, e.nombre AS nombre_empresa 
+    SELECT u.id, u.empresa_id, u.nombre_completo, u.correo, u.usuario, u.rol,
+           u.estado, u.fecha_creacion, u.ultimo_acceso, e.nombre AS nombre_empresa
     FROM usuarios u
     LEFT JOIN empresas e ON u.empresa_id = e.id
     WHERE u.estado = "activo"`;
@@ -13,11 +15,15 @@ const getAll = (req, res) => {
 };
 
 const insert = (req, res) => {
-  const { empresa_id, nombre_completo, correo, usuario, password_hash, rol } = req.body;
+  const { empresa_id, nombre_completo, correo, usuario, password_hash, password, rol } = req.body;
   const userName = usuario || correo || nombre_completo;
-  const passwordValue = password_hash || '';
+  const passwordValue = password || password_hash || '';
+  if (!userName || !passwordValue || !rol) {
+    return res.status(400).json({ error: 'Usuario, contraseña y rol son obligatorios' });
+  }
+  const hashedPassword = bcrypt.hashSync(passwordValue, 10);
   const sql = 'CALL sp_insert_usuario(?,?,?,?,?,?)';
-  db.query(sql, [empresa_id || null, nombre_completo, correo || null, userName, passwordValue, rol], (err, result) => {
+  db.query(sql, [empresa_id || null, nombre_completo, correo || null, userName, hashedPassword, rol], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
     const id = result?.[0]?.[0]?.id;
     res.json({ mensaje: 'Usuario creado', id });
@@ -25,11 +31,70 @@ const insert = (req, res) => {
 };
 
 const update = (req, res) => {
-  const { id, empresa_id, nombre_completo, correo, rol, estado } = req.body;
+  const { id, empresa_id, nombre_completo, correo, rol, estado, usuario, password } = req.body;
   const sql = 'CALL sp_update_usuario(?,?,?,?,?,?)';
   db.query(sql, [empresa_id || null, nombre_completo, correo || null, rol, estado, id], (err) => {
     if (err) return res.status(500).json({ error: err.message });
-    res.json({ mensaje: 'Usuario actualizado' });
+    const updates = [];
+    const values = [];
+
+    if (usuario) {
+      updates.push('usuario = ?');
+      values.push(usuario);
+    }
+
+    if (password) {
+      updates.push('password_hash = ?');
+      values.push(bcrypt.hashSync(password, 10));
+    }
+
+    if (!updates.length) return res.json({ mensaje: 'Usuario actualizado' });
+
+    values.push(id);
+    db.query(`UPDATE usuarios SET ${updates.join(', ')} WHERE id = ?`, values, (updateErr) => {
+      if (updateErr) return res.status(500).json({ error: updateErr.message });
+      res.json({ mensaje: 'Usuario actualizado' });
+    });
+  });
+};
+
+const login = (req, res) => {
+  const { usuario, password, roles_permitidos } = req.body;
+  if (!usuario || !password) {
+    return res.status(400).json({ error: 'Usuario y contraseña son obligatorios' });
+  }
+
+  const sql = `
+    SELECT u.id, u.empresa_id, u.nombre_completo, u.correo, u.usuario, u.password_hash, u.rol,
+           e.nombre AS nombre_empresa
+    FROM usuarios u
+    LEFT JOIN empresas e ON u.empresa_id = e.id
+    WHERE u.usuario = ? AND u.estado = "activo"
+    LIMIT 1`;
+
+  db.query(sql, [usuario], async (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!results.length) return res.status(401).json({ error: 'Credenciales incorrectas' });
+
+    const user = results[0];
+    let validPassword = false;
+
+    try {
+      validPassword = await bcrypt.compare(password, user.password_hash);
+    } catch {
+      validPassword = false;
+    }
+
+    if (!validPassword) return res.status(401).json({ error: 'Credenciales incorrectas' });
+
+    const allowedRoles = Array.isArray(roles_permitidos) ? roles_permitidos : [];
+    if (allowedRoles.length && !allowedRoles.includes(user.rol)) {
+      return res.status(403).json({ error: 'Tu usuario no tiene permiso para entrar aquí' });
+    }
+
+    db.query('UPDATE usuarios SET ultimo_acceso = NOW() WHERE id = ?', [user.id]);
+    delete user.password_hash;
+    res.json({ mensaje: 'Inicio de sesión correcto', usuario: user });
   });
 };
 
@@ -79,4 +144,4 @@ const exportByEmpresa = (req, res) => {
   });
 };
 
-module.exports = { getAll, insert, update, delete: deleteUsuario, exportByEmpresa };
+module.exports = { getAll, insert, update, delete: deleteUsuario, exportByEmpresa, login };

@@ -275,19 +275,19 @@ INSERT INTO empresas (nombre, rfc, ubicacion, telefono, correo_contacto) VALUES
 -- password: Admin2025! -> hash bcrypt de ejemplo
 INSERT INTO usuarios (empresa_id, nombre_completo, correo, usuario, password_hash, rol) VALUES
   (NULL, 'Ing. Gerardo Administrador', 'gerardo@techmap.mx', 'gerardo_admin',
-   '$2b$12$KIXabc123placeholderHashAdminTechMap000000000000', 'administrador');
+   '$2b$10$OEETEhPRRr5ZSSAYgFxpOu5hrevbeErQpTFwRCF/eXrG6jV6z2rMq', 'administrador');
 
 -- Usuarios empresa 1
 INSERT INTO usuarios (empresa_id, nombre_completo, correo, usuario, password_hash, rol) VALUES
-  (1, 'Carlos Ramírez López',   'carlos.ramirez@tecnosolucion.mx',  'carlos_ti',   '$2b$12$placeholder_hash_carlos_ti_001', 'ti'),
-  (1, 'Laura Méndez Torres',    'laura.mendez@tecnosolucion.mx',    'laura_conta', '$2b$12$placeholder_hash_laura_conta_01', 'contabilidad'),
-  (1, 'Roberto Sánchez Vega',   'roberto.sanchez@tecnosolucion.mx', 'roberto_jefe','$2b$12$placeholder_hash_roberto_jefe1', 'jefe_area');
+  (1, 'Carlos Ramírez López',   'carlos.ramirez@tecnosolucion.mx',  'carlos_ti',   '$2b$10$j/f8waeqV7JH88hR94sLO.ZsGekpjzojab7XdMSoYwT5WzTz77vnS', 'ti'),
+  (1, 'Laura Méndez Torres',    'laura.mendez@tecnosolucion.mx',    'laura_conta', '$2b$10$j/f8waeqV7JH88hR94sLO.ZsGekpjzojab7XdMSoYwT5WzTz77vnS', 'contabilidad'),
+  (1, 'Roberto Sánchez Vega',   'roberto.sanchez@tecnosolucion.mx', 'roberto_jefe','$2b$10$j/f8waeqV7JH88hR94sLO.ZsGekpjzojab7XdMSoYwT5WzTz77vnS', 'jefe_area');
 
 -- Usuarios empresa 2
 INSERT INTO usuarios (empresa_id, nombre_completo, correo, usuario, password_hash, rol) VALUES
-  (2, 'Ana González Pérez',     'ana.gonzalez@grupoinnovar.mx',     'ana_ti',      '$2b$12$placeholder_hash_ana_ti_00001', 'ti'),
-  (2, 'Miguel Flores Díaz',     'miguel.flores@grupoinnovar.mx',    'miguel_conta','$2b$12$placeholder_hash_miguel_cont1', 'contabilidad'),
-  (2, 'Patricia Luna Morales',  'patricia.luna@grupoinnovar.mx',    'patricia_jefe','$2b$12$placeholder_hash_patricia_j1', 'jefe_area');
+  (2, 'Ana González Pérez',     'ana.gonzalez@grupoinnovar.mx',     'ana_ti',      '$2b$10$j/f8waeqV7JH88hR94sLO.ZsGekpjzojab7XdMSoYwT5WzTz77vnS', 'ti'),
+  (2, 'Miguel Flores Díaz',     'miguel.flores@grupoinnovar.mx',    'miguel_conta','$2b$10$j/f8waeqV7JH88hR94sLO.ZsGekpjzojab7XdMSoYwT5WzTz77vnS', 'contabilidad'),
+  (2, 'Patricia Luna Morales',  'patricia.luna@grupoinnovar.mx',    'patricia_jefe','$2b$10$j/f8waeqV7JH88hR94sLO.ZsGekpjzojab7XdMSoYwT5WzTz77vnS', 'jefe_area');
 
 -- Equipos empresa 1
 INSERT INTO equipos (empresa_id, numero_serie, nombre, marca, modelo, tipo, ubicacion_fisica, fecha_adquisicion, valor_contable, registrado_por) VALUES

@@ -421,9 +421,21 @@
           </label>
 
           <label class="field-group">
-            <span class="field-label">Correo (opcional)</span>
+            <span class="field-label">Correo</span>
             <input class="text-input" type="email" name="correo"
-                   placeholder="correo@empresa.com">
+                   placeholder="correo@empresa.com" required>
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Usuario</span>
+            <input class="text-input" type="text" name="usuario"
+                   placeholder="usuario_login" autocomplete="username" required>
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Contrase&ntilde;a</span>
+            <input class="text-input" type="password" name="password"
+                   placeholder="Nueva contrase&ntilde;a" autocomplete="new-password">
           </label>
 
         </div>
@@ -510,6 +522,7 @@
         card.innerHTML = `
           ${rolBadge(user.rol)}
           <span class="user-name">${escapeHtml(user.nombre_completo || 'Usuario sin nombre')}</span>
+          <span class="user-detail"><strong>Usuario:</strong> ${escapeHtml(user.usuario || '—')}</span>
           <span class="user-detail"><strong>Empresa:</strong> ${escapeHtml(user.nombre_empresa || '—')}</span>
           <span class="user-detail"><strong>Estado:</strong> ${escapeHtml(user.estado || 'activo')}</span>
           <span class="user-detail"><strong>Correo:</strong> ${escapeHtml(user.correo || '—')}</span>
@@ -536,6 +549,8 @@
       userForm.empresa_id.value      = user.empresa_id      || '';
       userForm.estado.value          = user.estado          || 'activo';
       userForm.correo.value          = user.correo          || '';
+      userForm.usuario.value         = user.usuario         || '';
+      userForm.password.value        = '';
       renderUsers();
     };
 
@@ -546,6 +561,7 @@
     };
 
     document.getElementById('addButton').addEventListener('click', async () => {
+      if (!userForm.password.value) return alert('Agrega una contraseña para el usuario.');
       try {
         await request(`${USERS_API}/insert`, { method: 'POST', body: JSON.stringify(formData()) });
         clearForm(); await loadData();

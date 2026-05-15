@@ -300,7 +300,7 @@
     </svg>
 
     <!-- Formulario -->
-    <form class="admin-form" action="adminoptions.html">
+    <form class="admin-form" id="adminLoginForm">
 
       <!-- Logo -->
       <div class="logo-mark" aria-hidden="true">
@@ -327,7 +327,7 @@
             </svg>
             <input class="text-input" type="text" name="usuario"
                    placeholder="Ingresa tu usuario"
-                   autocomplete="username">
+                   autocomplete="username" required>
           </div>
         </label>
 
@@ -341,7 +341,7 @@
             </svg>
             <input class="text-input" type="password" name="contrasena"
                    placeholder="Ingresa tu contraseña"
-                   autocomplete="current-password">
+                   autocomplete="current-password" required>
           </div>
         </label>
 
@@ -352,6 +352,33 @@
   </main>
 
   <script>
+    const LOGIN_API = 'http://localhost:3000/api/usuarios/login';
+    const adminLoginForm = document.getElementById('adminLoginForm');
+
+    adminLoginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      try {
+        const response = await fetch(LOGIN_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            usuario: adminLoginForm.usuario.value.trim(),
+            password: adminLoginForm.contrasena.value,
+            roles_permitidos: ['administrador']
+          })
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'No se pudo iniciar sesión');
+
+        localStorage.setItem('techmap_session', JSON.stringify(data.usuario));
+        window.location.href = 'adminoptions.html';
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+
     const pc = document.getElementById('particles');
     for (let i = 0; i < 18; i++) {
       const p = document.createElement('div');
