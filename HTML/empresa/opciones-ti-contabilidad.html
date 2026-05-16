@@ -3,20 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TechMap - Opciones TI/contabilidad</title>
+  <title>TechMap - Opciones TI / Contabilidad</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * {
+    *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
+    :root {
+      --bg:    #3385bd;
+      --dark:  #1b2476;
+      --mid:   #243b97;
+      --blue:  #2b61ad;
+      --light: #58b4ec;
+      --white: #ffffff;
+    }
+
     body {
       min-height: 100vh;
       overflow: hidden;
-      background: #3385bd;
-      color: #ffffff;
-      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
     }
 
     .options-screen {
@@ -24,20 +36,40 @@
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      background: #3385bd;
+      background: linear-gradient(135deg, #1d6093 0%, #3385bd 55%, #58b4ec 100%);
     }
 
+    /* ── Partículas ── */
+    .particles {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(88,180,236,0.15);
+      animation: floatUp var(--d,8s) ease-in-out infinite var(--delay,0s);
+    }
+    @keyframes floatUp {
+      0%   { transform: translateY(0) scale(1);       opacity: 0; }
+      20%  { opacity: 0.8; }
+      80%  { opacity: 0.4; }
+      100% { transform: translateY(-90px) scale(1.1); opacity: 0; }
+    }
+
+    /* ── Ondas ── */
     .waves {
       position: absolute;
       inset: auto 0 0 0;
       width: 100%;
       height: 58%;
+      z-index: 1;
     }
 
-    .waves path {
-      shape-rendering: geometricPrecision;
-    }
-
+    /* ── Contenido ── */
     .content {
       position: relative;
       z-index: 2;
@@ -45,96 +77,299 @@
       min-height: 100vh;
       flex-direction: column;
       align-items: center;
-      padding: clamp(28px, 7vh, 34px) 28px 0;
+      padding: clamp(28px, 7vh, 44px) 28px 0;
       text-align: center;
     }
 
-    .page-title {
-      font-size: clamp(18px, 3.2vw, 19px);
-      font-weight: 400;
-      line-height: 1.2;
-    }
-
-    .divider {
-      width: min(505px, 90vw);
-      height: 2px;
-      margin-top: clamp(26px, 8vh, 27px);
-      border: 0;
-      background: rgba(255, 255, 255, 0.88);
-    }
-
-    .option-actions {
+    /* ── Top bar ── */
+    .top-bar {
       display: grid;
-      width: min(193px, 72vw);
-      gap: 26px;
-      margin-top: clamp(36px, 10vh, 37px);
+      grid-template-columns: 44px 1fr 44px;
+      align-items: center;
+      width: min(560px, calc(100vw - 40px));
+      animation: fadeDown 0.75s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .profile-link {
+      grid-column: 3;
+      justify-self: end;
+      display: flex;
+      width: 38px; height: 38px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      background: rgba(29,96,147,0.35);
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .profile-link:hover {
+      background: rgba(29,96,147,0.6);
+      border-color: rgba(255,255,255,0.38);
+    }
+    .profile-icon {
+      width: 20px; height: 20px;
+      fill: rgba(255,255,255,0.85);
+    }
+
+    /* ── Título ── */
+    .brand-wrap {
+      grid-column: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .page-title {
+      font-size: clamp(17px, 1.8vw, 22px);
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      color: var(--white);
+    }
+
+    .page-subtitle {
+      font-size: clamp(10px, 0.85vw, 12px);
+      font-weight: 300;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.38);
+    }
+
+    /* ── Divisor ── */
+    .divider {
+      width: min(520px, 90vw);
+      height: 1px;
+      margin-top: clamp(18px, 4vh, 24px);
+      border: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+    }
+
+    /* ── Dos badges de rol ── */
+    .role-badges {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeDown 0.75s 0.1s cubic-bezier(.22,1,.36,1) both;
+    }
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      background: rgba(29,96,147,0.4);
+      font-size: 11px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.75);
+      backdrop-filter: blur(6px);
+    }
+    .role-badge svg {
+      width: 12px; height: 12px;
+      stroke: rgba(255,255,255,0.65);
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* ── Menú de opciones ── */
+    .option-actions {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(14px, 2.8vh, 20px);
+      width: min(340px, 82vw);
+      margin-top: clamp(28px, 7vh, 42px);
+      animation: fadeUp 0.8s 0.2s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     .option-button {
+      position: relative;
       display: flex;
-      min-height: 37px;
       align-items: center;
-      justify-content: center;
-      border-radius: 10px;
-      background: rgba(45, 135, 195, 0.82);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-      color: #ffffff;
-      font-size: clamp(18px, 3.3vw, 18px);
-      line-height: 1.1;
+      gap: 14px;
+      min-height: clamp(50px, 5.5vw, 62px);
+      padding: 0 20px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 14px;
+      background: rgba(29,96,147,0.32);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: clamp(14px, 1.3vw, 17px);
+      font-weight: 500;
       text-decoration: none;
-      white-space: nowrap;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      overflow: hidden;
+      transition: background 0.22s, border-color 0.22s, transform 0.18s;
+    }
+
+    /* brillo hover */
+    .option-button::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 30% 50%, rgba(255,255,255,0.08) 0%, transparent 65%);
+      opacity: 0;
+      transition: opacity 0.22s;
+      border-radius: inherit;
+    }
+    /* flecha derecha */
+    .option-button::after {
+      content: "";
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 7px; height: 7px;
+      border-top: 1.5px solid rgba(255,255,255,0.35);
+      border-right: 1.5px solid rgba(255,255,255,0.35);
+      rotate: 45deg;
+      transition: right 0.18s, border-color 0.18s;
     }
 
     .option-button:hover {
-      background: rgba(61, 154, 212, 0.9);
+      background: rgba(38,115,172,0.52);
+      border-color: rgba(255,255,255,0.4);
+      transform: translateX(5px);
+    }
+    .option-button:hover::before { opacity: 1; }
+    .option-button:hover::after {
+      right: 14px;
+      border-color: rgba(255,255,255,0.75);
+    }
+    .option-button:active { transform: translateX(2px); }
+
+    /* Icono SVG */
+    .opt-icon {
+      width: 20px; height: 20px;
+      stroke: rgba(255,255,255,0.75);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
     }
 
     @media (max-width: 560px) {
-      .content {
-        padding-inline: 20px;
-      }
-
-      .waves {
-        height: 60%;
-      }
-
-      .option-actions {
-        width: min(230px, 78vw);
-      }
-
-      .option-button {
-        white-space: normal;
-      }
+      .content { padding-inline: 20px; }
+      .waves { height: 60%; }
+      .option-actions { width: min(280px, 84vw); }
     }
   </style>
 </head>
 <body>
   <main class="options-screen" aria-label="Opciones de TI y contabilidad">
+
+    <!-- Partículas -->
+    <div class="particles" id="particles" aria-hidden="true"></div>
+
+    <!-- Ondas -->
     <svg class="waves" viewBox="0 0 543 348" preserveAspectRatio="none" aria-hidden="true">
-      <path
-        fill="#2b61ad"
-        d="M0 139 C88 147 134 163 201 140 C260 120 308 88 371 130 C429 169 467 173 543 143 L543 348 L0 348 Z"
-      />
-      <path
-        fill="#243b97"
-        d="M0 230 C82 253 126 235 185 197 C242 161 297 214 359 236 C416 256 483 242 543 233 L543 348 L0 348 Z"
-      />
-      <path
-        fill="#1b2476"
-        d="M0 280 C88 286 144 282 223 276 C310 268 384 285 543 266 L543 348 L0 348 Z"
-      />
+      <path fill="#2b61ad"
+        d="M0 139 C88 147 134 163 201 140 C260 120 308 88 371 130
+           C429 169 467 173 543 143 L543 348 L0 348 Z"/>
+      <path fill="#243b97"
+        d="M0 230 C82 253 126 235 185 197 C242 161 297 214 359 236
+           C416 256 483 242 543 233 L543 348 L0 348 Z"/>
+      <path fill="#1b2476"
+        d="M0 280 C88 286 144 282 223 276 C310 268 384 285 543 266
+           L543 348 L0 348 Z"/>
     </svg>
 
     <section class="content">
-      <h1 class="page-title">TI / Contabilidad</h1>
+
+      <!-- Top bar -->
+      <div class="top-bar">
+        <div class="brand-wrap">
+          <h1 class="page-title">TI / Contabilidad</h1>
+          <span class="page-subtitle">Panel de opciones</span>
+        </div>
+        <a class="profile-link" href="perfil-empresa.html" aria-label="Perfil de usuario">
+          <svg class="profile-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 12c2.35 0 4.25-1.9 4.25-4.25S14.35 3.5 12 3.5s-4.25 1.9-4.25 4.25S9.65 12 12 12Zm0 2c-3.95 0-7.5 2.02-7.5 4.25V20h15v-1.75C19.5 16.02 15.95 14 12 14Z"/>
+          </svg>
+        </a>
+      </div>
+
       <hr class="divider">
 
+      <!-- Badges de rol -->
+      <div class="role-badges">
+        <span class="role-badge">
+          <svg viewBox="0 0 24 24">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <path d="M8 21h8M12 17v4"/>
+          </svg>
+          TI
+        </span>
+        <span class="role-badge">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2l3 4h5l-1.5 5L21 14l-9 5-9-5 2.5-3L4 6h5z"/>
+          </svg>
+          Contabilidad
+        </span>
+      </div>
+
+      <!-- Menú -->
       <nav class="option-actions" aria-label="Acciones de TI y contabilidad">
-        <a class="option-button" href="gestionar-equipos.html">Gestionar equipos</a>
-        <a class="option-button" href="consultar-inventario.html">Consultar inventario</a>
-        <a class="option-button" href="historial.html">Ver historial</a>
+
+        <a class="option-button" href="gestionar-equipos.html">
+          <svg class="opt-icon" viewBox="0 0 24 24">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <path d="M8 21h8M12 17v4"/>
+            <path d="M7 8h4M7 11h6"/>
+          </svg>
+          Gestionar equipos
+        </a>
+
+        <a class="option-button" href="consultar-inventario.html">
+          <svg class="opt-icon" viewBox="0 0 24 24">
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+            <path d="M9 12h6M9 16h4"/>
+          </svg>
+          Consultar inventario
+        </a>
+
+        <a class="option-button" href="historial.html">
+          <svg class="opt-icon" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 7v5l3 3"/>
+          </svg>
+          Ver historial
+        </a>
+
       </nav>
     </section>
   </main>
+
+  <script>
+    const pc = document.getElementById('particles');
+    for (let i = 0; i < 16; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = 5 + Math.random() * 16;
+      p.style.cssText = `
+        left:${Math.random()*100}%;
+        bottom:${Math.random()*48}%;
+        width:${size}px; height:${size}px;
+        --d:${6+Math.random()*8}s;
+        --delay:-${Math.random()*8}s;
+      `;
+      pc.appendChild(p);
+    }
+  </script>
 </body>
 </html>
