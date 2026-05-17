@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechMap - Inventario</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg:    #3385bd;
+      --dark:  #1b2476;
+      --mid:   #2e4aa9;
+      --blue:  #2b61ad;
+      --light: #58b4ec;
+      --navy:  #11174f;
+      --white: #ffffff;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+    }
+
+    .inventory-screen {
+      min-height: 100vh;
+      padding: 16px clamp(14px, 3vw, 24px) 32px;
+      background: linear-gradient(135deg, #1d6093 0%, #3385bd 55%, #58b4ec 100%);
+      position: relative;
+    }
+
+    /* ── Top bar ── */
+    .top-bar {
+      display: grid;
+      grid-template-columns: 42px 1fr 42px;
+      align-items: center;
+      max-width: 960px;
+      margin: 0 auto;
+      animation: fadeDown 0.7s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .back-link {
+      display: inline-flex;
+      width: 38px; height: 38px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      background: rgba(29,96,147,0.35);
+      color: var(--white);
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .back-link:hover {
+      background: rgba(29,96,147,0.6);
+      border-color: rgba(255,255,255,0.38);
+    }
+    .back-icon {
+      width: 20px; height: 20px;
+      fill: none;
+      stroke: rgba(255,255,255,0.85);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 2;
+    }
+
+    .title-wrap {
+      text-align: center;
+    }
+    .page-title {
+      font-size: clamp(17px, 1.8vw, 22px);
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+    .page-sub {
+      font-size: clamp(10px, 0.85vw, 12px);
+      font-weight: 300;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.38);
+      margin-top: 3px;
+    }
+
+    .profile-link {
+      justify-self: end;
+      display: inline-flex;
+      width: 38px; height: 38px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      background: rgba(29,96,147,0.35);
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .profile-link:hover {
+      background: rgba(29,96,147,0.6);
+      border-color: rgba(255,255,255,0.38);
+    }
+    .profile-icon {
+      width: 20px; height: 20px;
+      fill: rgba(255,255,255,0.85);
+    }
+
+    /* ── Divisor ── */
+    .divider {
+      max-width: 960px;
+      height: 1px;
+      margin: 12px auto 16px;
+      border: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+    }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 180px;
+      gap: 10px;
+      max-width: 960px;
+      margin: 0 auto 14px;
+      animation: fadeDown 0.7s 0.1s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    .search-wrap {
+      position: relative;
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px; top: 50%;
+      transform: translateY(-50%);
+      width: 16px; height: 16px;
+      stroke: rgba(255,255,255,0.38);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      pointer-events: none;
+    }
+
+    .search-input,
+    .type-filter {
+      height: 36px;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 9px;
+      outline: none;
+      background: rgba(17,23,79,0.55);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: clamp(12px, 1vw, 13px);
+      padding: 0 12px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+    .search-input { padding-left: 36px; }
+    .search-input::placeholder { color: rgba(255,255,255,0.38); }
+    .search-input:focus,
+    .type-filter:focus {
+      border-color: rgba(88,180,236,0.6);
+      box-shadow: 0 0 0 3px rgba(88,180,236,0.14);
+    }
+    .type-filter option {
+      background: #1a3a6a;
+      color: var(--white);
+    }
+
+    /* ── Contador ── */
+    .record-count {
+      max-width: 960px;
+      margin: 0 auto 8px;
+      font-size: 11px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.38);
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Tabla ── */
+    .table-wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      overflow-x: auto;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 14px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      animation: fadeUp 0.75s 0.15s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    table {
+      width: 100%;
+      min-width: 720px;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th, td {
+      height: 40px;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding: 0 10px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    th:last-child, td:last-child { border-right: 0; }
+    tr:last-child td { border-bottom: 0; }
+
+    thead th {
+      background: rgba(17,23,79,0.75);
+      color: rgba(255,255,255,0.75);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    thead th:first-child { border-radius: 13px 0 0 0; }
+    thead th:last-child  { border-radius: 0 13px 0 0; }
+
+    tbody td {
+      background: rgba(29,96,147,0.22);
+      color: rgba(255,255,255,0.85);
+      font-size: clamp(11px, 0.95vw, 13px);
+    }
+    tbody tr:hover td {
+      background: rgba(45,107,169,0.42);
+    }
+
+    /* Badge de estado */
+    .status-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .status-activo  { background: rgba(22,110,82,0.4);  border: 1px solid rgba(80,200,140,0.4);  color: #7ddfb0; }
+    .status-baja    { background: rgba(160,40,40,0.35); border: 1px solid rgba(220,80,80,0.4);   color: #f4a0a0; }
+    .status-default { background: rgba(80,80,120,0.35); border: 1px solid rgba(140,140,200,0.3); color: rgba(255,255,255,0.7); }
+
+    .id-column     { width: 56px; }
+    .serial-column { width: 110px; }
+    .type-column   { width: 90px; }
+    .status-column { width: 100px; }
+    .date-column   { width: 110px; }
+
+    /* ── Mensaje vacío ── */
+    .empty-message {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      background: rgba(29,96,147,0.2);
+      color: rgba(255,255,255,0.45);
+      text-align: center;
+      font-size: 13px;
+      font-weight: 300;
+      backdrop-filter: blur(8px);
+    }
+
+    @media (max-width: 620px) {
+      .toolbar { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="inventory-screen" aria-label="Consultar inventario">
+
+    <!-- Top bar -->
+    <header class="top-bar">
+      <a class="back-link" href="opciones-ti-contabilidad.html" aria-label="Regresar">
+        <svg class="back-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </a>
+      <div class="title-wrap">
+        <h1 class="page-title">Inventario</h1>
+        <p class="page-sub">Consulta de equipos</p>
+      </div>
+      <a class="profile-link" href="perfil-empresa.html" aria-label="Perfil">
+        <svg class="profile-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 12c2.35 0 4.25-1.9 4.25-4.25S14.35 3.5 12 3.5s-4.25 1.9-4.25 4.25S9.65 12 12 12Zm0 2c-3.95 0-7.5 2.02-7.5 4.25V20h15v-1.75C19.5 16.02 15.95 14 12 14Z"/>
+        </svg>
+      </a>
+    </header>
+
+    <hr class="divider">
+
+    <!-- Toolbar -->
+    <section class="toolbar" aria-label="Filtros de inventario">
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input class="search-input" type="search" id="searchInput"
+               placeholder="Buscar por dispositivo, serie, usuario o estado">
+      </div>
+      <select class="type-filter" id="typeFilter" aria-label="Filtrar por tipo">
+        <option value="todos">Todos los tipos</option>
+      </select>
+    </section>
+
+    <p class="record-count" id="recordCount" aria-live="polite"></p>
+
+    <!-- Tabla -->
+    <section class="table-wrap" aria-label="Tabla de inventario">
+      <table>
+        <thead>
+          <tr>
+            <th class="id-column">ID</th>
+            <th>Dispositivo</th>
+            <th class="serial-column">Núm. Serie</th>
+            <th class="type-column">Tipo</th>
+            <th>Usuario asignado</th>
+            <th class="status-column">Estado</th>
+            <th class="date-column">Fecha compra</th>
+          </tr>
+        </thead>
+        <tbody id="inventoryTable"></tbody>
+      </table>
+    </section>
+
+    <p class="empty-message" id="emptyMessage" hidden>
+      No hay equipos que coincidan con la búsqueda.
+    </p>
+
+  </main>
+
+  <script>
+    const STORAGE_KEY    = 'techmap_equipos_empresa';
+    const inventoryTable = document.getElementById('inventoryTable');
+    const emptyMessage   = document.getElementById('emptyMessage');
+    const searchInput    = document.getElementById('searchInput');
+    const typeFilter     = document.getElementById('typeFilter');
+    const recordCount    = document.getElementById('recordCount');
+
+    const fallbackEquipment = [
+      { id:'EQ-001', nombre:'Dell Latitude',     tipo:'laptop',    numero_serie:'88181111', encargado_equipo:'Norman Reedus',   estado:'Activo', fecha_compra:'2026-07-14' },
+      { id:'EQ-002', nombre:'HP LaserJet',        tipo:'impresora', numero_serie:'88181112', encargado_equipo:'Denisse Valadez', estado:'Activo', fecha_compra:'2026-08-14' },
+      { id:'EQ-003', nombre:'Teclado Logitech',   tipo:'teclado',   numero_serie:'88181113', encargado_equipo:'Andrea Monreal',  estado:'Activo', fecha_compra:'2026-09-14' },
+      { id:'EQ-004', nombre:'Mouse Microsoft',    tipo:'mouse',     numero_serie:'88181114', encargado_equipo:'Draco Malfoy',    estado:'Activo', fecha_compra:'2026-10-14' },
+      { id:'EQ-005', nombre:'Monitor LG',         tipo:'monitor',   numero_serie:'88181115', encargado_equipo:'Higgs Monaghan',  estado:'Activo', fecha_compra:'2026-04-14' }
+    ];
+
+    const escapeHtml = (v) => String(v ?? '').replace(/[&<>"']/g, (c) =>
+      ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
+
+    const formatId = (id, i) => {
+      const n = String(id || '').match(/\d+/)?.[0];
+      return n ? n.padStart(3,'0').slice(-3) : String(i+1).padStart(3,'0');
+    };
+
+    const formatDate = (v) => {
+      if (!v) return '—';
+      const [y,m,d] = v.split('-');
+      return y && m && d ? `${d}/${m}/${y}` : v;
+    };
+
+    const statusBadge = (estado) => {
+      const val = (estado || 'Activo').toLowerCase();
+      const cls = val === 'activo' ? 'status-activo' : val.includes('baja') ? 'status-baja' : 'status-default';
+      return `<span class="status-badge ${cls}">${escapeHtml(estado || 'Activo')}</span>`;
+    };
+
+    const loadEquipment = () => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        return saved.length ? saved : fallbackEquipment;
+      } catch { return fallbackEquipment; }
+    };
+
+    const equipment = loadEquipment();
+
+    const populateTypeFilter = () => {
+      const types = [...new Set(equipment.map(e => e.tipo).filter(Boolean))].sort();
+      types.forEach(t => {
+        const o = document.createElement('option');
+        o.value = t.toLowerCase();
+        o.textContent = t.charAt(0).toUpperCase() + t.slice(1);
+        typeFilter.appendChild(o);
+      });
+    };
+
+    const matchesSearch = (item, q) => [
+      item.nombre, item.numero_serie, item.tipo,
+      item.encargado_equipo, item.estado || 'Activo',
+      item.area, item.ubicacion_fisica
+    ].join(' ').toLowerCase().includes(q);
+
+    const renderInventory = () => {
+      const q    = searchInput.value.trim().toLowerCase();
+      const type = typeFilter.value;
+      const list = equipment.filter(item => {
+        const typeOk = type === 'todos' || String(item.tipo || '').toLowerCase() === type;
+        return typeOk && matchesSearch(item, q);
+      });
+
+      inventoryTable.innerHTML = list.map((item, i) => `
+        <tr>
+          <td>${formatId(item.id, i)}</td>
+          <td style="text-align:left">${escapeHtml(item.nombre || 'Dispositivo')}</td>
+          <td>${escapeHtml(item.numero_serie || '—')}</td>
+          <td>${escapeHtml(item.tipo || '—')}</td>
+          <td>${escapeHtml(item.encargado_equipo || '—')}</td>
+          <td>${statusBadge(item.estado)}</td>
+          <td>${escapeHtml(formatDate(item.fecha_compra))}</td>
+        </tr>
+      `).join('');
+
+      emptyMessage.hidden = list.length > 0;
+      recordCount.textContent = list.length > 0
+        ? `${list.length} equipo${list.length !== 1 ? 's' : ''} encontrado${list.length !== 1 ? 's' : ''}`
+        : '';
+    };
+
+    searchInput.addEventListener('input', renderInventory);
+    typeFilter.addEventListener('change', renderInventory);
+    populateTypeFilter();
+    renderInventory();
+  </script>
+</body>
+</html>

@@ -488,6 +488,7 @@
 
   <script>
     const STORAGE_KEY    = 'techmap_equipos_empresa';
+    const HISTORY_KEY    = 'techmap_historial_empresa';
     const equipmentList  = document.getElementById('equipmentList');
     const equipmentForm  = document.getElementById('equipmentForm');
     let selectedEquipmentId = null;
@@ -511,6 +512,27 @@
     const saveEquipment = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(equipment));
     const formData = () => Object.fromEntries(new FormData(equipmentForm).entries());
     const createId = () => `EQ-${Date.now().toString().slice(-6)}`;
+    const currentUser = () => {
+      try {
+        return JSON.parse(localStorage.getItem('techmap_session') || '{}').nombre_completo || 'Usuario empresa';
+      } catch {
+        return 'Usuario empresa';
+      }
+    };
+
+    const addHistory = (tipo, item, detalle) => {
+      const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+      history.unshift({
+        id: `MOV-${Date.now()}`,
+        fecha: new Date().toISOString(),
+        tipo,
+        equipo: item?.nombre || 'Equipo',
+        numero_serie: item?.numero_serie || '',
+        usuario: currentUser(),
+        detalle
+      });
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 80)));
+    };
 
     const renderEquipment = () => {
       equipmentList.innerHTML = '';
@@ -555,19 +577,25 @@
 
     document.getElementById('addButton').addEventListener('click', () => {
       if (!equipmentForm.reportValidity()) return;
-      equipment = [{ id: createId(), ...formData() }, ...equipment];
+      const newEquipment = { id: createId(), ...formData() };
+      equipment = [newEquipment, ...equipment];
+      addHistory('Alta', newEquipment, `Se agrego el equipo ${newEquipment.nombre || 'sin nombre'}.`);
       saveEquipment(); clearForm();
     });
     document.getElementById('editButton').addEventListener('click', () => {
       if (!selectedEquipmentId) return alert('Selecciona un equipo para editar.');
       if (!equipmentForm.reportValidity()) return;
-      equipment = equipment.map((item) => item.id === selectedEquipmentId ? { ...item, ...formData() } : item);
+      const updatedEquipment = { ...equipment.find((item) => item.id === selectedEquipmentId), ...formData() };
+      equipment = equipment.map((item) => item.id === selectedEquipmentId ? updatedEquipment : item);
+      addHistory('Modificacion', updatedEquipment, `Se actualizaron los datos de ${updatedEquipment.nombre || 'un equipo'}.`);
       saveEquipment(); clearForm();
     });
     document.getElementById('deleteButton').addEventListener('click', () => {
       if (!selectedEquipmentId) return alert('Selecciona un equipo para eliminar.');
       if (!confirm('¿Eliminar este equipo?')) return;
+      const deletedEquipment = equipment.find((item) => item.id === selectedEquipmentId);
       equipment = equipment.filter((item) => item.id !== selectedEquipmentId);
+      addHistory('Eliminacion', deletedEquipment, `Se elimino el equipo ${deletedEquipment?.nombre || 'seleccionado'}.`);
       saveEquipment(); clearForm();
     });
     document.getElementById('clearButton').addEventListener('click', clearForm);
