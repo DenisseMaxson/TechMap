@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechMap - Perfil empresa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg:    #3385bd;
+      --dark:  #1b2476;
+      --mid:   #243b97;
+      --blue:  #2b61ad;
+      --light: #58b4ec;
+      --white: #ffffff;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+    }
+
+    .profile-screen {
+      position: relative;
+      min-height: 100vh;
+      overflow: hidden;
+      background: linear-gradient(135deg, #1d6093 0%, #3385bd 55%, #58b4ec 100%);
+    }
+
+    /* ── Partículas ── */
+    .particles {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(88,180,236,0.15);
+      animation: floatUp var(--d,8s) ease-in-out infinite var(--delay,0s);
+    }
+    @keyframes floatUp {
+      0%   { transform: translateY(0) scale(1);       opacity: 0; }
+      20%  { opacity: 0.8; }
+      80%  { opacity: 0.4; }
+      100% { transform: translateY(-90px) scale(1.1); opacity: 0; }
+    }
+
+    /* ── Ondas ── */
+    .waves {
+      position: absolute;
+      inset: auto 0 0 0;
+      width: 100%;
+      height: 58%;
+      z-index: 1;
+    }
+
+    /* ── Contenido ── */
+    .content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+      align-items: center;
+      padding: clamp(20px, 5vh, 36px) 24px 0;
+      text-align: center;
+    }
+
+    /* ── Top bar ── */
+    .top-bar {
+      display: grid;
+      grid-template-columns: 42px 1fr 42px;
+      align-items: center;
+      width: min(520px, calc(100vw - 40px));
+      animation: fadeDown 0.75s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.85); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .back-link {
+      display: inline-flex;
+      width: 38px; height: 38px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      background: rgba(29,96,147,0.35);
+      color: var(--white);
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .back-link:hover {
+      background: rgba(29,96,147,0.6);
+      border-color: rgba(255,255,255,0.38);
+    }
+    .back-icon {
+      width: 20px; height: 20px;
+      fill: none;
+      stroke: rgba(255,255,255,0.85);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 2;
+    }
+
+    .page-title {
+      font-size: clamp(17px, 1.8vw, 22px);
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      text-align: center;
+    }
+
+    /* ── Divisor ── */
+    .divider {
+      width: min(520px, calc(100vw - 40px));
+      height: 1px;
+      margin-top: 12px;
+      border: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+    }
+
+    /* ── Avatar con anillo ── */
+    .avatar-wrap {
+      position: relative;
+      margin-top: clamp(22px, 5vh, 36px);
+      animation: scaleIn 0.7s 0.1s cubic-bezier(.22,1,.36,1) both;
+    }
+    .avatar-ring {
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(88,180,236,0.35);
+      animation: rotateSlow 12s linear infinite;
+    }
+    .avatar-ring::before {
+      content: "";
+      position: absolute;
+      top: -2px; left: 50%;
+      transform: translateX(-50%);
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(88,180,236,0.75);
+    }
+    @keyframes rotateSlow {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    .avatar {
+      position: relative;
+      display: flex;
+      width: clamp(96px, 13vw, 120px);
+      height: clamp(96px, 13vw, 120px);
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      background: rgba(29,96,147,0.35);
+      backdrop-filter: blur(8px);
+    }
+    .avatar-icon {
+      width: 50%;
+      height: 50%;
+      fill: rgba(255,255,255,0.9);
+    }
+
+    /* ── Info ── */
+    .profile-info {
+      animation: fadeUp 0.75s 0.2s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    .profile-name {
+      margin-top: clamp(14px, 3vh, 20px);
+      font-size: clamp(18px, 2.2vw, 26px);
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    /* Badge de rol dinámico */
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: clamp(11px, 1vw, 13px);
+      font-weight: 400;
+      backdrop-filter: blur(6px);
+    }
+    .role-badge svg {
+      width: 13px; height: 13px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .role-ti          { background: rgba(22,110,82,0.4);  border: 1px solid rgba(80,200,140,0.4);  color: #7ddfb0; }
+    .role-contabilidad{ background: rgba(100,60,160,0.4); border: 1px solid rgba(170,120,220,0.4); color: #c8a0f0; }
+    .role-jefe_area   { background: rgba(160,100,20,0.4); border: 1px solid rgba(220,170,60,0.4);  color: #f5d76e; }
+    .role-default     { background: rgba(29,96,147,0.4);  border: 1px solid rgba(88,180,236,0.4);  color: rgba(255,255,255,0.8); }
+
+    /* ── Card de datos ── */
+    .profile-card {
+      width: min(400px, calc(100vw - 42px));
+      margin-top: clamp(18px, 4vh, 26px);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 16px;
+      background: rgba(29,96,147,0.25);
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      animation: fadeUp 0.75s 0.3s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    .profile-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .profile-row:last-child { border-bottom: none; }
+
+    .row-icon {
+      width: 16px; height: 16px;
+      stroke: rgba(88,180,236,0.8);
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
+    .row-content { flex: 1; text-align: left; min-width: 0; }
+    .profile-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.38);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .profile-value {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.88);
+      overflow-wrap: anywhere;
+      margin-top: 1px;
+    }
+
+    /* ── Acciones ── */
+    .actions {
+      display: grid;
+      width: min(400px, calc(100vw - 42px));
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 10px;
+      margin-top: 14px;
+      animation: fadeUp 0.75s 0.4s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    .action-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      background: rgba(29,96,147,0.45);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: clamp(13px, 1.1vw, 15px);
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      transition: background 0.2s, border-color 0.2s, transform 0.18s;
+    }
+    .action-button svg {
+      width: 16px; height: 16px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .action-button:hover {
+      background: rgba(38,115,172,0.65);
+      border-color: rgba(255,255,255,0.38);
+      transform: translateY(-2px);
+    }
+    .action-button:active { transform: translateY(0); }
+
+    .logout-button {
+      background: rgba(160,40,40,0.3);
+      border-color: rgba(220,80,80,0.35);
+      color: rgba(255,200,200,0.9);
+    }
+    .logout-button:hover {
+      background: rgba(160,40,40,0.5) !important;
+      border-color: rgba(220,80,80,0.6) !important;
+    }
+
+    @media (max-width: 520px) {
+      body { overflow-y: auto; }
+      .profile-screen { overflow-y: auto; }
+      .actions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="profile-screen" aria-label="Perfil de empresa">
+
+    <!-- Partículas -->
+    <div class="particles" id="particles" aria-hidden="true"></div>
+
+    <!-- Ondas -->
+    <svg class="waves" viewBox="0 0 543 348" preserveAspectRatio="none" aria-hidden="true">
+      <path fill="#2b61ad"
+        d="M0 139 C88 147 134 163 201 140 C260 120 308 88 371 130
+           C429 169 467 173 543 143 L543 348 L0 348 Z"/>
+      <path fill="#243b97"
+        d="M0 230 C82 253 126 235 185 197 C242 161 297 214 359 236
+           C416 256 483 242 543 233 L543 348 L0 348 Z"/>
+      <path fill="#1b2476"
+        d="M0 280 C88 286 144 282 223 276 C310 268 384 285 543 266
+           L543 348 L0 348 Z"/>
+    </svg>
+
+    <section class="content">
+
+      <!-- Top bar -->
+      <header class="top-bar">
+        <a class="back-link" href="opciones-ti-contabilidad.html" id="backLink" aria-label="Regresar">
+          <svg class="back-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19 12H5M12 5l-7 7 7 7"/>
+          </svg>
+        </a>
+        <h1 class="page-title">Perfil</h1>
+        <span aria-hidden="true"></span>
+      </header>
+
+      <hr class="divider">
+
+      <!-- Avatar -->
+      <div class="avatar-wrap" aria-hidden="true">
+        <div class="avatar-ring"></div>
+        <div class="avatar">
+          <svg class="avatar-icon" viewBox="0 0 24 24">
+            <path d="M12 12c2.35 0 4.25-1.9 4.25-4.25S14.35 3.5 12 3.5s-4.25 1.9-4.25 4.25S9.65 12 12 12Zm0 2c-3.95 0-7.5 2.02-7.5 4.25V20h15v-1.75C19.5 16.02 15.95 14 12 14Z"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="profile-info">
+        <h2 class="profile-name" id="profileName">Usuario empresa</h2>
+        <span class="role-badge role-default" id="roleBadge">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <span id="profileRole">Rol</span>
+        </span>
+      </div>
+
+      <!-- Card de datos -->
+      <div class="profile-card" aria-label="Datos del usuario">
+
+        <div class="profile-row">
+          <svg class="row-icon" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M9 3v18"/>
+          </svg>
+          <div class="row-content">
+            <span class="profile-label">Empresa</span>
+            <span class="profile-value" id="profileCompany">Sin empresa</span>
+          </div>
+        </div>
+
+        <div class="profile-row">
+          <svg class="row-icon" viewBox="0 0 24 24">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+          <div class="row-content">
+            <span class="profile-label">Usuario</span>
+            <span class="profile-value" id="profileUser">Sin usuario</span>
+          </div>
+        </div>
+
+        <div class="profile-row">
+          <svg class="row-icon" viewBox="0 0 24 24">
+            <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/>
+            <path d="M22 6l-10 7L2 6"/>
+          </svg>
+          <div class="row-content">
+            <span class="profile-label">Correo</span>
+            <span class="profile-value" id="profileEmail">Sin correo</span>
+          </div>
+        </div>
+
+        <div class="profile-row">
+          <svg class="row-icon" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 8v4l3 3"/>
+          </svg>
+          <div class="row-content">
+            <span class="profile-label">Estado</span>
+            <span class="profile-value" id="profileStatus">Activo</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Acciones -->
+      <div class="actions">
+        <a class="action-button" id="optionsLink" href="opciones-ti-contabilidad.html">
+          <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+          Opciones
+        </a>
+        <button class="action-button logout-button" type="button" id="logoutButton">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Cerrar sesión
+        </button>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    // Partículas
+    const pc = document.getElementById('particles');
+    for (let i = 0; i < 14; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = 5 + Math.random() * 16;
+      p.style.cssText = `
+        left:${Math.random()*100}%;
+        bottom:${Math.random()*48}%;
+        width:${size}px; height:${size}px;
+        --d:${6+Math.random()*8}s;
+        --delay:-${Math.random()*8}s;
+      `;
+      pc.appendChild(p);
+    }
+
+    // Sesión
+    const roleLabels = {
+      ti:            'TI',
+      contabilidad:  'Contabilidad',
+      jefe_area:     'Jefe de área',
+      administrador: 'Administrador'
+    };
+    const roleClasses = {
+      ti:            'role-ti',
+      contabilidad:  'role-contabilidad',
+      jefe_area:     'role-jefe_area',
+    };
+
+    const getSession = () => {
+      try { return JSON.parse(localStorage.getItem('techmap_session') || '{}'); }
+      catch { return {}; }
+    };
+
+    const session     = getSession();
+    const isJefeArea  = session.rol === 'jefe_area';
+    const returnPage  = isJefeArea ? 'opciones-jefe-area.html' : 'opciones-ti-contabilidad.html';
+
+    document.getElementById('backLink').href    = returnPage;
+    document.getElementById('optionsLink').href = returnPage;
+
+    document.getElementById('profileName').textContent    = session.nombre_completo || 'Usuario empresa';
+    document.getElementById('profileRole').textContent    = roleLabels[session.rol] || 'Rol no disponible';
+    document.getElementById('profileCompany').textContent = session.nombre_empresa  || 'Sin empresa';
+    document.getElementById('profileUser').textContent    = session.usuario         || 'Sin usuario';
+    document.getElementById('profileEmail').textContent   = session.correo          || 'Sin correo';
+    document.getElementById('profileStatus').textContent  = session.estado          || 'Activo';
+
+    // Color del badge según rol
+    const badge = document.getElementById('roleBadge');
+    const cls   = roleClasses[session.rol] || 'role-default';
+    badge.classList.remove('role-default');
+    badge.classList.add(cls);
+
+    document.getElementById('logoutButton').addEventListener('click', () => {
+      localStorage.removeItem('techmap_session');
+      window.location.href = 'companylogin.html';
+    });
+  </script>
+</body>
+</html>
