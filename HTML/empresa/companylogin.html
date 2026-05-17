@@ -40,13 +40,7 @@
     }
 
     /* ── Estrellas ── */
-    .stars {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-      overflow: hidden;
-      pointer-events: none;
-    }
+    .stars { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
     .star {
       position: absolute;
       background: rgba(255,255,255,0.55);
@@ -59,34 +53,52 @@
     }
 
     /* ── Ondas ── */
-    .waves {
-      position: absolute;
-      inset: auto 0 0 0;
-      width: 100%;
-      height: 52%;
-      z-index: 1;
-    }
+    .waves { position: absolute; inset: auto 0 0 0; width: 100%; height: 52%; z-index: 1; }
 
     /* ── Brillo horizonte ── */
     .horizon-glow {
-      position: absolute;
-      left: 0; right: 0;
-      bottom: 51.5%;
-      height: 2px;
+      position: absolute; left: 0; right: 0; bottom: 51.5%; height: 2px;
       background: linear-gradient(90deg, transparent 0%, rgba(88,180,236,0.6) 30%, rgba(150,210,240,0.9) 50%, rgba(88,180,236,0.6) 70%, transparent 100%);
-      z-index: 2;
-      filter: blur(1px);
+      z-index: 2; filter: blur(1px);
+    }
+
+    /* ── Botón regreso ── */
+    .back-link {
+      position: absolute;
+      z-index: 4;
+      top: clamp(16px, 3vh, 24px);
+      left: clamp(18px, 4vw, 28px);
+      display: flex;
+      width: 38px; height: 38px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 10px;
+      background: rgba(29,96,147,0.35);
+      text-decoration: none;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: background 0.2s, border-color 0.2s;
+      animation: fadeDown 0.75s cubic-bezier(.22,1,.36,1) both;
+    }
+    .back-link:hover {
+      background: rgba(29,96,147,0.6);
+      border-color: rgba(255,255,255,0.45);
+    }
+    .back-icon {
+      width: 20px; height: 20px;
+      fill: none;
+      stroke: rgba(255,255,255,0.85);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 2;
     }
 
     /* ── Contenido ── */
     .content {
-      position: relative;
-      z-index: 3;
-      display: flex;
-      min-height: 100vh;
-      flex-direction: column;
-      align-items: center;
-      padding-top: clamp(32px, 7vh, 52px);
+      position: relative; z-index: 3;
+      display: flex; min-height: 100vh; flex-direction: column;
+      align-items: center; padding-top: clamp(32px, 7vh, 52px);
       text-align: center;
       animation: fadeDown 0.85s cubic-bezier(.22,1,.36,1) both;
     }
@@ -94,230 +106,110 @@
       from { opacity: 0; transform: translateY(-22px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-
-    /* ── Logo pequeño ── */
-    .logo-mark {
-      position: relative;
-      width: clamp(52px, 6vw, 68px);
-      height: clamp(44px, 5.2vw, 58px);
-      margin-bottom: 16px;
-      filter: drop-shadow(0 0 12px rgba(88,180,236,0.5));
-    }
-    .monitor {
-      position: absolute;
-      left: 5%; top: 2%;
-      width: 92%; height: 80%;
-      border: 2.5px solid var(--white);
-      border-radius: 3px;
-    }
-    .monitor::after {
-      content: "";
-      position: absolute;
-      right: 8%; bottom: 10%;
-      width: 5%; height: 7%;
-      background: var(--white);
-      border-radius: 1px;
-    }
-    .stand {
-      position: absolute;
-      left: 39%; top: 80%;
-      width: 24%; height: 14%;
-      background: var(--white);
-    }
-    .base {
-      position: absolute;
-      left: 27%; top: 92%;
-      width: 50%; height: 8%;
-      background: var(--white);
-      border-radius: 4px 4px 0 0;
-    }
-    .pin {
-      position: absolute;
-      left: 35%; top: 12%;
-      width: 32%; height: 48%;
-    }
-    .pin::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border: 2.5px solid var(--white);
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-    }
-    .pin::after {
-      content: "";
-      position: absolute;
-      left: 38%; top: 26%;
-      width: 22%; height: 18%;
-      border: 2px solid var(--white);
-      border-radius: 50%;
-    }
-
-    /* ── Textos ── */
-    .company-title {
-      font-size: clamp(22px, 2.6vw, 30px);
-      font-weight: 700;
-      letter-spacing: -0.3px;
-      color: var(--white);
-      text-shadow: 0 2px 20px rgba(30,114,167,0.4);
-    }
-
-    .divider {
-      width: min(380px, 72vw);
-      height: 1px;
-      margin-top: clamp(22px, 5vh, 30px);
-      border: 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
-    }
-
-    .login-label {
-      margin-top: clamp(10px, 2vh, 16px);
-      font-size: clamp(12px, 1.1vw, 15px);
-      font-weight: 300;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.45);
-    }
-
-    /* ── Botones de rol ── */
-    .role-actions {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 240px));
-      justify-content: center;
-      gap: clamp(20px, 5vw, 48px);
-      width: min(600px, calc(100vw - 48px));
-      margin-top: clamp(40px, 9vh, 64px);
-      animation: fadeUp 0.85s 0.25s cubic-bezier(.22,1,.36,1) both;
-    }
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(22px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
+    /* ── Logo ── */
+    .logo-mark {
+      position: relative; width: clamp(52px, 6vw, 68px); height: clamp(44px, 5.2vw, 58px);
+      margin-bottom: 16px; filter: drop-shadow(0 0 12px rgba(88,180,236,0.5));
+    }
+    .monitor { position: absolute; left: 5%; top: 2%; width: 92%; height: 80%; border: 2.5px solid var(--white); border-radius: 3px; }
+    .monitor::after { content: ""; position: absolute; right: 8%; bottom: 10%; width: 5%; height: 7%; background: var(--white); border-radius: 1px; }
+    .stand { position: absolute; left: 39%; top: 80%; width: 24%; height: 14%; background: var(--white); }
+    .base  { position: absolute; left: 27%; top: 92%; width: 50%; height: 8%;  background: var(--white); border-radius: 4px 4px 0 0; }
+    .pin   { position: absolute; left: 35%; top: 12%; width: 32%; height: 48%; }
+    .pin::before { content: ""; position: absolute; inset: 0; border: 2.5px solid var(--white); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+    .pin::after  { content: ""; position: absolute; left: 38%; top: 26%; width: 22%; height: 18%; border: 2px solid var(--white); border-radius: 50%; }
+
+    /* ── Textos ── */
+    .company-title {
+      font-size: clamp(22px, 2.6vw, 30px); font-weight: 700; letter-spacing: -0.3px;
+      color: var(--white); text-shadow: 0 2px 20px rgba(30,114,167,0.4);
+    }
+    .divider {
+      width: min(380px, 72vw); height: 1px; margin-top: clamp(22px, 5vh, 30px);
+      border: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    }
+    .login-label {
+      margin-top: clamp(10px, 2vh, 16px); font-size: clamp(12px, 1.1vw, 15px);
+      font-weight: 300; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.45);
+    }
+
+    /* ── Botones de rol ── */
+    .role-actions {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 240px));
+      justify-content: center; gap: clamp(20px, 5vw, 48px);
+      width: min(600px, calc(100vw - 48px)); margin-top: clamp(40px, 9vh, 64px);
+      animation: fadeUp 0.85s 0.25s cubic-bezier(.22,1,.36,1) both;
+    }
     .role-button {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      min-height: clamp(110px, 13vw, 148px);
-      padding: 20px 16px;
-      border: 1.5px solid rgba(255,255,255,0.22);
-      border-radius: 18px;
-      background: rgba(29,96,147,0.35);
-      color: var(--white);
-      font-family: 'Outfit', Arial, sans-serif;
-      text-decoration: none;
-      cursor: pointer;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      overflow: hidden;
+      position: relative; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 10px;
+      min-height: clamp(110px, 13vw, 148px); padding: 20px 16px;
+      border: 1.5px solid rgba(255,255,255,0.22); border-radius: 18px;
+      background: rgba(29,96,147,0.35); color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif; text-decoration: none; cursor: pointer;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); overflow: hidden;
       transition: background 0.25s, border-color 0.25s, transform 0.2s;
     }
-
-    /* brillo hover */
     .role-button::before {
-      content: "";
-      position: absolute;
-      inset: 0;
+      content: ""; position: absolute; inset: 0;
       background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.1) 0%, transparent 70%);
-      opacity: 0;
-      transition: opacity 0.25s;
-      border-radius: inherit;
+      opacity: 0; transition: opacity 0.25s; border-radius: inherit;
     }
-    /* línea superior acento */
     .role-button::after {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2.5px;
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2.5px;
       background: linear-gradient(90deg, rgba(88,180,236,0.7), rgba(150,220,255,0.9), rgba(88,180,236,0.7));
-      border-radius: 18px 18px 0 0;
-      opacity: 0;
-      transition: opacity 0.25s;
+      border-radius: 18px 18px 0 0; opacity: 0; transition: opacity 0.25s;
     }
-
-    .role-button:hover {
-      background: rgba(38,152,213,0.42);
-      border-color: rgba(255,255,255,0.45);
-      transform: translateY(-4px);
-    }
+    .role-button:hover { background: rgba(38,152,213,0.42); border-color: rgba(255,255,255,0.45); transform: translateY(-4px); }
     .role-button:hover::before,
     .role-button:hover::after { opacity: 1; }
     .role-button:active { transform: translateY(-1px); }
 
-    /* Icono SVG */
     .role-icon {
-      width: clamp(30px, 3.2vw, 40px);
-      height: clamp(30px, 3.2vw, 40px);
-      stroke: rgba(255,255,255,0.85);
-      fill: none;
-      stroke-width: 1.5;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      transition: transform 0.2s;
+      width: clamp(30px, 3.2vw, 40px); height: clamp(30px, 3.2vw, 40px);
+      stroke: rgba(255,255,255,0.85); fill: none; stroke-width: 1.5;
+      stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s;
     }
     .role-button:hover .role-icon { transform: scale(1.08); }
-
-    .role-name {
-      font-size: clamp(15px, 1.5vw, 19px);
-      font-weight: 600;
-      color: var(--white);
-    }
-
-    .role-sub {
-      font-size: clamp(10px, 0.85vw, 12px);
-      font-weight: 300;
-      color: rgba(255,255,255,0.48);
-      letter-spacing: 0.04em;
-    }
+    .role-name { font-size: clamp(15px, 1.5vw, 19px); font-weight: 600; color: var(--white); }
+    .role-sub  { font-size: clamp(10px, 0.85vw, 12px); font-weight: 300; color: rgba(255,255,255,0.48); letter-spacing: 0.04em; }
 
     @media (max-width: 680px) {
       body { overflow-y: auto; }
       .company-screen { min-height: 100vh; overflow-y: auto; }
       .content { padding-top: 36px; }
       .waves { height: 58%; }
-      .role-actions {
-        grid-template-columns: minmax(0, 280px);
-        gap: 16px;
-        margin-top: 36px;
-      }
-      .role-button {
-        min-height: 80px;
-        flex-direction: row;
-        padding: 0 24px;
-        gap: 16px;
-      }
+      .role-actions { grid-template-columns: minmax(0, 280px); gap: 16px; margin-top: 36px; }
+      .role-button { min-height: 80px; flex-direction: row; padding: 0 24px; gap: 16px; }
     }
-
   </style>
 </head>
 <body>
   <main class="company-screen" aria-label="Seleccionar tipo de acceso de empresa">
 
-    <!-- Estrellas -->
     <div class="stars" id="stars" aria-hidden="true"></div>
 
-    <!-- Ondas -->
     <svg class="waves" viewBox="0 0 1366 420" preserveAspectRatio="none" aria-hidden="true">
-      <path fill="#1e72a7"
-        d="M0 76 C154 101 293 126 453 115 C625 104 748 46 899 70
-           C1035 91 1134 97 1366 82 L1366 420 L0 420 Z"/>
-      <path fill="#2698d5"
-        d="M0 190 C181 178 372 170 509 196 C670 227 785 262 977 254
-           C1137 247 1245 225 1366 204 L1366 420 L0 420 Z"/>
-      <path fill="#58b4ec"
-        d="M0 318 C170 293 324 284 491 302 C679 321 768 372 956 374
-           C1115 376 1231 350 1366 322 L1366 420 L0 420 Z"/>
+      <path fill="#1e72a7" d="M0 76 C154 101 293 126 453 115 C625 104 748 46 899 70 C1035 91 1134 97 1366 82 L1366 420 L0 420 Z"/>
+      <path fill="#2698d5" d="M0 190 C181 178 372 170 509 196 C670 227 785 262 977 254 C1137 247 1245 225 1366 204 L1366 420 L0 420 Z"/>
+      <path fill="#58b4ec" d="M0 318 C170 293 324 284 491 302 C679 321 768 372 956 374 C1115 376 1231 350 1366 322 L1366 420 L0 420 Z"/>
     </svg>
 
     <div class="horizon-glow" aria-hidden="true"></div>
 
-    <!-- Contenido -->
-    <section class="content">
+    <!-- Botón regreso al login general -->
+    <a class="back-link" href="../inicio/login.html" aria-label="Volver al login principal">
+      <svg class="back-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M19 12H5M12 5l-7 7 7 7"/>
+      </svg>
+    </a>
 
-      <!-- Logo -->
+    <section class="content">
       <div class="logo-mark" aria-hidden="true">
         <div class="monitor"></div>
         <div class="pin"></div>
@@ -329,11 +221,8 @@
       <hr class="divider">
       <p class="login-label">Iniciar sesión como</p>
 
-      <!-- Roles -->
       <nav class="role-actions" aria-label="Seleccionar rol de empresa">
-
-        <!-- TI / Contabilidad -->
-        <a class="role-button" href="../empresa/login-ti-contabilidad.html" aria-label="Entrar como TI o Contabilidad">
+        <a class="role-button" href="login-ti-contabilidad.html" aria-label="Entrar como TI o Contabilidad">
           <svg class="role-icon" viewBox="0 0 24 24" aria-hidden="true">
             <rect x="2" y="3" width="20" height="14" rx="2"/>
             <path d="M8 21h8M12 17v4"/>
@@ -343,8 +232,7 @@
           <span class="role-sub">Gestión de inventario</span>
         </a>
 
-        <!-- Jefe de área -->
-        <a class="role-button" href="../empresa/login-jefe-area.html" aria-label="Entrar como Jefe de área">
+        <a class="role-button" href="login-jefe-area.html" aria-label="Entrar como Jefe de área">
           <svg class="role-icon" viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="8" r="4"/>
             <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
@@ -353,9 +241,7 @@
           <span class="role-name">Jefe de área</span>
           <span class="role-sub">Autorización de bajas</span>
         </a>
-
       </nav>
-
     </section>
   </main>
 
