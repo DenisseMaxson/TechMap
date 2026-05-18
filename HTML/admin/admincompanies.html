@@ -484,13 +484,37 @@
       renderCompanies();
     };
 
-    document.getElementById('addButton').addEventListener('click', async () => {
+    /*document.getElementById('addButton').addEventListener('click', async () => {
       try {
         await request(`${API_URL}/insert`, { method: 'POST', body: JSON.stringify(formData()) });
         clearForm();
         await loadCompanies();
       } catch (error) { alert(error.message); }
+    });*/
+
+    // Dentro del <script> de admincompanies.html
+document.getElementById('addButton').addEventListener('click', async () => {
+  // 1. Recuperamos los datos que guardamos en el login real del Sr. Gerardo
+  const session = JSON.parse(sessionStorage.getItem('techmap_session') || '{}');
+
+  // 2. Empaquetamos los datos del formulario e inyectamos su rol de 'administrador'
+  const payload = {
+    ...formData(),
+    rol_operador: session.rol // Esto le avisa a tu backend que sí es Gerardo
+  };
+
+  try {
+    // 3. Hacemos la petición real al servidor
+    await request(`${API_URL}/insert`, { 
+      method: 'POST', 
+      body: JSON.stringify(payload) 
     });
+    clearForm();
+    await loadCompanies();
+  } catch (error) {
+    alert(error.message); // Si una empresa se quisiera registrar sola, el back lo rebota y aquí sale el error
+  }
+});
 
     document.getElementById('editButton').addEventListener('click', async () => {
       if (!selectedCompanyId) return alert('Selecciona una empresa para editar.');

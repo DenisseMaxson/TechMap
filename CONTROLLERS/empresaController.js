@@ -18,13 +18,34 @@ const getAll = (req, res) => {
   });
 };
 
-const insert = (req, res) => {
+/*const insert = (req, res) => {
   const { nombre, rfc, ubicacion, telefono, correo_contacto } = req.body;
   const sql = 'CALL sp_insert_empresa(?,?,?,?,?)';
   db.query(sql, [nombre, rfc, ubicacion, telefono, correo_contacto], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
     const id = result?.[0]?.[0]?.id;
     res.json({ mensaje: 'Empresa registrada', id });
+  });
+};*/
+
+// CONTROLLERS/empresaController.js
+const insert = (req, res) => {
+  // Recibimos los datos del formulario + el rol de quien está picando el botón
+  const { nombre, rfc, ubicacion, telefono, correo_contacto, rol_operador } = req.body;
+
+  // REGLA DE NEGOCIO CRÍTICA: Bloquear si no es administrador
+  if (rol_operador !== 'administrador') {
+    return res.status(403).json({ 
+      error: 'Acceso denegado. Operación exclusiva del Administrador Principal.' 
+    });
+  }
+
+  // Si sí es el administrador, el procedimiento sp_insert_empresa se ejecuta normal
+  const sql = 'CALL sp_insert_empresa(?,?,?,?,?)';
+  db.query(sql, [nombre, rfc, ubicacion, telefono, correo_contacto], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    const id = result?.[0]?.[0]?.id;
+    res.json({ mensaje: 'Empresa registrada con éxito por el Administrador', id });
   });
 };
 
