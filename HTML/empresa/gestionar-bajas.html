@@ -4,251 +4,328 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TechMap - Gestionar bajas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * {
+    *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
+    :root {
+      --bg:    #3385bd;
+      --dark:  #1b2476;
+      --mid:   #243b97;
+      --blue:  #2b61ad;
+      --light: #58b4ec;
+      --white: #ffffff;
+    }
+
     body {
       min-height: 100vh;
-      background: #3385bd;
-      color: #ffffff;
-      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
     }
 
     .bajas-screen {
       min-height: 100vh;
-      padding: 15px clamp(14px, 3vw, 28px) 18px;
-      background: #3385bd;
+      padding: 16px clamp(14px, 3vw, 24px) 32px;
+      background: linear-gradient(135deg, #1d6093 0%, #3385bd 55%, #58b4ec 100%);
     }
 
+    /* ── Top bar ── */
     .top-bar {
-      display: flex;
+      display: grid;
+      grid-template-columns: 42px 1fr 42px;
       align-items: center;
-      justify-content: space-between;
-      max-width: 920px;
-      margin: 0 auto 22px;
+      max-width: 960px;
+      margin: 0 auto;
+      animation: fadeDown 0.7s cubic-bezier(.22,1,.36,1) both;
     }
-
-    .page-title {
-      font-size: clamp(18px, 3vw, 21px);
-      font-weight: 400;
-      line-height: 1.2;
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     .back-link {
       display: inline-flex;
-      width: 34px;
-      height: 34px;
-      align-items: center;
-      justify-content: center;
-      color: #ffffff;
-      text-decoration: none;
+      width: 38px; height: 38px;
+      align-items: center; justify-content: center;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      background: rgba(29,96,147,0.35);
+      color: var(--white); text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
     }
-
+    .back-link:hover {
+      background: rgba(29,96,147,0.6);
+      border-color: rgba(255,255,255,0.38);
+    }
     .back-icon {
-      width: 31px;
-      height: 31px;
-      fill: none;
-      stroke: currentColor;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-width: 3;
+      width: 20px; height: 20px; fill: none;
+      stroke: rgba(255,255,255,0.85);
+      stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;
     }
 
+    .title-wrap { text-align: center; }
+    .page-title {
+      font-size: clamp(17px, 1.8vw, 22px);
+      font-weight: 700; letter-spacing: -0.2px;
+    }
+    .page-sub {
+      font-size: clamp(10px, 0.85vw, 12px); font-weight: 300;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: rgba(255,255,255,0.38); margin-top: 3px;
+    }
+
+    .profile-link {
+      justify-self: end;
+      display: inline-flex; width: 38px; height: 38px;
+      align-items: center; justify-content: center;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      background: rgba(29,96,147,0.35);
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .profile-link:hover {
+      background: rgba(29,96,147,0.6);
+      border-color: rgba(255,255,255,0.38);
+    }
+    .profile-icon { width: 20px; height: 20px; fill: rgba(255,255,255,0.85); }
+
+    /* ── Divisor ── */
+    .divider {
+      max-width: 960px; height: 1px;
+      margin: 12px auto 16px; border: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+    }
+
+    /* ── Toolbar ── */
     .toolbar {
-      display: flex;
-      max-width: 920px;
-      margin: 0 auto 10px;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 10px;
+      display: flex; max-width: 960px;
+      margin: 0 auto 12px;
+      align-items: center; justify-content: space-between; gap: 10px;
+      animation: fadeDown 0.7s 0.1s cubic-bezier(.22,1,.36,1) both;
     }
 
-    .filter-select,
-    .reset-button {
-      min-height: 31px;
-      border: 0;
-      border-radius: 7px;
-      background: rgba(18, 33, 98, 0.9);
-      color: #ffffff;
-      font-size: 13px;
-      outline: 0;
-    }
+    .toolbar-left { display: flex; align-items: center; gap: 8px; }
 
     .filter-select {
-      padding: 0 9px;
+      height: 36px;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 9px; outline: none;
+      background: rgba(17,23,79,0.55);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: clamp(12px,1vw,13px);
+      padding: 0 12px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .filter-select:focus {
+      border-color: rgba(88,180,236,0.6);
+      box-shadow: 0 0 0 3px rgba(88,180,236,0.14);
+    }
+    .filter-select option { background: #1a3a6a; color: var(--white); }
+
+    .record-count {
+      font-size: 11px; font-weight: 300;
+      color: rgba(255,255,255,0.38); letter-spacing: 0.06em;
     }
 
     .reset-button {
-      padding: 0 12px;
-      cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      height: 36px; padding: 0 14px;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 9px;
+      background: rgba(80,80,120,0.3);
+      color: rgba(255,255,255,0.65);
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: 12px; font-weight: 500; cursor: pointer;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
     }
-
+    .reset-button svg {
+      width: 13px; height: 13px;
+      stroke: currentColor; fill: none;
+      stroke-width: 1.8; stroke-linecap: round;
+    }
     .reset-button:hover {
-      background: #172a79;
+      background: rgba(80,80,120,0.55);
+      color: var(--white);
+      border-color: rgba(255,255,255,0.3);
     }
 
+    /* ── Tabla ── */
     .table-wrap {
-      max-width: 920px;
-      margin: 0 auto;
+      max-width: 960px; margin: 0 auto;
       overflow-x: auto;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      background: rgba(18, 33, 98, 0.28);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 14px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      animation: fadeUp 0.75s 0.15s cubic-bezier(.22,1,.36,1) both;
     }
 
     table {
-      width: 100%;
-      min-width: 690px;
-      border-collapse: collapse;
-      table-layout: fixed;
+      width: 100%; min-width: 690px;
+      border-collapse: collapse; table-layout: fixed;
     }
 
-    th,
-    td {
-      height: 35px;
-      border-right: 1px solid rgba(255, 255, 255, 0.38);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.28);
-      padding: 0 8px;
-      text-align: center;
-      vertical-align: middle;
+    th, td {
+      height: 40px;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding: 0 10px; text-align: center; vertical-align: middle;
     }
-
-    th:last-child,
-    td:last-child {
-      border-right: 0;
-    }
+    th:last-child, td:last-child { border-right: 0; }
+    tr:last-child td { border-bottom: 0; }
 
     thead th {
-      height: 40px;
-      background: #11174f;
-      color: #ffffff;
-      font-size: 12px;
-      font-weight: 400;
+      background: rgba(17,23,79,0.75);
+      color: rgba(255,255,255,0.72);
+      font-size: 11px; font-weight: 500;
+      letter-spacing: 0.1em; text-transform: uppercase;
     }
+    thead th:first-child { border-radius: 13px 0 0 0; }
+    thead th:last-child  { border-radius: 0 13px 0 0; }
 
     tbody td {
-      background: rgba(31, 78, 128, 0.76);
-      color: #ffffff;
-      font-size: 12px;
+      background: rgba(29,96,147,0.22);
+      color: rgba(255,255,255,0.85);
+      font-size: clamp(11px,0.95vw,13px);
     }
 
-    tbody tr.is-approved td {
-      background: rgba(39, 117, 105, 0.78);
-    }
+    /* Filas por estado */
+    tbody tr.is-approved td { background: rgba(22,110,82,0.28); }
+    tbody tr.is-rejected td { background: rgba(160,40,40,0.28); }
+    tbody tr:hover td { filter: brightness(1.15); }
 
-    tbody tr.is-rejected td {
-      background: rgba(109, 55, 83, 0.78);
+    /* ── Badge de estado ── */
+    .status-badge {
+      display: inline-block; padding: 2px 10px;
+      border-radius: 20px; font-size: 10px; font-weight: 500;
+      letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap;
     }
+    .badge-pendiente { background: rgba(160,130,20,0.35); border: 1px solid rgba(220,190,60,0.4); color: #f5d76e; }
+    .badge-aprobada  { background: rgba(22,110,82,0.4);  border: 1px solid rgba(80,200,140,0.4); color: #7ddfb0; }
+    .badge-rechazada { background: rgba(160,40,40,0.35); border: 1px solid rgba(220,80,80,0.4);  color: #f4a0a0; }
 
-    .id-column {
-      width: 56px;
-    }
-
-    .serial-column {
-      width: 92px;
-    }
-
-    .status-column {
-      width: 78px;
-    }
-
-    .actions-column {
-      width: 118px;
-    }
-
-    .actions {
-      display: flex;
-      justify-content: center;
-      gap: 18px;
-    }
+    /* ── Botones de acción ── */
+    .actions { display: flex; justify-content: center; gap: 10px; }
 
     .icon-button {
-      display: inline-flex;
-      width: 22px;
-      height: 22px;
-      align-items: center;
-      justify-content: center;
-      border: 0;
-      border-radius: 50%;
-      background: #ffffff;
-      color: #1b5390;
-      cursor: pointer;
+      display: inline-flex; width: 28px; height: 28px;
+      align-items: center; justify-content: center;
+      border-radius: 8px; border: none; cursor: pointer;
+      transition: transform 0.15s, opacity 0.2s;
     }
+    .icon-button:hover:not(:disabled) { transform: scale(1.12); }
+    .icon-button:disabled { opacity: 0.3; cursor: not-allowed; }
 
     .icon-button svg {
-      width: 15px;
-      height: 15px;
-      fill: none;
-      stroke: currentColor;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-width: 3;
+      width: 14px; height: 14px; fill: none;
+      stroke: currentColor; stroke-linecap: round;
+      stroke-linejoin: round; stroke-width: 2.2;
     }
 
-    .icon-button:hover {
-      background: #dff1ff;
+    .icon-button.approve {
+      background: rgba(22,110,82,0.45);
+      border: 1px solid rgba(80,200,140,0.45);
+      color: #7ddfb0;
     }
-
+    .icon-button.approve:hover:not(:disabled) {
+      background: rgba(22,110,82,0.7);
+    }
     .icon-button.reject {
-      color: #10235b;
+      background: rgba(160,40,40,0.4);
+      border: 1px solid rgba(220,80,80,0.4);
+      color: #f4a0a0;
+    }
+    .icon-button.reject:hover:not(:disabled) {
+      background: rgba(160,40,40,0.65);
     }
 
+    .id-column      { width: 56px; }
+    .serial-column  { width: 100px; }
+    .status-column  { width: 110px; }
+    .actions-column { width: 100px; }
+
+    /* ── Mensaje vacío ── */
     .empty-message {
-      padding: 18px;
-      background: rgba(31, 78, 128, 0.76);
-      color: #ffffff;
-      text-align: center;
-      font-size: 14px;
+      max-width: 960px; margin: 0 auto;
+      padding: 20px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      background: rgba(29,96,147,0.2);
+      color: rgba(255,255,255,0.45);
+      text-align: center; font-size: 13px; font-weight: 300;
+      backdrop-filter: blur(8px);
     }
 
     @media (max-width: 560px) {
-      .bajas-screen {
-        padding-inline: 10px;
-      }
-
-      .top-bar,
-      .toolbar {
-        max-width: 100%;
-      }
-
-      .toolbar {
-        justify-content: space-between;
-      }
+      .bajas-screen { padding-inline: 10px; }
+      .toolbar { flex-wrap: wrap; }
     }
   </style>
 </head>
 <body>
   <main class="bajas-screen" aria-label="Gestionar bajas">
+
+    <!-- Top bar -->
     <header class="top-bar">
-      <h1 class="page-title">Gestionar bajas</h1>
       <a class="back-link" href="opciones-jefe-area.html" aria-label="Regresar">
-        <svg class="back-icon" viewBox="0 0 32 32" aria-hidden="true">
-          <path d="M12 8 5 15l7 7" />
-          <path d="M6 15h14a7 7 0 1 1 0 14" />
+        <svg class="back-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </a>
+      <div class="title-wrap">
+        <h1 class="page-title">Gestionar bajas</h1>
+        <p class="page-sub">Solicitudes de baja de equipos</p>
+      </div>
+      <a class="profile-link" href="perfil-empresa.html" aria-label="Perfil">
+        <svg class="profile-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 12c2.35 0 4.25-1.9 4.25-4.25S14.35 3.5 12 3.5s-4.25 1.9-4.25 4.25S9.65 12 12 12Zm0 2c-3.95 0-7.5 2.02-7.5 4.25V20h15v-1.75C19.5 16.02 15.95 14 12 14Z"/>
         </svg>
       </a>
     </header>
 
+    <hr class="divider">
+
+    <!-- Toolbar -->
     <section class="toolbar" aria-label="Filtros de bajas">
-      <select class="filter-select" id="statusFilter" aria-label="Filtrar por estado">
-        <option value="todos">Todos</option>
-        <option value="pendiente">Pendientes</option>
-        <option value="aprobada">Aprobadas</option>
-        <option value="rechazada">Rechazadas</option>
-      </select>
-      <button class="reset-button" type="button" id="resetButton">Restaurar</button>
+      <div class="toolbar-left">
+        <select class="filter-select" id="statusFilter" aria-label="Filtrar por estado">
+          <option value="todos">Todos los estados</option>
+          <option value="pendiente">Pendientes</option>
+          <option value="aprobada">Aprobadas</option>
+          <option value="rechazada">Rechazadas</option>
+        </select>
+        <span class="record-count" id="recordCount" aria-live="polite"></span>
+      </div>
+      <button class="reset-button" type="button" id="resetButton">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+          <path d="M3 3v5h5"/>
+        </svg>
+        Restaurar
+      </button>
     </section>
 
+    <!-- Tabla -->
     <section class="table-wrap" aria-label="Solicitudes de baja">
       <table>
         <thead>
           <tr>
             <th class="id-column">ID</th>
             <th>Dispositivo</th>
-            <th class="serial-column">Num. Serie</th>
+            <th class="serial-column">Núm. Serie</th>
             <th>Solicitante</th>
             <th class="status-column">Estado</th>
             <th class="actions-column">Acciones</th>
@@ -256,89 +333,88 @@
         </thead>
         <tbody id="bajasTable"></tbody>
       </table>
-      <p class="empty-message" id="emptyMessage" hidden>No hay solicitudes con ese estado.</p>
     </section>
+
+    <p class="empty-message" id="emptyMessage" hidden>
+      No hay solicitudes con ese estado.
+    </p>
+
   </main>
 
   <script>
     const initialRequests = [
-      { id: '001', dispositivo: 'Dell Latitude', serie: '88181111', solicitante: 'Tyler Joseph', estado: 'pendiente' },
-      { id: '002', dispositivo: 'HP LaserJet', serie: '88181112', solicitante: 'Denisse Valadez', estado: 'pendiente' },
-      { id: '003', dispositivo: 'Teclado Logitech', serie: '88181113', solicitante: 'Andrea Monreal', estado: 'pendiente' },
-      { id: '004', dispositivo: 'Mouse Microsoft', serie: '88181114', solicitante: 'Draco Malfoy', estado: 'pendiente' },
-      { id: '005', dispositivo: 'Monitor LG', serie: '88181115', solicitante: 'Higgs Monaghan', estado: 'pendiente' },
-      { id: '006', dispositivo: 'Dell Latitude', serie: '88181116', solicitante: 'Rhea Ripley', estado: 'pendiente' },
-      { id: '007', dispositivo: 'Dell Latitude', serie: '88181117', solicitante: 'Danhausen', estado: 'pendiente' }
+      { id:'001', dispositivo:'Dell Latitude',    serie:'88181111', solicitante:'Tyler Joseph',    estado:'pendiente' },
+      { id:'002', dispositivo:'HP LaserJet',       serie:'88181112', solicitante:'Denisse Valadez', estado:'pendiente' },
+      { id:'003', dispositivo:'Teclado Logitech',  serie:'88181113', solicitante:'Andrea Monreal',  estado:'pendiente' },
+      { id:'004', dispositivo:'Mouse Microsoft',   serie:'88181114', solicitante:'Draco Malfoy',    estado:'pendiente' },
+      { id:'005', dispositivo:'Monitor LG',        serie:'88181115', solicitante:'Higgs Monaghan',  estado:'pendiente' },
+      { id:'006', dispositivo:'Dell Latitude',     serie:'88181116', solicitante:'Rhea Ripley',     estado:'pendiente' },
+      { id:'007', dispositivo:'Dell Latitude',     serie:'88181117', solicitante:'Danhausen',       estado:'pendiente' }
     ];
 
-    let requests = initialRequests.map((request) => ({ ...request }));
-    const tableBody = document.getElementById('bajasTable');
-    const emptyMessage = document.getElementById('emptyMessage');
+    let requests = initialRequests.map(r => ({ ...r }));
+    const tableBody   = document.getElementById('bajasTable');
+    const emptyMsg    = document.getElementById('emptyMessage');
     const statusFilter = document.getElementById('statusFilter');
+    const recordCount  = document.getElementById('recordCount');
 
-    const labels = {
-      pendiente: 'Activo',
-      aprobada: 'Baja aprobada',
-      rechazada: 'Rechazada'
-    };
-
-    const rowClass = {
-      pendiente: '',
-      aprobada: 'is-approved',
-      rechazada: 'is-rejected'
-    };
+    const labels   = { pendiente:'Pendiente', aprobada:'Aprobada', rechazada:'Rechazada' };
+    const rowClass = { pendiente:'', aprobada:'is-approved', rechazada:'is-rejected' };
+    const badgeCls = { pendiente:'badge-pendiente', aprobada:'badge-aprobada', rechazada:'badge-rechazada' };
 
     const setStatus = (id, estado) => {
-      requests = requests.map((request) => (
-        request.id === id ? { ...request, estado } : request
-      ));
+      requests = requests.map(r => r.id === id ? { ...r, estado } : r);
       renderRequests();
     };
 
-    const actionButtons = (request) => {
-      const disabled = request.estado !== 'pendiente' ? 'disabled' : '';
+    const actionButtons = (r) => {
+      const dis = r.estado !== 'pendiente' ? 'disabled' : '';
       return `
         <div class="actions">
-          <button class="icon-button approve" type="button" data-action="aprobada" data-id="${request.id}" ${disabled} aria-label="Aprobar baja de ${request.dispositivo}">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" /></svg>
+          <button class="icon-button approve" type="button"
+                  data-action="aprobada" data-id="${r.id}" ${dis}
+                  aria-label="Aprobar baja de ${r.dispositivo}">
+            <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
           </button>
-          <button class="icon-button reject" type="button" data-action="rechazada" data-id="${request.id}" ${disabled} aria-label="Rechazar baja de ${request.dispositivo}">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12" /><path d="M18 6 6 18" /></svg>
+          <button class="icon-button reject" type="button"
+                  data-action="rechazada" data-id="${r.id}" ${dis}
+                  aria-label="Rechazar baja de ${r.dispositivo}">
+            <svg viewBox="0 0 24 24"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg>
           </button>
-        </div>
-      `;
+        </div>`;
     };
 
     const renderRequests = () => {
-      const selectedStatus = statusFilter.value;
-      const visibleRequests = selectedStatus === 'todos'
-        ? requests
-        : requests.filter((request) => request.estado === selectedStatus);
+      const sel = statusFilter.value;
+      const list = sel === 'todos' ? requests : requests.filter(r => r.estado === sel);
 
-      tableBody.innerHTML = visibleRequests.map((request) => `
-        <tr class="${rowClass[request.estado]}">
-          <td>${request.id}</td>
-          <td>${request.dispositivo}</td>
-          <td>${request.serie}</td>
-          <td>${request.solicitante}</td>
-          <td>${labels[request.estado]}</td>
-          <td>${actionButtons(request)}</td>
+      tableBody.innerHTML = list.map(r => `
+        <tr class="${rowClass[r.estado]}">
+          <td>${r.id}</td>
+          <td style="text-align:left">${r.dispositivo}</td>
+          <td>${r.serie}</td>
+          <td>${r.solicitante}</td>
+          <td><span class="status-badge ${badgeCls[r.estado]}">${labels[r.estado]}</span></td>
+          <td>${actionButtons(r)}</td>
         </tr>
       `).join('');
 
-      emptyMessage.hidden = visibleRequests.length > 0;
+      emptyMsg.hidden = list.length > 0;
+      recordCount.textContent = list.length > 0
+        ? `${list.length} solicitud${list.length !== 1 ? 'es' : ''}`
+        : '';
     };
 
-    tableBody.addEventListener('click', (event) => {
-      const button = event.target.closest('button[data-action]');
-      if (!button || button.disabled) return;
-      setStatus(button.dataset.id, button.dataset.action);
+    tableBody.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn || btn.disabled) return;
+      setStatus(btn.dataset.id, btn.dataset.action);
     });
 
     statusFilter.addEventListener('change', renderRequests);
 
     document.getElementById('resetButton').addEventListener('click', () => {
-      requests = initialRequests.map((request) => ({ ...request }));
+      requests = initialRequests.map(r => ({ ...r }));
       statusFilter.value = 'todos';
       renderRequests();
     });
