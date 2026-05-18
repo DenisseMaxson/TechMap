@@ -321,7 +321,7 @@
     /* ── Botones de acción ── */
     .actions {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
       margin-top: 12px;
     }
@@ -353,8 +353,6 @@
     .action-button.btn-edit   { border-color: rgba(88,180,236,0.35); }
     .action-button.btn-add    { background: rgba(22,110,82,0.35);  border-color: rgba(80,200,140,0.35); }
     .action-button.btn-add:hover { background: rgba(22,110,82,0.55); }
-    .action-button.btn-delete { background: rgba(160,40,40,0.3);   border-color: rgba(220,80,80,0.35); }
-    .action-button.btn-delete:hover { background: rgba(160,40,40,0.5); }
     .action-button.btn-clear  { background: rgba(80,80,120,0.28);  border-color: rgba(140,140,200,0.3); }
 
     .btn-icon {
@@ -498,10 +496,6 @@
           <svg class="btn-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
           Agregar
         </button>
-        <button class="action-button btn-delete" type="button" id="deleteButton">
-          <svg class="btn-icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-          Eliminar
-        </button>
         <button class="action-button btn-clear" type="button" id="clearButton">
           <svg class="btn-icon" viewBox="0 0 24 24"><path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
           Limpiar
@@ -641,15 +635,6 @@
       addHistory('Modificacion', updatedEquipment, `Se actualizaron los datos de ${updatedEquipment.nombre || 'un equipo'}.`);
       saveEquipment(); clearForm();
       showToast('Equipo actualizado correctamente.');
-    });
-    document.getElementById('deleteButton').addEventListener('click', () => {
-      if (!selectedEquipmentId) return showToast('Selecciona un equipo para eliminar.', 'error');
-      if (!confirm('¿Eliminar este equipo?')) return;
-      const deletedEquipment = equipment.find((item) => item.id === selectedEquipmentId);
-      equipment = equipment.filter((item) => item.id !== selectedEquipmentId);
-      addHistory('Eliminacion', deletedEquipment, `Se elimino el equipo ${deletedEquipment?.nombre || 'seleccionado'}.`);
-      saveEquipment(); clearForm();
-      showToast('Equipo eliminado correctamente.');
     });
     document.getElementById('clearButton').addEventListener('click', clearForm);
     renderEquipment();
