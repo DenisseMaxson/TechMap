@@ -321,6 +321,27 @@
       .waves { height: 56%; }
       .form-card { padding: 20px 18px; }
     }
+    .company-form.was-validated :invalid {
+      box-shadow: 0 0 0 3px rgba(255,110,110,0.32);
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 10;
+      max-width: min(340px, calc(100vw - 36px));
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      background: rgba(132,42,58,0.94);
+      color: #ffffff;
+      padding: 13px 15px;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 <body>
@@ -410,6 +431,8 @@
     </form>
   </main>
 
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
   <script>
     // Partículas
     const pc = document.getElementById('particles');
@@ -430,9 +453,23 @@
     // Login
     const LOGIN_API = 'http://localhost:3000/api/usuarios/login';
     const loginForm = document.getElementById('loginForm');
+    const toast = document.getElementById('toast');
+    let toastTimer;
+
+    const showToast = (message) => {
+      clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.classList.add('show');
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+    };
 
     loginForm.addEventListener('submit', async (event) => {
       event.preventDefault();
+      loginForm.classList.add('was-validated');
+      if (!loginForm.checkValidity()) {
+        showToast('Ingresa usuario y contraseña.');
+        return;
+      }
       try {
         const response = await fetch(LOGIN_API, {
           method: 'POST',
@@ -448,7 +485,7 @@
         localStorage.setItem('techmap_session', JSON.stringify(data.usuario));
         window.location.href = 'opciones-jefe-area.html';
       } catch (error) {
-        alert(error.message);
+        showToast(error.message);
       }
     });
   </script>

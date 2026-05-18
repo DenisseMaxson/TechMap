@@ -293,6 +293,31 @@
       color: var(--white);
     }
 
+    .equipment-form.was-validated :invalid {
+      border-color: rgba(255,110,110,0.8);
+      box-shadow: 0 0 0 3px rgba(255,110,110,0.18);
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 10;
+      max-width: min(340px, calc(100vw - 36px));
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      background: rgba(17,23,79,0.94);
+      color: #ffffff;
+      padding: 13px 15px;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: rgba(22,110,82,0.94); }
+    .toast.error { background: rgba(132,42,58,0.94); }
+
     /* ── Botones de acción ── */
     .actions {
       display: grid;
@@ -486,12 +511,16 @@
     </section>
   </main>
 
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
   <script>
     const STORAGE_KEY    = 'techmap_equipos_empresa';
     const HISTORY_KEY    = 'techmap_historial_empresa';
     const equipmentList  = document.getElementById('equipmentList');
     const equipmentForm  = document.getElementById('equipmentForm');
+    const toast          = document.getElementById('toast');
     let selectedEquipmentId = null;
+    let toastTimer;
 
     const sampleEquipment = [
       { id:'EQ-001', nombre:'Dell Latitude',   tipo:'Portatil', numero_serie:'SN-DELL-001', modelo:'Latitude 5520',  direccion_mac:'AA:BB:CC:11:22:33', direccion_ip:'192.168.1.25', area:'TI',          ubicacion_fisica:'Oficina TI Piso 2', encargado_equipo:'Tyler Joseph',   fecha_compra:'2022-03-15', lugar_compra:'Dell Mexico' },
@@ -534,6 +563,22 @@
       localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 80)));
     };
 
+    const showToast = (message, type = 'success') => {
+      clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+    };
+
+    const validateForm = () => {
+      equipmentForm.classList.add('was-validated');
+      if (!equipmentForm.checkValidity()) {
+        showToast('Revisa los campos marcados antes de continuar.', 'error');
+        return false;
+      }
+      return true;
+    };
+
     const renderEquipment = () => {
       equipmentList.innerHTML = '';
       if (!equipment.length) {
@@ -573,30 +618,38 @@
       renderEquipment();
     };
 
-    const clearForm = () => { selectedEquipmentId = null; equipmentForm.reset(); renderEquipment(); };
+    const clearForm = () => {
+      selectedEquipmentId = null;
+      equipmentForm.reset();
+      equipmentForm.classList.remove('was-validated');
+      renderEquipment();
+    };
 
     document.getElementById('addButton').addEventListener('click', () => {
-      if (!equipmentForm.reportValidity()) return;
+      if (!validateForm()) return;
       const newEquipment = { id: createId(), ...formData() };
       equipment = [newEquipment, ...equipment];
       addHistory('Alta', newEquipment, `Se agrego el equipo ${newEquipment.nombre || 'sin nombre'}.`);
       saveEquipment(); clearForm();
+      showToast('Equipo agregado correctamente.');
     });
     document.getElementById('editButton').addEventListener('click', () => {
-      if (!selectedEquipmentId) return alert('Selecciona un equipo para editar.');
-      if (!equipmentForm.reportValidity()) return;
+      if (!selectedEquipmentId) return showToast('Selecciona un equipo para editar.', 'error');
+      if (!validateForm()) return;
       const updatedEquipment = { ...equipment.find((item) => item.id === selectedEquipmentId), ...formData() };
       equipment = equipment.map((item) => item.id === selectedEquipmentId ? updatedEquipment : item);
       addHistory('Modificacion', updatedEquipment, `Se actualizaron los datos de ${updatedEquipment.nombre || 'un equipo'}.`);
       saveEquipment(); clearForm();
+      showToast('Equipo actualizado correctamente.');
     });
     document.getElementById('deleteButton').addEventListener('click', () => {
-      if (!selectedEquipmentId) return alert('Selecciona un equipo para eliminar.');
+      if (!selectedEquipmentId) return showToast('Selecciona un equipo para eliminar.', 'error');
       if (!confirm('¿Eliminar este equipo?')) return;
       const deletedEquipment = equipment.find((item) => item.id === selectedEquipmentId);
       equipment = equipment.filter((item) => item.id !== selectedEquipmentId);
       addHistory('Eliminacion', deletedEquipment, `Se elimino el equipo ${deletedEquipment?.nombre || 'seleccionado'}.`);
       saveEquipment(); clearForm();
+      showToast('Equipo eliminado correctamente.');
     });
     document.getElementById('clearButton').addEventListener('click', clearForm);
     renderEquipment();
