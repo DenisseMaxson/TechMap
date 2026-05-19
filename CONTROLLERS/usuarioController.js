@@ -7,7 +7,7 @@ const getAll = (req, res) => {
            u.estado, u.fecha_creacion, u.ultimo_acceso, e.nombre AS nombre_empresa
     FROM usuarios u
     LEFT JOIN empresas e ON u.empresa_id = e.id
-    WHERE u.estado = "activo"`;
+    WHERE u.estado = "activo" AND u.rol <> "administrador"`;
   db.query(sql, (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);

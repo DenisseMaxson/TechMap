@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TechMap - Gestionar Usuarios</title>
+  <title>TechMap - Registrar Usuarios</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -344,7 +344,7 @@
   </style>
 </head>
 <body>
-  <main class="users-screen" aria-label="Gestionar usuarios">
+  <main class="users-screen" aria-label="Registrar usuarios de empresa">
 
     <!-- Ondas -->
     <svg class="waves" viewBox="0 0 1366 420" preserveAspectRatio="none" aria-hidden="true">
@@ -366,7 +366,7 @@
           <path d="M9.7 5.3 3 12l6.7 6.7 1.4-1.4L6.8 13H21v-2H6.8l4.3-4.3-1.4-1.4Z"/>
         </svg>
       </a>
-      <h1 class="page-title">Gestionar Usuarios</h1>
+      <h1 class="page-title">Registrar Usuarios</h1>
       <a class="profile-link" href="adminprofile.html" aria-label="Perfil del administrador">
         <svg class="top-icon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 12c2.35 0 4.25-1.9 4.25-4.25S14.35 3.5 12 3.5s-4.25 1.9-4.25 4.25S9.65 12 12 12Zm0 2c-3.95 0-7.5 2.02-7.5 4.25V20h15v-1.75C19.5 16.02 15.95 14 12 14Z"/>
@@ -384,7 +384,7 @@
 
       <!-- Formulario -->
       <form class="user-form" id="userForm">
-        <p class="form-section-label">Datos del usuario</p>
+        <p class="form-section-label">Datos y credenciales del usuario de empresa</p>
         <div class="form-grid">
 
           <label class="field-group full">
@@ -395,9 +395,8 @@
 
           <label class="field-group">
             <span class="field-label">Rol</span>
-            <select class="select-input" name="rol">
+            <select class="select-input" name="rol" required>
               <option value="">Seleccionar rol</option>
-              <option value="administrador">Administrador</option>
               <option value="ti">Responsable de TI</option>
               <option value="contabilidad">Contabilidad</option>
               <option value="jefe_area">Jefe de área</option>
@@ -406,15 +405,14 @@
 
           <label class="field-group">
             <span class="field-label">Empresa</span>
-            <select class="select-input" name="empresa_id" id="companySelect">
-              <option value="">Sin empresa</option>
+            <select class="select-input" name="empresa_id" id="companySelect" required>
+              <option value="">Seleccionar empresa</option>
             </select>
           </label>
 
           <label class="field-group">
             <span class="field-label">Estado</span>
             <select class="select-input" name="estado">
-              <option value="">Seleccionar estado</option>
               <option value="activo">Activo</option>
               <option value="inactivo">Inactivo</option>
             </select>
@@ -449,7 +447,7 @@
         </button>
         <button class="action-button btn-add" type="button" id="addButton">
           <svg class="btn-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
-          Agregar
+          Registrar
         </button>
         <button class="action-button btn-delete" type="button" id="deleteButton">
           <svg class="btn-icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
@@ -500,7 +498,7 @@
     };
 
     const renderCompanies = () => {
-      companySelect.innerHTML = '<option value="">Sin empresa</option>';
+      companySelect.innerHTML = '<option value="">Seleccionar empresa</option>';
       companies.forEach((c) => {
         const o = document.createElement('option');
         o.value = c.id;
@@ -561,6 +559,7 @@
     };
 
     document.getElementById('addButton').addEventListener('click', async () => {
+      if (!userForm.reportValidity()) return;
       if (!userForm.password.value) return alert('Agrega una contraseña para el usuario.');
       try {
         await request(`${USERS_API}/insert`, { method: 'POST', body: JSON.stringify(formData()) });
@@ -570,6 +569,7 @@
 
     document.getElementById('editButton').addEventListener('click', async () => {
       if (!selectedUserId) return alert('Selecciona un usuario para editar.');
+      if (!userForm.reportValidity()) return;
       try {
         await request(`${USERS_API}/update`, {
           method: 'PUT',
