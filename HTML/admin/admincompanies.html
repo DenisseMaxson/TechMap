@@ -380,9 +380,35 @@
           </label>
 
           <label class="field-group">
-            <span class="field-label">Teléfono</span>
-            <input class="text-input" type="tel" name="telefono" placeholder="10 dígitos">
-          </label>
+          <span class="field-label">Teléfono principal *</span>
+          <input 
+            class="text-input"
+            type="tel"
+            name="telefono_principal"
+            placeholder="10 dígitos"
+            required
+          >
+        </label>
+
+        <label class="field-group">
+          <span class="field-label">Teléfono secundario</span>
+          <input 
+            class="text-input"
+            type="tel"
+            name="telefono_secundario"
+            placeholder="Opcional"
+          >
+        </label>
+
+        <label class="field-group full">
+          <span class="field-label">Teléfono adicional</span>
+          <input 
+            class="text-input"
+            type="tel"
+            name="telefono_adicional"
+            placeholder="Opcional"
+          >
+        </label>
 
           <label class="field-group">
             <span class="field-label">Correo de contacto</span>
