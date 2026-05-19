@@ -478,7 +478,11 @@
           <span class="company-detail"><strong>ID:</strong> ${escapeHtml(company.id || '')}</span>
           <span class="company-detail"><strong>Ubicación:</strong> ${escapeHtml(company.ubicacion || '—')}</span>
           <span class="company-detail"><strong>RFC:</strong> ${escapeHtml(company.rfc || '—')}</span>
+          <span class="company-detail"><strong>Tel. principal:</strong> ${escapeHtml(company.telefono_principal || '—')}</span>
+          <span class="company-detail"><strong>Tel. secundario:</strong> ${escapeHtml(company.telefono_secundario || '—')}</span>
+          <span class="company-detail"><strong>Tel. adicional:</strong> ${escapeHtml(company.telefono_adicional || '—')}</span>
           <span class="company-detail"><strong>Contacto:</strong> ${escapeHtml(company.correo_contacto || '—')}</span>
+
         `;
         card.addEventListener('click', () => selectCompany(company));
         companyList.appendChild(card);
@@ -499,7 +503,9 @@
       companyForm.nombre.value          = company.nombre          || '';
       companyForm.rfc.value             = company.rfc             || '';
       companyForm.ubicacion.value       = company.ubicacion       || '';
-      companyForm.telefono.value        = company.telefono        || '';
+      companyForm.telefono_principal.value  = company.telefono_principal  || '';
+      companyForm.telefono_secundario.value = company.telefono_secundario || '';
+      companyForm.telefono_adicional.value  = company.telefono_adicional  || '';
       companyForm.correo_contacto.value = company.correo_contacto || '';
       renderCompanies();
     };
