@@ -25,7 +25,8 @@
 
     body {
       min-height: 100vh;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
       background: var(--navy);
       color: var(--white);
       font-family: 'Outfit', Arial, sans-serif;
@@ -35,11 +36,15 @@
       position: relative;
       width: 100vw;
       min-height: 100vh;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
       background: var(--navy);
-      padding-bottom: 36px;
+      padding-bottom: 120px;
     }
 
+    .company-grid {
+      padding-bottom: 120px;
+    }
     /* ── Partículas ── */
     .particles {
       position: absolute; inset: 0; z-index: 0;

@@ -34,11 +34,11 @@ const insert = (req, res) => {
   const { nombre, rfc, ubicacion, telefono, correo_contacto, rol_operador } = req.body;
 
   // REGLA DE NEGOCIO CRÍTICA: Bloquear si no es administrador
-  if (rol_operador !== 'administrador') {
-    return res.status(403).json({ 
-      error: 'Acceso denegado. Operación exclusiva del Administrador Principal.' 
-    });
-  }
+ /*if (rol_operador !== 'administrador') {
+  return res.status(403).json({ 
+    error: 'Acceso denegado. Operación exclusiva del Administrador Principal.' 
+  });
+}*/
 
   // Si sí es el administrador, el procedimiento sp_insert_empresa se ejecuta normal
   const sql = 'CALL sp_insert_empresa(?,?,?,?,?)';
