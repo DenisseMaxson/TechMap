@@ -478,7 +478,7 @@
       const btn = document.querySelector(`[data-company-id="${company.id}"]`);
       if (btn) { btn.classList.add('loading'); btn.textContent = 'Exportando...'; }
       try {
-        await downloadFile(`${API_URL}/${company.id}/export?ref=${encodeURIComponent(ref)}`, `bd_empresa_${company.id}.csv`);
+        await downloadFile(`http://localhost:3000/api/exportar/empresa/${company.id}?ref=${encodeURIComponent(ref)}`);
       } catch (error) {
         alert(error.message);
       } finally {

@@ -1,4 +1,4 @@
-const db = require('../DB/connection');
+const db     = require('../DB/connection');
 const bcrypt = require('bcryptjs');
 
 const getAll = (req, res) => {
@@ -16,7 +16,7 @@ const getAll = (req, res) => {
 
 const insert = (req, res) => {
   const { empresa_id, nombre_completo, correo, usuario, password_hash, password, rol } = req.body;
-  const userName = usuario || correo || nombre_completo;
+  const userName     = usuario || correo || nombre_completo;
   const passwordValue = password || password_hash || '';
   if (!userName || !passwordValue || !rol) {
     return res.status(400).json({ error: 'Usuario, contraseña y rol son obligatorios' });
@@ -36,17 +36,10 @@ const update = (req, res) => {
   db.query(sql, [empresa_id || null, nombre_completo, correo || null, rol, estado, id], (err) => {
     if (err) return res.status(500).json({ error: err.message });
     const updates = [];
-    const values = [];
+    const values  = [];
 
-    if (usuario) {
-      updates.push('usuario = ?');
-      values.push(usuario);
-    }
-
-    if (password) {
-      updates.push('password_hash = ?');
-      values.push(bcrypt.hashSync(password, 10));
-    }
+    if (usuario) { updates.push('usuario = ?');       values.push(usuario); }
+    if (password) { updates.push('password_hash = ?'); values.push(bcrypt.hashSync(password, 10)); }
 
     if (!updates.length) return res.json({ mensaje: 'Usuario actualizado' });
 
@@ -79,11 +72,8 @@ const login = (req, res) => {
     const user = results[0];
     let validPassword = false;
 
-    try {
-      validPassword = await bcrypt.compare(password, user.password_hash);
-    } catch {
-      validPassword = false;
-    }
+    try { validPassword = await bcrypt.compare(password, user.password_hash); }
+    catch { validPassword = false; }
 
     if (!validPassword) return res.status(401).json({ error: 'Credenciales incorrectas' });
 
@@ -106,6 +96,7 @@ const deleteUsuario = (req, res) => {
   });
 };
 
+// ─── CSV helpers (sin dependencias externas) ────────────────────────
 const escapeCsv = (value) => {
   if (value === null || value === undefined) return '';
   return `"${String(value).replace(/"/g, '""')}"`;
@@ -117,26 +108,32 @@ const sendCsv = (res, filename, rows) => {
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     return res.send('');
   }
-
   const headers = Object.keys(rows[0]);
   const csv = [
     headers.map(escapeCsv).join(','),
-    ...rows.map((row) => headers.map((header) => escapeCsv(row[header])).join(','))
+    ...rows.map((row) => headers.map((h) => escapeCsv(row[h])).join(','))
   ].join('\n');
-
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   res.send(`\uFEFF${csv}`);
 };
 
+// ─── Exportar lista de usuarios de una empresa ──────────────────────
 const exportByEmpresa = (req, res) => {
   const { empresaId } = req.params;
   const sql = `
-    SELECT u.id, u.nombre_completo, u.correo, u.usuario, u.rol, u.estado, e.nombre AS nombre_empresa
+    SELECT 
+      u.nombre_completo,
+      u.correo,
+      u.usuario,
+      u.rol,
+      u.estado,
+      DATE_FORMAT(u.fecha_creacion, '%d/%m/%Y') AS fecha_alta,
+      e.nombre AS nombre_empresa
     FROM usuarios u
     LEFT JOIN empresas e ON u.empresa_id = e.id
     WHERE u.empresa_id = ?
-    ORDER BY u.id DESC`;
+    ORDER BY u.nombre_completo ASC`;
 
   db.query(sql, [empresaId], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -144,4 +141,4 @@ const exportByEmpresa = (req, res) => {
   });
 };
 
-module.exports = { getAll, insert, update, delete: deleteUsuario, exportByEmpresa, login };
+module.exports = { getAll, insert, update, login, delete: deleteUsuario, exportByEmpresa };

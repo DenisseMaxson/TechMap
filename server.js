@@ -10,7 +10,10 @@ app.use(express.json());
 const empresaRoutes  = require('./ROUTES/empresaRoutes');
 const usuarioRoutes  = require('./ROUTES/usuarioRoutes');
 const equipoRoutes  = require('./ROUTES/equiposRoutes');
+const exportRoutes   = require('./ROUTES/exportRoutes');
 
+
+app.use('/api/exportar', exportRoutes);
 app.use('/api/empresas', empresaRoutes);
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/equipos', equipoRoutes);

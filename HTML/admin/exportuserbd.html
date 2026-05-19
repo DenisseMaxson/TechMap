@@ -356,8 +356,7 @@
           btn.textContent = 'Exportando...';
           try {
             await downloadFile(
-              `${USERS_API}/empresa/${company.id}/export`,
-              `usuarios_empresa_${company.id}.csv`
+             `http://localhost:3000/api/exportar/usuarios/${company.id}`
             );
           } catch (error) {
             alert(error.message);

@@ -8,5 +8,6 @@ router.post  ('/login',   controller.login);
 router.post  ('/insert',  controller.insert);
 router.put   ('/update',  controller.update);
 router.delete('/delete',  controller.delete);
+router.get('/empresa/:id/export', controller.exportByEmpresa);
 
 module.exports = router;
