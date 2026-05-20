@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechMap - Exportar Equipos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --navy:  #111649;
+      --blue1: #184f89;
+      --blue2: #237fb9;
+      --blue3: #3793d0;
+      --sky:   #69a1ce;
+      --white: #ffffff;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      background: var(--navy);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+    }
+
+    .export-screen {
+      position: relative;
+      width: 100vw;
+      min-height: 100vh;
+      background: var(--navy);
+      padding-bottom: 60px;
+    }
+
+    /* ── Partículas ── */
+    .particles {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(55,147,208,0.15);
+      animation: floatUp var(--d,8s) ease-in-out infinite var(--delay,0s);
+    }
+    @keyframes floatUp {
+      0%   { transform: translateY(0) scale(1);    opacity: 0; }
+      20%  { opacity: 0.8; }
+      80%  { opacity: 0.4; }
+      100% { transform: translateY(-90px) scale(1.1); opacity: 0; }
+    }
+
+    /* ── Ondas ── */
+    .waves {
+      position: fixed;
+      inset: auto 0 0 0;
+      width: 100%;
+      height: 52%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* ── Top bar ── */
+    .top-bar {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 44px 1fr 44px;
+      align-items: center;
+      width: min(800px, calc(100vw - 44px));
+      margin: 20px auto 0;
+      animation: fadeDown 0.75s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .home-link, .profile-link {
+      display: flex;
+      width: 38px;
+      height: 38px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(105,161,206,0.25);
+      border-radius: 10px;
+      background: rgba(55,147,208,0.1);
+      color: var(--white);
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .profile-link { justify-self: end; }
+    .home-link:hover, .profile-link:hover {
+      background: rgba(55,147,208,0.25);
+      border-color: rgba(105,161,206,0.5);
+    }
+    .top-icon {
+      width: 22px;
+      height: 22px;
+      fill: rgba(255,255,255,0.85);
+    }
+
+    .page-title {
+      font-size: clamp(17px, 1.8vw, 22px);
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: -0.2px;
+    }
+
+    /* ── Divisor ── */
+    .divider {
+      position: relative;
+      z-index: 2;
+      width: min(800px, calc(100vw - 44px));
+      height: 1px;
+      margin: 10px auto 0;
+      border: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+    }
+
+    .section-sub {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      margin-top: 24px;
+      font-size: clamp(11px, 1vw, 13px);
+      font-weight: 300;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      animation: fadeDown 0.75s 0.1s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    /* ── Contenedor de Equipos ── */
+    .equipos-container {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      /* Ajuste automático para poner tantas tarjetas como quepan */
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 24px;
+      width: min(900px, calc(100vw - 48px));
+      margin: 30px auto 0;
+      animation: fadeUp 0.8s 0.2s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Card de Equipo ── */
+    .equipo-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(106,174,226,0.28);
+      border-radius: 18px;
+      background: rgba(24, 79, 137, 0.2);
+      padding: 24px 20px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      /* Sombra que concuerda orgánicamente con la iluminación azul */
+      box-shadow: 0 10px 30px rgba(17, 22, 73, 0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+    }
+
+    .equipo-card:hover {
+      border-color: rgba(105,161,206,0.6);
+      transform: translateY(-4px);
+      box-shadow: 0 15px 35px rgba(17, 22, 73, 0.8), 0 0 20px rgba(55, 147, 208, 0.2), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+
+    /* Línea superior */
+    .equipo-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 18px 18px 0 0;
+      background: linear-gradient(90deg, var(--blue2), var(--sky));
+      opacity: 0.7;
+    }
+
+    .equipo-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .equipo-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: rgba(35,127,185,0.3);
+      border: 1px solid rgba(105,161,206,0.35);
+    }
+    .equipo-icon svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--white);
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .equipo-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--white);
+      line-height: 1.2;
+    }
+    .equipo-id {
+      font-size: 11px;
+      color: var(--sky);
+      font-weight: 400;
+      margin-top: 2px;
+    }
+
+    .equipo-info {
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.6;
+      margin-bottom: 20px;
+      flex-grow: 1;
+    }
+    .equipo-info strong {
+      color: var(--white);
+      font-weight: 500;
+    }
+
+    /* Botón de exportar */
+    .btn-export {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px;
+      border: 1px solid rgba(105,161,206,0.4);
+      border-radius: 10px;
+      background: rgba(35,127,185,0.15);
+      color: var(--white);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-export:hover {
+      background: rgba(55,147,208,0.4);
+    }
+    .btn-export:active {
+      transform: scale(0.97);
+    }
+    .btn-export svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    @media (max-width: 620px) {
+      .top-bar { margin-top: 14px; }
+      .equipos-container {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="export-screen" aria-label="Exportar Fichas Técnicas">
+
+    <div class="particles" id="particles" aria-hidden="true"></div>
+
+    <svg class="waves" viewBox="0 0 1366 420" preserveAspectRatio="none" aria-hidden="true">
+      <path fill="#184f89" d="M0 76 C154 101 293 126 453 115 C625 104 748 46 899 70 C1035 91 1134 97 1366 82 L1366 420 L0 420 Z"/>
+      <path fill="#237fb9" d="M0 190 C181 178 372 170 509 196 C670 227 785 262 977 254 C1137 247 1245 225 1366 204 L1366 420 L0 420 Z"/>
+      <path fill="#69a1ce" d="M0 318 C170 293 324 284 491 302 C679 321 768 372 956 374 C1115 376 1231 350 1366 322 L1366 420 L0 420 Z"/>
+    </svg>
+
+    <header class="top-bar">
+      <a class="home-link" href="adminoptions.html" aria-label="Volver">
+        <svg class="top-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9.7 5.3 3 12l6.7 6.7 1.4-1.4L6.8 13H21v-2H6.8l4.3-4.3-1.4-1.4Z"/>
+        </svg>
+      </a>
+      <h1 class="page-title">Fichas Técnicas</h1>
+      <a class="profile-link" href="adminprofile.html" aria-label="Perfil">
+        <svg class="top-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 12c2.35 0 4.25-1.9 4.25-4.25S14.35 3.5 12 3.5s-4.25 1.9-4.25 4.25S9.65 12 12 12Zm0 2c-3.95 0-7.5 2.02-7.5 4.25V20h15v-1.75C19.5 16.02 15.95 14 12 14Z"/>
+        </svg>
+      </a>
+    </header>
+
+    <hr class="divider">
+    <p class="section-sub">Selecciona un equipo para generar su reporte PDF</p>
+
+    <section class="equipos-container" id="contenedorEquipos" aria-label="Lista de equipos">
+      </section>
+
+  </main>
+
+  <script>
+    // 1. Efecto de partículas de fondo
+    const pc = document.getElementById('particles');
+    for (let i = 0; i < 16; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = 5 + Math.random() * 16;
+      p.style.cssText = `
+        left:${Math.random()*100}%;
+        bottom:${Math.random()*48}%;
+        width:${size}px; height:${size}px;
+        --d:${6+Math.random()*8}s;
+        --delay:-${Math.random()*8}s;
+      `;
+      pc.appendChild(p);
+    }
+
+    // 2. Función para descargar el PDF
+    function descargarFichaTecnica(idEquipo) {
+      window.location.href = `http://localhost:3000/api/equipos/exportar/${idEquipo}`;
+    }
+
+    // 3. Renderizar los equipos en la pantalla
+    const contenedor = document.getElementById('contenedorEquipos');
+
+    function renderizarEquipos(listaEquipos) {
+      contenedor.innerHTML = ''; // Limpiar contenedor
+      
+      listaEquipos.forEach(equipo => {
+        const div = document.createElement('div');
+        div.className = 'equipo-card';
+        
+        div.innerHTML = `
+          <div class="equipo-header">
+            <div class="equipo-icon">
+              <svg viewBox="0 0 24 24">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </div>
+            <div>
+              <h3 class="equipo-title">${equipo.nombre}</h3>
+              <p class="equipo-id">ID Registro: ${equipo.id}</p>
+            </div>
+          </div>
+          <div class="equipo-info">
+            <strong>Tipo:</strong> ${equipo.tipo}<br>
+            <strong>Área:</strong> ${equipo.area}<br>
+            <strong>IP Local:</strong> ${equipo.direccion_ip}
+          </div>
+          <button class="btn-export" onclick="descargarFichaTecnica(${equipo.id})">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Exportar a PDF
+          </button>
+        `;
+        contenedor.appendChild(div);
+      });
+    }
+
+    // DATOS DE PRUEBA (MOCK) - Elimina esto cuando conectes tu base de datos
+    const equiposMock = [
+      { id: 1, nombre: "Servidor Principal", tipo: "Servidor", area: "Sistemas", direccion_ip: "192.168.1.10" },
+      { id: 2, nombre: "PC Recepción", tipo: "Desktop", area: "Atención", direccion_ip: "192.168.1.15" },
+      { id: 3, nombre: "Laptop Contabilidad", tipo: "Laptop", area: "Finanzas", direccion_ip: "192.168.1.22" },
+      { id: 4, nombre: "Router Cisco", tipo: "Redes", area: "Sistemas", direccion_ip: "192.168.1.1" }
+    ];
+    
+    // Mostramos los de prueba inicialmente
+    renderizarEquipos(equiposMock);
+
+    /* // 4. CÓDIGO REAL PARA CONECTAR AL BACKEND (Descomenta y usa este en producción)
+    // Asumiendo que el ID de la empresa es el 1
+    const idEmpresa = 1; 
+
+    fetch(`http://localhost:3000/api/equipos/empresa/${idEmpresa}`)
+      .then(response => response.json())
+      .then(data => {
+        // Renderizamos las tarjetas con los datos reales de la BD
+        renderizarEquipos(data);
+      })
+      .catch(error => {
+        console.error("Error al obtener equipos:", error);
+        contenedor.innerHTML = '<p style="text-align:center; color:#ccc;">Error al cargar los equipos de la base de datos.</p>';
+      });
+    */
+  </script>
+</body>
+</html>

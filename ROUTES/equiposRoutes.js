@@ -19,4 +19,8 @@ router.put('/', equipoController.update);
 // Dar de baja a un equipo (Baja lógica)
 router.delete('/', equipoController.delete);
 
+// Exportar ficha técnica de un equipo específico en formato PDF
+// URL: http://localhost:3000/api/equipos/exportar/1
+router.get('/exportar/:id', equipoController.exportPDF);
+
 module.exports = router;
