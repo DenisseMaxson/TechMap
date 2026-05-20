@@ -65,19 +65,17 @@ const deleteEmpresa = (req, res) => {
   });
 };
 
-// 5. EXPORTAR EMPRESA (Añadido para que las rutas no truenen)
+// EXPORTAR EMPRESA 
 const exportEmpresa = (req, res) => {
   const { id } = req.params;
-  // NOTA: Aquí puedes poner tu lógica real de exportación si la tenías.
-  // Por ahora responde un JSON básico para que la app encienda sin errores.
   res.json({ mensaje: `Exportando datos de la empresa con ID: ${id}` });
 };
 
-// 6. EXPORTACIÓN DE MÓDULOS
+// EXPORTACIÓN DE MÓDULOS
 module.exports = { 
   getAll, 
   insert, 
   update, 
   delete: deleteEmpresa,
-  exportEmpresa // <-- Exportado correctamente
+  exportEmpresa 
 };
