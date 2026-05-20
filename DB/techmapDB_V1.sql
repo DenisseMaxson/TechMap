@@ -355,3 +355,9 @@ ADD COLUMN lugar_compra VARCHAR(200) AFTER fecha_adquisicion;
 CREATE INDEX idx_equipos_mac ON equipos (direccion_mac);
 CREATE INDEX idx_equipos_serie ON equipos (numero_serie);
 
+
+ALTER TABLE empresas 
+  ADD COLUMN telefono_principal  VARCHAR(20) NULL AFTER telefono,
+  ADD COLUMN telefono_secundario VARCHAR(20) NULL AFTER telefono_principal,
+  ADD COLUMN telefono_adicional  VARCHAR(20) NULL AFTER telefono_secundario;
+

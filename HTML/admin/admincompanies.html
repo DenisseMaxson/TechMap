@@ -365,54 +365,38 @@
         <div class="form-grid">
 
           <label class="field-group">
-            <span class="field-label">Nombre de empresa</span>
+            <span class="field-label">Nombre de empresa *</span>
             <input class="text-input" type="text" name="nombre" placeholder="Ej. Tecnologías Solución SA" required>
           </label>
 
           <label class="field-group">
-            <span class="field-label">RFC</span>
-            <input class="text-input" type="text" name="rfc" placeholder="Ej. TSS210301AB1">
+            <span class="field-label">RFC *</span>
+            <input class="text-input" type="text" name="rfc" placeholder="Ej. TSS210301AB1" maxlength="13" required>
           </label>
 
           <label class="field-group full">
-            <span class="field-label">Ubicación</span>
-            <input class="text-input" type="text" name="ubicacion" placeholder="Ciudad, Estado">
+            <span class="field-label">Ubicación *</span>
+            <input class="text-input" type="text" name="ubicacion" placeholder="Ciudad, Estado" required>
           </label>
 
           <label class="field-group">
-          <span class="field-label">Teléfono principal *</span>
-          <input 
-            class="text-input"
-            type="tel"
-            name="telefono_principal"
-            placeholder="10 dígitos"
-            required
-          >
-        </label>
-
-        <label class="field-group">
-          <span class="field-label">Teléfono secundario</span>
-          <input 
-            class="text-input"
-            type="tel"
-            name="telefono_secundario"
-            placeholder="Opcional"
-          >
-        </label>
-
-        <label class="field-group full">
-          <span class="field-label">Teléfono adicional</span>
-          <input 
-            class="text-input"
-            type="tel"
-            name="telefono_adicional"
-            placeholder="Opcional"
-          >
-        </label>
+            <span class="field-label">Teléfono principal *</span>
+            <input class="text-input" type="tel" name="telefono_principal" placeholder="10 dígitos" required>
+          </label>
 
           <label class="field-group">
-            <span class="field-label">Correo de contacto</span>
-            <input class="text-input" type="email" name="correo_contacto" placeholder="correo@empresa.com">
+            <span class="field-label">Teléfono secundario</span>
+            <input class="text-input" type="tel" name="telefono_secundario" placeholder="Opcional">
+          </label>
+
+          <label class="field-group full">
+            <span class="field-label">Teléfono adicional</span>
+            <input class="text-input" type="tel" name="telefono_adicional" placeholder="Opcional">
+          </label>
+
+          <label class="field-group full">
+            <span class="field-label">Correo de contacto *</span>
+            <input class="text-input" type="email" name="correo_contacto" placeholder="correo@empresa.com" required>
           </label>
 
         </div>

@@ -261,3 +261,83 @@ BEGIN
 END //
 
 DELIMITER ;
+
+DELIMITER //
+
+DROP PROCEDURE IF EXISTS sp_update_empresa //
+CREATE PROCEDURE sp_update_empresa(
+    IN p_nombre           VARCHAR(255),
+    IN p_rfc              VARCHAR(20),
+    IN p_ubicacion        VARCHAR(255),
+    IN p_telefono_principal  VARCHAR(20),
+    IN p_telefono_secundario VARCHAR(20),
+    IN p_telefono_adicional  VARCHAR(20),
+    IN p_correo_contacto  VARCHAR(255),
+    IN p_id               INT
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    UPDATE empresas
+    SET nombre               = p_nombre,
+        rfc                  = p_rfc,
+        ubicacion            = p_ubicacion,
+        telefono_principal   = p_telefono_principal,
+        telefono_secundario  = p_telefono_secundario,
+        telefono_adicional   = p_telefono_adicional,
+        correo_contacto      = p_correo_contacto
+    WHERE id = p_id;
+
+    COMMIT;
+END //
+
+DROP PROCEDURE IF EXISTS sp_insert_empresa //
+CREATE PROCEDURE sp_insert_empresa(
+    IN p_nombre              VARCHAR(255),
+    IN p_rfc                 VARCHAR(20),
+    IN p_ubicacion           VARCHAR(255),
+    IN p_telefono_principal  VARCHAR(20),
+    IN p_telefono_secundario VARCHAR(20),
+    IN p_telefono_adicional  VARCHAR(20),
+    IN p_correo_contacto     VARCHAR(255)
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    INSERT INTO empresas (
+        nombre, rfc, ubicacion,
+        telefono_principal, telefono_secundario, telefono_adicional,
+        correo_contacto
+    )
+    VALUES (
+        p_nombre, p_rfc, p_ubicacion,
+        p_telefono_principal, p_telefono_secundario, p_telefono_adicional,
+        p_correo_contacto
+    );
+
+    SELECT LAST_INSERT_ID() AS id;
+    COMMIT;
+END //
+
+DELIMITER ;
+
+USE techmap_db;
+
+USE techmap_db;
+
+ALTER TABLE empresas 
+  ADD COLUMN telefono_principal  VARCHAR(20) NULL AFTER telefono,
+  ADD COLUMN telefono_secundario VARCHAR(20) NULL AFTER telefono_principal,
+  ADD COLUMN telefono_adicional  VARCHAR(20) NULL AFTER telefono_secundario;
