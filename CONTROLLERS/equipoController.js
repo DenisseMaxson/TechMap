@@ -1,5 +1,6 @@
-const db = require('../DB/connection');
+const db = require('../DB/connection'); 
 const PDFDocument = require('pdfkit');
+const { enviarCorreoBajaPendiente } = require('../CONFIG/mailer');
 
 // 1. Obtener todos los equipos de una empresa específica
 const getEquiposByEmpresa = (req, res) => {
@@ -51,7 +52,7 @@ const updateEquipo = (req, res) => {
     });
 };
 
-// 4. Baja lógica del equipo (Eliminar)
+// 4. Baja lógica del equipo
 const deleteEquipo = (req, res) => {
     const { id, usuario_id } = req.body;
     const sql = 'CALL sp_delete_equipo(?,?)';
@@ -62,6 +63,7 @@ const deleteEquipo = (req, res) => {
     });
 };
 
+// 5. Obtener estadísticas para el Dashboard
 const getDashboardStats = (req, res) => {
     const { empresa_id } = req.params;
     const sql = 'CALL sp_get_dashboard_stats(?)';
@@ -69,17 +71,16 @@ const getDashboardStats = (req, res) => {
     db.query(sql, [empresa_id], (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
 
-        // Los resultados de un CALL en mysql2 vienen como un array de arrays
         res.json({
-            resumen: results[0][0],        // Total equipos
-            por_tipo: results[1],         // Lista por tipo
-            bajas: results[2][0],         // Bajas pendientes
-            financiero: results[3][0]     // Valor total
+            resumen: results[0][0],        
+            por_tipo: results[1],         
+            bajas: results[2][0],         
+            financiero: results[3][0]     
         });
     });
 };
 
-// Exportar ficha técnica de un equipo específico en PDF
+// 6. Exportar ficha técnica de un equipo específico en PDF
 const exportEquipoPDF = (req, res) => {
     const { id } = req.params;
     const sql = 'SELECT * FROM equipos WHERE id = ?';
@@ -89,18 +90,12 @@ const exportEquipoPDF = (req, res) => {
         if (results.length === 0) return res.status(404).json({ error: 'Equipo no encontrado' });
 
         const equipo = results[0];
-
-        // 1. Inicializar el documento PDF
         const doc = new PDFDocument({ margin: 50 });
 
-        // 2. Configurar cabeceras HTTP para que el navegador entienda que es un PDF de descarga
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=Ficha_Tecnica_Equipo_${equipo.numero_serie || id}.pdf`);
 
-        // Redirigir el flujo de escritura del PDF directamente a la respuesta HTTP
         doc.pipe(res);
-
-        // ─── DISEÑO DEL PDF ───
 
         // Banner Superior Corporativo (Azul Oscuro)
         doc.rect(0, 0, 612, 100).fill('#1b2476');
@@ -109,11 +104,9 @@ const exportEquipoPDF = (req, res) => {
 
         // Título del reporte
         doc.fillColor('#243b97').fontSize(16).text(`Ficha Técnica: ${equipo.nombre || 'Sin Nombre'}`, 50, 130);
-        
-        // Línea divisoria
         doc.strokeColor('#2b61ad').lineWidth(1).moveTo(50, 155).lineTo(562, 155).stroke();
 
-        // SECCIÓN 1: Detalles de Asignación y Operación
+        // SECCIÓN 1: Datos de Operación y Ubicación
         doc.fillColor('#1b2476').fontSize(12).text('1. Datos de Operación y Ubicación', 50, 175);
         doc.fillColor('#333333').fontSize(10);
         
@@ -138,7 +131,7 @@ const exportEquipoPDF = (req, res) => {
         doc.text(`Dirección MAC:`, 60, y); doc.text(`${equipo.direccion_mac || 'No configurada'}`, 180, y); y += spacing;
         doc.text(`Dirección IP Local:`, 60, y); doc.text(`${equipo.direccion_ip || 'Dinámica / No asignada'}`, 180, y);
 
-        // SECCIÓN 3: Datos Financieros (Contabilidad)
+        // SECCIÓN 3: Datos Financieros
         y += 35;
         doc.fillColor('#1b2476').fontSize(12).text('3. Registro Financiero y Adquisición', 50, y);
         y += 25;
@@ -162,16 +155,58 @@ const exportEquipoPDF = (req, res) => {
         doc.fillColor('#999999').fontSize(8).text('Este documento constituye una representación digital de control interno de activos fijos de la empresa.', 50, 735, { align: 'center' });
         doc.text(`ID Único de Auditoría de Hardware: ${equipo.id}`, 50, 747, { align: 'center' });
 
-        // Finalizar y enviar el archivo terminando la transmisión
         doc.end();
     });
 };
 
+// 7. Solicitar Baja
+const solicitarBaja = async (req, res) => {
+  const { id_equipo, motivo, solicitante, id_area } = req.body;
+
+  try {
+    const [rows] = await db.query('CALL sp_solicitar_baja(?, ?, ?)', [id_equipo, motivo, id_area]);
+    const datosDeRetorno = rows[0]?.[0]; 
+    const correoJefe = datosDeRetorno?.email_jefe;
+    const nombreEquipo = datosDeRetorno?.nombre_equipo || "Equipo Registrado";
+
+    console.log(`Procedimiento ejecutado. Jefe detectado: ${correoJefe}, Equipo: ${nombreEquipo}`);
+
+    if (correoJefe) {
+      enviarCorreoBajaPendiente(correoJefe, {
+        id_equipo,
+        nombre_equipo: nombreEquipo,
+        motivo,
+        solicitante
+      }).then(() => {
+        console.log(`📧 Notificación de baja enviada con éxito a: ${correoJefe}`);
+      }).catch(err => {
+        console.error('❌ Error al enviar el correo con Nodemailer:', err);
+      });
+    } else {
+      console.log('⚠️ No se envió correo porque no se encontró un Jefe asignado a esta área.');
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'La solicitud de baja se registró y se notificó al jefe de área.'
+    });
+
+  } catch (error) {
+    console.error('❌ Error en el controlador sp_solicitar_baja:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Error interno en el servidor al procesar la baja.' 
+    });
+  }
+};
+
+// EXPORTACIONES MODIFICADAS
 module.exports = {
     getEquiposByEmpresa,
     getDashboardStats,
     insert: insertEquipo,
     update: updateEquipo,
-    delete: deleteEquipo,
-    exportPDF: exportEquipoPDF
+    bajaLogica: deleteEquipo, // <-- REEMPLAZADO PARA EVITAR PALABRAS RESERVADAS
+    exportPDF: exportEquipoPDF,
+    solicitarBaja
 };

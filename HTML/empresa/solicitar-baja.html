@@ -265,14 +265,12 @@
 <body>
   <main class="request-screen" aria-label="Solicitar baja de equipo">
 
-    <!-- Ondas -->
     <svg class="waves" viewBox="0 0 543 348" preserveAspectRatio="none" aria-hidden="true">
       <path fill="#2b61ad" d="M0 139 C88 147 134 163 201 140 C260 120 308 88 371 130 C429 169 467 173 543 143 L543 348 L0 348 Z"/>
       <path fill="#243b97" d="M0 230 C82 253 126 235 185 197 C242 161 297 214 359 236 C416 256 483 242 543 233 L543 348 L0 348 Z"/>
       <path fill="#1b2476" d="M0 280 C88 286 144 282 223 276 C310 268 384 285 543 266 L543 348 L0 348 Z"/>
     </svg>
 
-    <!-- Top bar -->
     <header class="top-bar">
       <a class="back-link" href="opciones-ti-contabilidad.html" aria-label="Regresar">
         <svg class="top-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -292,13 +290,11 @@
 
     <hr class="divider">
 
-    <!-- Formulario -->
     <section class="content">
       <form class="request-form" id="requestForm" novalidate>
         <p class="form-section-label">Datos de la solicitud</p>
         <div class="form-grid">
 
-          <!-- Equipo -->
           <label class="field-group full">
             <span class="field-label">Equipo</span>
             <select class="select-input" name="equipo_id" id="equipmentSelect" required>
@@ -307,7 +303,6 @@
             <span class="field-help" id="equipmentHelp">Elige el equipo que requiere baja.</span>
           </label>
 
-          <!-- Info card dinámica del equipo -->
           <div class="equipment-info full" id="equipmentInfo">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <rect x="2" y="3" width="20" height="14" rx="2"/>
@@ -316,38 +311,33 @@
             <p id="equipmentInfoText"></p>
           </div>
 
-          <!-- Serie (readonly) -->
           <label class="field-group">
             <span class="field-label">Número de serie</span>
             <input class="text-input" type="text" name="serie" id="serialInput" readonly
                    placeholder="Se completa al seleccionar equipo">
           </label>
 
-          <!-- Área (readonly) -->
           <label class="field-group">
             <span class="field-label">Área</span>
-            <input class="text-input" type="text" name="area" id="areaInput" readonly
+            <input class="text-input" type="text" name="area" id="areaInput" readonly data-id=""
                    placeholder="Se completa al seleccionar equipo">
           </label>
 
-          <!-- Motivo -->
           <label class="field-group full">
             <span class="field-label">Motivo de la baja</span>
-            <textarea class="textarea-input" name="motivo" minlength="12" required
+            <textarea class="textarea-input" name="motivo" id="txtMotivo" minlength="12" required
                       placeholder="Describe el motivo detallado de la baja..."></textarea>
             <span class="field-help">Mínimo 12 caracteres.</span>
           </label>
 
-          <!-- Evidencia -->
           <label class="field-group full">
             <span class="field-label">Evidencia o referencia (opcional)</span>
-            <input class="text-input" type="text" name="evidencia"
+            <input class="text-input" type="text" name="evidencia" id="txtEvidencia"
                    placeholder="Liga, folio, reporte interno o comentario corto">
           </label>
 
         </div>
 
-        <!-- Acciones -->
         <div class="actions">
           <button class="action-button secondary" type="button" id="clearButton">
             <svg viewBox="0 0 24 24"><path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
@@ -365,8 +355,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
-    const EQUIPMENT_KEY = 'techmap_equipos_empresa';
-    const REQUESTS_KEY  = 'techmap_solicitudes_baja';
+    // Llaves locales (Se mantienen para no romper el rastro de historial local si lo usan)
     const HISTORY_KEY   = 'techmap_historial_empresa';
 
     const requestForm     = document.getElementById('requestForm');
@@ -378,10 +367,11 @@
     const toast           = document.getElementById('toast');
     let toastTimer;
 
+    // Arreglo de respaldo con IDs numéricos reales y sus id_area correspondientes
     const fallbackEquipment = [
-      { id:'EQ-001', nombre:'Dell Latitude',   numero_serie:'SN-DELL-001',  area:'TI',          encargado_equipo:'Tyler Joseph' },
-      { id:'EQ-002', nombre:'HP EliteDesk',    numero_serie:'SN-HP-002',    area:'Contabilidad', encargado_equipo:'Denisse Valadez' },
-      { id:'EQ-003', nombre:'Cisco Catalyst',  numero_serie:'SN-CISCO-003', area:'Redes',        encargado_equipo:'Andrea Monreal' }
+      { id: 1, nombre: 'Dell Latitude',  numero_serie: 'SN-DELL-001',  area: 'TI',           id_area: 1, encargado_equipo: 'Tyler Joseph' },
+      { id: 2, nombre: 'HP EliteDesk',   numero_serie: 'SN-HP-002',    area: 'Contabilidad', id_area: 2, encargado_equipo: 'Denisse Valadez' },
+      { id: 3, nombre: 'Cisco Catalyst', numero_serie: 'SN-CISCO-003', area: 'Redes',        id_area: 3, encargado_equipo: 'Andrea Monreal' }
     ];
 
     const showToast = (msg, type = 'success') => {
@@ -396,14 +386,8 @@
       catch { return {}; }
     };
 
-    const loadEquipment = () => {
-      try {
-        const saved = JSON.parse(localStorage.getItem(EQUIPMENT_KEY) || '[]');
-        return saved.length ? saved : fallbackEquipment;
-      } catch { return fallbackEquipment; }
-    };
-
-    const equipment = loadEquipment();
+    // Puedes dejar que consuma del fallback o agregar un fetch inicial a tu endpoint 'GET /api/equipos' si ya lo tienes listo
+    const equipment = fallbackEquipment;
 
     const saveHistory = (req) => {
       const session = getSession();
@@ -429,12 +413,14 @@
       });
     };
 
-    const selectedEquipment = () => equipment.find(e => e.id === equipmentSelect.value);
+    const selectedEquipment = () => equipment.find(e => String(e.id) === String(equipmentSelect.value));
 
     equipmentSelect.addEventListener('change', () => {
       const item = selectedEquipment();
       serialInput.value = item?.numero_serie || '';
       areaInput.value   = item?.area         || '';
+      areaInput.setAttribute('data-id', item?.id_area || ''); // Almacena el ID numérico de la zona
+      
       if (item) {
         equipmentInfoTx.innerHTML = `<strong>${item.nombre}</strong> · Serie: ${item.numero_serie} · Encargado: ${item.encargado_equipo || '—'}`;
         equipmentInfo.classList.add('visible');
@@ -448,40 +434,71 @@
       requestForm.classList.remove('was-validated');
       serialInput.value = '';
       areaInput.value   = '';
+      areaInput.setAttribute('data-id', '');
       equipmentInfo.classList.remove('visible');
       showToast('Formulario limpio.', 'success');
     });
 
-    requestForm.addEventListener('submit', (e) => {
+    // ── Conexión Fetch con el Servidor Backend (Node.js) ──
+    requestForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       requestForm.classList.add('was-validated');
+
       if (!requestForm.checkValidity()) {
         showToast('Revisa los campos marcados antes de enviar.', 'error');
         return;
       }
+
       const item    = selectedEquipment();
       const session = getSession();
-      const requests = JSON.parse(localStorage.getItem(REQUESTS_KEY) || '[]');
-      const req = {
-        id: String(Date.now()).slice(-6),
-        equipo_id:   item.id,
-        dispositivo: item.nombre        || 'Equipo',
-        serie:       item.numero_serie  || '',
-        solicitante: session.nombre_completo || item.encargado_equipo || 'Usuario empresa',
-        estado:      'pendiente',
-        motivo:      requestForm.motivo.value.trim(),
-        evidencia:   requestForm.evidencia.value.trim(),
-        fecha:       new Date().toISOString()
+
+      // Recolección estructurada para el Body JSON
+      const datosBaja = {
+        id_equipo:   parseInt(item.id),
+        motivo:      document.getElementById('txtMotivo').value.trim(),
+        id_area:     parseInt(areaInput.getAttribute('data-id')),
+        solicitante: session.nombre_completo || item.encargado_equipo || 'Usuario empresa'
       };
-      requests.unshift(req);
-      localStorage.setItem(REQUESTS_KEY, JSON.stringify(requests));
-      saveHistory(req);
-      requestForm.reset();
-      requestForm.classList.remove('was-validated');
-      serialInput.value = '';
-      areaInput.value   = '';
-      equipmentInfo.classList.remove('visible');
-      showToast('Solicitud enviada. El Jefe de área ya puede revisarla.', 'success');
+
+      try {
+        // Petición POST al endpoint de Node.js
+        const response = await fetch('http://localhost:3000/api/equipos/solicitar-baja', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(datosBaja)
+        });
+
+        const resultado = await response.json();
+
+        if (resultado.success) {
+          // Si guardó en BD, actualizamos historial local de apoyo
+          saveHistory({
+            dispositivo: item.nombre,
+            serie: item.numero_serie,
+            solicitante: datosBaja.solicitante,
+            motivo: datosBaja.motivo
+          });
+
+          // Resetear los estados de la interfaz
+          requestForm.reset();
+          requestForm.classList.remove('was-validated');
+          serialInput.value = '';
+          areaInput.value   = '';
+          areaInput.setAttribute('data-id', '');
+          equipmentInfo.classList.remove('visible');
+
+          // Desplegamos el toast de éxito
+          showToast(resultado.message, 'success');
+        } else {
+          showToast(`Error: ${resultado.message}`, 'error');
+        }
+
+      } catch (error) {
+        console.error('Error al conectar con el backend:', error);
+        showToast('No se pudo establecer conexión con el servidor de TechMap.', 'error');
+      }
     });
 
     populateEquipment();

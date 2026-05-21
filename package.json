@@ -26,6 +26,7 @@
     "express": "^5.2.1",
     "json2csv": "^6.0.0-alpha.2",
     "mysql2": "^3.22.3",
+    "nodemailer": "^8.0.7",
     "pdfkit": "^0.18.0"
   }
 }

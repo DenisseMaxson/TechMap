@@ -16,8 +16,8 @@ router.post('/', equipoController.insert);
 // Actualizar datos de un equipo
 router.put('/', equipoController.update);
 
-// Dar de baja a un equipo (Baja lógica)
-router.delete('/', equipoController.delete);
+// En tu archivo ROUTES/equiposRoutes.js:
+router.delete('/', equipoController.bajaLogica);
 
 // Exportar ficha técnica de un equipo específico en formato PDF
 // URL: http://localhost:3000/api/equipos/exportar/1
