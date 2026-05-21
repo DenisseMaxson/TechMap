@@ -293,6 +293,14 @@
       color: var(--white);
     }
 
+    .textarea-input {
+      height: auto !important;
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: clamp(11px, 0.95vw, 13px);
+      resize: vertical;
+      min-height: 80px;
+    }
+
     .equipment-form.was-validated :invalid {
       border-color: rgba(255,110,110,0.8);
       box-shadow: 0 0 0 3px rgba(255,110,110,0.18);
@@ -485,6 +493,11 @@
             <input class="text-input" type="text" name="lugar_compra" placeholder="Ej. Dell México">
           </label>
 
+          <label class="field-group full">
+            <span class="field-label">Descripción / Notas</span>
+            <textarea class="text-input textarea-input" name="descripcion" placeholder="Describe características especiales, estado actual, notas importantes, etc." maxlength="500"></textarea>
+          </label>
+
         </div>
       </form>
 
@@ -519,9 +532,9 @@
     let toastTimer;
 
     const sampleEquipment = [
-      { id:'EQ-001', nombre:'Dell Latitude',   tipo:'Portatil', numero_serie:'SN-DELL-001', modelo:'Latitude 5520',  direccion_mac:'AA:BB:CC:11:22:33', direccion_ip:'192.168.1.25', area:'TI',          ubicacion_fisica:'Oficina TI Piso 2', encargado_equipo:'Tyler Joseph',   fecha_compra:'2022-03-15', lugar_compra:'Dell Mexico' },
-      { id:'EQ-002', nombre:'HP EliteDesk',    tipo:'PC',       numero_serie:'SN-HP-002',   modelo:'EliteDesk 800', direccion_mac:'AA:BB:CC:44:55:66', direccion_ip:'192.168.1.36', area:'Contabilidad', ubicacion_fisica:'Contabilidad',      encargado_equipo:'Denisse Valadez', fecha_compra:'2021-08-10', lugar_compra:'HP Store' },
-      { id:'EQ-003', nombre:'Cisco Catalyst',  tipo:'Switch',   numero_serie:'SN-CISCO-003',modelo:'Catalyst 2960', direccion_mac:'AA:BB:CC:77:88:99', direccion_ip:'192.168.1.2',  area:'Redes',        ubicacion_fisica:'Cuarto de redes',   encargado_equipo:'Andrea Monreal',  fecha_compra:'2020-01-20', lugar_compra:'Cisco Partner' }
+      { id:'EQ-001', nombre:'Dell Latitude',   tipo:'Portatil', numero_serie:'SN-DELL-001', modelo:'Latitude 5520',  direccion_mac:'AA:BB:CC:11:22:33', direccion_ip:'192.168.1.25', area:'TI',          ubicacion_fisica:'Oficina TI Piso 2', encargado_equipo:'Tyler Joseph',   fecha_compra:'2022-03-15', lugar_compra:'Dell Mexico', descripcion:'Laptop de oficina en buen estado. Pantalla 15.6 FHD, 16GB RAM, SSD 512GB. Funciona correctamente.' },
+      { id:'EQ-002', nombre:'HP EliteDesk',    tipo:'PC',       numero_serie:'SN-HP-002',   modelo:'EliteDesk 800', direccion_mac:'AA:BB:CC:44:55:66', direccion_ip:'192.168.1.36', area:'Contabilidad', ubicacion_fisica:'Contabilidad',      encargado_equipo:'Denisse Valadez', fecha_compra:'2021-08-10', lugar_compra:'HP Store', descripcion:'Desktop de escritorio. Procesador i7, 8GB RAM. Utilizado para tareas de análisis contable.' },
+      { id:'EQ-003', nombre:'Cisco Catalyst',  tipo:'Switch',   numero_serie:'SN-CISCO-003',modelo:'Catalyst 2960', direccion_mac:'AA:BB:CC:77:88:99', direccion_ip:'192.168.1.2',  area:'Redes',        ubicacion_fisica:'Cuarto de redes',   encargado_equipo:'Andrea Monreal',  fecha_compra:'2020-01-20', lugar_compra:'Cisco Partner', descripcion:'Switch de red central. Soporta 48 puertos Gigabit. Configurado para VLAN. Mantenimiento preventivo requerido en próximos 3 meses.' }
     ];
 
     const escapeHtml = (v) => String(v ?? '').replace(/[&<>"']/g, (c) =>
@@ -611,6 +624,7 @@
       equipmentForm.encargado_equipo.value = item.encargado_equipo || '';
       equipmentForm.fecha_compra.value     = item.fecha_compra     || '';
       equipmentForm.lugar_compra.value     = item.lugar_compra     || '';
+      equipmentForm.descripcion.value      = item.descripcion      || '';
       renderEquipment();
     };
 
