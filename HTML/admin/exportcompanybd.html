@@ -438,66 +438,31 @@
         <path d="M3 13v4c0 1.66 4.03 3 9 3s9-1.34 9-3v-4"/>
       </svg>`;
 
-    const downloadFile = async (url, filename) => {
-      const response = await fetch(url);
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || 'No se pudo exportar el archivo');
-      }
-      const blob = await response.blob();
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(link.href);
-    };
-
-    // Modal
-    const openModal = (company) => {
-      pendingCompany = company;
-      referenceInput.value = '';
-      modalOverlay.classList.remove('hidden');
-      setTimeout(() => referenceInput.focus(), 100);
-    };
-    const closeModal = () => {
-      modalOverlay.classList.add('hidden');
-      pendingCompany = null;
-    };
-
-    document.getElementById('modalCancel').addEventListener('click', closeModal);
-    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
-
-    document.getElementById('modalConfirm').addEventListener('click', async () => {
-      const ref = referenceInput.value.trim();
-      if (!ref) {
-        referenceInput.focus();
-        referenceInput.style.borderColor = 'rgba(220,80,80,0.7)';
-        setTimeout(() => referenceInput.style.borderColor = '', 1500);
-        return;
-      }
-      closeModal();
-      if (!pendingCompany) return;
-      const company = pendingCompany;
-      const btn = document.querySelector(`[data-company-id="${company.id}"]`);
-      if (btn) { btn.classList.add('loading'); btn.textContent = 'Exportando...'; }
-      try {
-        await downloadFile(`http://localhost:3000/api/exportar/empresa/${company.id}?ref=${encodeURIComponent(ref)}`);
-      } catch (error) {
-        alert(error.message);
-      } finally {
-        if (btn) {
-          btn.classList.remove('loading');
-          btn.innerHTML = `
-            <svg viewBox="0 0 24 24" aria-hidden="true"
-                 style="width:14px;height:14px;stroke:rgba(255,255,255,0.8);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round">
-              <path d="M12 3v13M7 11l5 5 5-5"/><path d="M4 20h16"/>
-            </svg>
-            Exportar BD`;
-        }
-      }
-    });
+    const downloadFile = async (url, filename = 'backup.csv') => {
+  try {
+    const response = await fetch(url);
+    
+    // Si la respuesta no es 200, lanza el error para verlo en el alert
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({ error: 'Error desconocido' }));
+      throw new Error(errData.error);
+    }
+    
+    const blob = await response.blob();
+    const urlBlob = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = urlBlob;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(urlBlob);
+    
+  } catch (error) {
+    console.error("Fallo en la descarga:", error);
+    throw error; // Esto hará que el 'catch' de tu botón muestre el alert
+  }
+};
 
     const renderCompanies = (companies) => {
       companyGrid.innerHTML = '';
@@ -534,6 +499,59 @@
         companyGrid.innerHTML = `<p class="empty-message">${error.message}</p>`;
       }
     };
+
+    // ─── Control del Modal ───
+    const openModal = (company) => {
+      pendingCompany = company;
+      referenceInput.value = ''; // Limpiar input
+      modalOverlay.classList.remove('hidden');
+      setTimeout(() => referenceInput.focus(), 100);
+    };
+
+    const closeModal = () => {
+      modalOverlay.classList.add('hidden');
+      pendingCompany = null;
+    };
+
+    document.getElementById('modalCancel').addEventListener('click', closeModal);
+
+    // ─── Lógica al confirmar la exportación ───
+    document.getElementById('modalConfirm').addEventListener('click', async () => {
+      if (!pendingCompany) return;
+      
+      const ref = referenceInput.value.trim();
+      if (!ref) {
+        alert('Por favor, ingresa la referencia de la solicitud.');
+        return;
+      }
+
+      const btn = document.getElementById('modalConfirm');
+      const originalText = btn.innerHTML;
+      
+      // Cambiar estado del botón
+      btn.innerHTML = 'Exportando...';
+      btn.style.opacity = '0.6';
+      btn.style.pointerEvents = 'none';
+
+      try {
+        // Aquí armamos la URL correcta usando pendingCompany.id
+        const url = `http://localhost:3000/api/exportar/empresa/${pendingCompany.id}?ref=${encodeURIComponent(ref)}`;
+        
+        // Llamamos a la función de descarga que ya arreglaste
+        await downloadFile(url, `BD_${pendingCompany.nombre.replace(/\s+/g, '_')}.csv`);
+        
+        // Si todo sale bien, cerramos el modal
+        closeModal();
+      } catch (error) {
+        // Si hay error (404, 500, etc), el throw de downloadFile caerá aquí
+        alert(`Error: ${error.message}`);
+      } finally {
+        // Restaurar el botón a la normalidad
+        btn.innerHTML = originalText;
+        btn.style.opacity = '1';
+        btn.style.pointerEvents = 'auto';
+      }
+    });
 
     loadCompanies();
   </script>
