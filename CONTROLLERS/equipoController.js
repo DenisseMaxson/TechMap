@@ -160,44 +160,53 @@ const exportEquipoPDF = (req, res) => {
 };
 
 // 7. Solicitar Baja
-const solicitarBaja = async (req, res) => {
-  const { id_equipo, motivo, solicitante, id_area } = req.body;
+// 7. Solicitar Baja
+const solicitarBaja = (req, res) => {
+    // Datos que tu formulario le manda al backend
+    const { id_equipo, motivo, solicitante, id_area } = req.body;
 
-  try {
-    const [rows] = await db.query('CALL sp_solicitar_baja(?, ?, ?)', [id_equipo, motivo, id_area]);
-    const datosDeRetorno = rows[0]?.[0]; 
-    const correoJefe = datosDeRetorno?.email_jefe;
-    const nombreEquipo = datosDeRetorno?.nombre_equipo || "Equipo Registrado";
+    // 1. Ejecutamos el procedimiento almacenado para actualizar estado y jalar correo
+    db.query('CALL sp_solicitar_baja(?, ?, ?)', [id_equipo, motivo, id_area], (err, results) => {
+        if (err) {
+            console.error('❌ Error en el procedimiento sp_solicitar_baja:', err);
+            return res.status(500).json({ success: false, message: 'Error interno al procesar la baja.' });
+        }
 
-    console.log(`Procedimiento ejecutado. Jefe detectado: ${correoJefe}, Equipo: ${nombreEquipo}`);
+        const datosDeRetorno = results?.[0]?.[0]; 
+        const correoJefe = datosDeRetorno?.email_jefe;
+        const nombreEquipo = datosDeRetorno?.nombre_equipo || "Equipo Registrado";
 
-    if (correoJefe) {
-      enviarCorreoBajaPendiente(correoJefe, {
-        id_equipo,
-        nombre_equipo: nombreEquipo,
-        motivo,
-        solicitante
-      }).then(() => {
-        console.log(`📧 Notificación de baja enviada con éxito a: ${correoJefe}`);
-      }).catch(err => {
-        console.error('❌ Error al enviar el correo con Nodemailer:', err);
-      });
-    } else {
-      console.log('⚠️ No se envió correo porque no se encontró un Jefe asignado a esta área.');
-    }
+        // 2. GUARDAR EL HISTORIAL EN solicitudes_baja
+        // Jalamos el empresa_id directo desde la tabla equipos para no fallar
+        const sqlInsert = `
+            INSERT INTO solicitudes_baja (equipo_id, empresa_id, solicitado_por, motivo, estado, fecha_solicitud)
+            SELECT id, empresa_id, ?, ?, 'pendiente', NOW() 
+            FROM equipos WHERE id = ?
+        `;
 
-    return res.status(200).json({
-      success: true,
-      message: 'La solicitud de baja se registró y se notificó al jefe de área.'
+        db.query(sqlInsert, [solicitante, motivo, id_equipo], (errInsert) => {
+            if (errInsert) {
+                console.error('❌ Error guardando en solicitudes_baja:', errInsert);
+            } else {
+                console.log('✅ Solicitud registrada exitosamente en la base de datos.');
+            }
+
+            // 3. Disparar el correo en segundo plano
+            if (correoJefe) {
+                enviarCorreoBajaPendiente(correoJefe, { id_equipo, nombre_equipo: nombreEquipo, motivo, solicitante })
+                    .then(() => console.log(`📧 Notificación enviada a: ${correoJefe}`))
+                    .catch(mailErr => console.error('❌ Error con Nodemailer:', mailErr));
+            } else {
+                console.log('⚠️ No se envió correo: Jefe no encontrado para esta empresa.');
+            }
+
+            // 4. Responder al Frontend (Aviso Verde)
+            return res.status(200).json({
+                success: true,
+                message: 'La solicitud de baja se registró y se notificó al jefe de área.'
+            });
+        });
     });
-
-  } catch (error) {
-    console.error('❌ Error en el controlador sp_solicitar_baja:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Error interno en el servidor al procesar la baja.' 
-    });
-  }
 };
 
 // EXPORTACIONES MODIFICADAS

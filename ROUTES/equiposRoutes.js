@@ -13,6 +13,10 @@ router.get('/dashboard/:empresa_id', equipoController.getDashboardStats);
 // Registrar un nuevo equipo (Los 11 campos técnicos)
 router.post('/', equipoController.insert);
 
+// 🚀 RUTA AGREGADA: Procesar la solicitud de baja y enviar correo al jefe
+// URL: http://localhost:3000/api/equipos/solicitar-baja
+router.post('/solicitar-baja', equipoController.solicitarBaja);
+
 // Actualizar datos de un equipo
 router.put('/', equipoController.update);
 
