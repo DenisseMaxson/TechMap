@@ -356,6 +356,7 @@
 
   <script>
     // Llaves locales (Se mantienen para no romper el rastro de historial local si lo usan)
+    const REQUESTS_KEY = 'techmap_solicitudes_baja';
     const HISTORY_KEY   = 'techmap_historial_empresa';
 
     const requestForm     = document.getElementById('requestForm');
@@ -402,6 +403,23 @@
         detalle: `Solicitud de baja enviada: ${req.motivo}`
       });
       localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 80)));
+    };
+
+    const saveLocalRequest = (req) => {
+      const saved = JSON.parse(localStorage.getItem(REQUESTS_KEY) || '[]');
+      saved.unshift({
+        id: String(Date.now()).slice(-6),
+        dispositivo: req.dispositivo,
+        serie: req.serie,
+        area: req.area,
+        solicitante: req.solicitante,
+        motivo: req.motivo,
+        evidencia: req.evidencia || 'Sin evidencia adjunta',
+        estado: 'pendiente',
+        fecha_solicitud: new Date().toISOString(),
+        observaciones: ''
+      });
+      localStorage.setItem(REQUESTS_KEY, JSON.stringify(saved.slice(0, 80)));
     };
 
     const populateEquipment = () => {
@@ -474,12 +492,16 @@
 
         if (resultado.success) {
           // Si guardó en BD, actualizamos historial local de apoyo
-          saveHistory({
+          const localRequest = {
             dispositivo: item.nombre,
             serie: item.numero_serie,
+            area: item.area,
             solicitante: datosBaja.solicitante,
-            motivo: datosBaja.motivo
-          });
+            motivo: datosBaja.motivo,
+            evidencia: document.getElementById('txtEvidencia').value.trim()
+          };
+          saveHistory(localRequest);
+          saveLocalRequest(localRequest);
 
           // Resetear los estados de la interfaz
           requestForm.reset();

@@ -251,11 +251,19 @@
     .icon-button.reject:hover:not(:disabled) {
       background: rgba(160,40,40,0.65);
     }
+    .icon-button.details {
+      background: rgba(35,97,173,0.48);
+      border: 1px solid rgba(88,180,236,0.45);
+      color: #bfe7ff;
+    }
+    .icon-button.details:hover {
+      background: rgba(35,97,173,0.75);
+    }
 
     .id-column      { width: 56px; }
     .serial-column  { width: 100px; }
     .status-column  { width: 110px; }
-    .actions-column { width: 100px; }
+    .actions-column { width: 132px; }
 
     /* ── Mensaje vacío ── */
     .empty-message {
@@ -289,9 +297,116 @@
     .toast.success { background: rgba(22,110,82,0.94); }
     .toast.error { background: rgba(132,42,58,0.94); }
 
+    /* Modal de detalles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(10,16,48,0.62);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .modal-overlay.hidden { display: none; }
+
+    .details-modal {
+      width: min(680px, 100%);
+      max-height: min(720px, calc(100vh - 36px));
+      overflow: auto;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 14px;
+      background: rgba(17,23,79,0.96);
+      box-shadow: 0 22px 60px rgba(0,0,0,0.28);
+      animation: fadeUp 0.22s ease both;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 18px 20px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+    .modal-title {
+      font-size: clamp(17px, 2vw, 22px);
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+    .modal-sub {
+      margin-top: 4px;
+      color: rgba(255,255,255,0.48);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .modal-close {
+      display: inline-flex;
+      width: 32px;
+      height: 32px;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.78);
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, transform 0.15s;
+    }
+    .modal-close:hover {
+      background: rgba(255,255,255,0.12);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+    .modal-close svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      padding: 18px 20px 20px;
+    }
+    .detail-item {
+      min-width: 0;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      background: rgba(29,96,147,0.22);
+      padding: 10px 12px;
+    }
+    .detail-item.full { grid-column: 1 / -1; }
+    .detail-label {
+      display: block;
+      margin-bottom: 5px;
+      color: rgba(255,255,255,0.46);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .detail-value {
+      color: rgba(255,255,255,0.88);
+      font-size: 13px;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
     @media (max-width: 560px) {
       .bajas-screen { padding-inline: 10px; }
       .toolbar { flex-wrap: wrap; }
+      .details-grid { grid-template-columns: 1fr; }
+      .detail-item.full { grid-column: 1; }
     }
   </style>
 </head>
@@ -361,19 +476,37 @@
 
   </main>
 
+  <div class="modal-overlay hidden" id="detailsOverlay" role="dialog" aria-modal="true" aria-labelledby="detailsTitle">
+    <article class="details-modal">
+      <header class="modal-header">
+        <div>
+          <h2 class="modal-title" id="detailsTitle">Detalles de la solicitud</h2>
+          <p class="modal-sub" id="detailsSubtitle">Solicitud de baja</p>
+        </div>
+        <button class="modal-close" type="button" id="closeDetailsButton" aria-label="Cerrar detalles">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6l12 12"/>
+            <path d="M18 6 6 18"/>
+          </svg>
+        </button>
+      </header>
+      <div class="details-grid" id="detailsContent"></div>
+    </article>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
     const REQUESTS_KEY = 'techmap_solicitudes_baja';
     const HISTORY_KEY = 'techmap_historial_empresa';
     const initialRequests = [
-      { id:'001', dispositivo:'Dell Latitude',    serie:'88181111', solicitante:'Tyler Joseph',    estado:'pendiente' },
-      { id:'002', dispositivo:'HP LaserJet',       serie:'88181112', solicitante:'Denisse Valadez', estado:'pendiente' },
-      { id:'003', dispositivo:'Teclado Logitech',  serie:'88181113', solicitante:'Andrea Monreal',  estado:'pendiente' },
-      { id:'004', dispositivo:'Mouse Microsoft',   serie:'88181114', solicitante:'Draco Malfoy',    estado:'pendiente' },
-      { id:'005', dispositivo:'Monitor LG',        serie:'88181115', solicitante:'Higgs Monaghan',  estado:'pendiente' },
-      { id:'006', dispositivo:'Dell Latitude',     serie:'88181116', solicitante:'Rhea Ripley',     estado:'pendiente' },
-      { id:'007', dispositivo:'Dell Latitude',     serie:'88181117', solicitante:'Danhausen',       estado:'pendiente' }
+      { id:'001', dispositivo:'Dell Latitude',    serie:'88181111', solicitante:'Tyler Joseph',    area:'TI',           estado:'pendiente', fecha_solicitud:'2026-05-17T09:20:00', motivo:'La bateria ya no retiene carga y el equipo se apaga durante revisiones de soporte.', evidencia:'Reporte interno TI-145' },
+      { id:'002', dispositivo:'HP LaserJet',       serie:'88181112', solicitante:'Denisse Valadez', area:'Contabilidad', estado:'pendiente', fecha_solicitud:'2026-05-17T10:05:00', motivo:'Atascos constantes de papel y costo de reparacion superior al valor actual del equipo.', evidencia:'Cotizacion proveedor #9082' },
+      { id:'003', dispositivo:'Teclado Logitech',  serie:'88181113', solicitante:'Andrea Monreal',  area:'Redes',        estado:'pendiente', fecha_solicitud:'2026-05-18T11:15:00', motivo:'Varias teclas no responden despues de mantenimiento preventivo.', evidencia:'Sin evidencia adjunta' },
+      { id:'004', dispositivo:'Mouse Microsoft',   serie:'88181114', solicitante:'Draco Malfoy',    area:'Operaciones',  estado:'pendiente', fecha_solicitud:'2026-05-18T12:30:00', motivo:'Falla intermitente del sensor optico y desconexiones frecuentes.', evidencia:'Ticket MESA-221' },
+      { id:'005', dispositivo:'Monitor LG',        serie:'88181115', solicitante:'Higgs Monaghan',  area:'Direccion',    estado:'pendiente', fecha_solicitud:'2026-05-19T08:45:00', motivo:'Panel con lineas permanentes y brillo irregular que impide su uso continuo.', evidencia:'Fotografia en expediente' },
+      { id:'006', dispositivo:'Dell Latitude',     serie:'88181116', solicitante:'Rhea Ripley',     area:'Ventas',       estado:'pendiente', fecha_solicitud:'2026-05-19T13:00:00', motivo:'Equipo obsoleto sin soporte de actualizaciones requeridas por seguridad.', evidencia:'Revision inventario Q2' },
+      { id:'007', dispositivo:'Dell Latitude',     serie:'88181117', solicitante:'Danhausen',       area:'Soporte',      estado:'pendiente', fecha_solicitud:'2026-05-20T16:10:00', motivo:'Tarjeta madre danada; reparacion no viable por disponibilidad de refacciones.', evidencia:'Diagnostico tecnico DT-077' }
     ];
 
     const loadRequests = () => {
@@ -391,11 +524,35 @@
     const statusFilter = document.getElementById('statusFilter');
     const recordCount  = document.getElementById('recordCount');
     const toast = document.getElementById('toast');
+    const detailsOverlay = document.getElementById('detailsOverlay');
+    const detailsSubtitle = document.getElementById('detailsSubtitle');
+    const detailsContent = document.getElementById('detailsContent');
     let toastTimer;
 
     const labels   = { pendiente:'Pendiente', aprobada:'Aprobada', rechazada:'Rechazada' };
     const rowClass = { pendiente:'', aprobada:'is-approved', rechazada:'is-rejected' };
     const badgeCls = { pendiente:'badge-pendiente', aprobada:'badge-aprobada', rechazada:'badge-rechazada' };
+
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) =>
+      ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' }[c]));
+
+    const displayValue = (value) => {
+      const text = String(value ?? '').trim();
+      return text ? text : 'No registrado';
+    };
+
+    const formatDate = (value) => {
+      if (!value) return 'No registrada';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleString('es-MX', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    };
 
     const showToast = (message, type = 'success') => {
       clearTimeout(toastTimer);
@@ -435,17 +592,56 @@
       const dis = r.estado !== 'pendiente' ? 'disabled' : '';
       return `
         <div class="actions">
+          <button class="icon-button details" type="button"
+                  data-action="details" data-id="${escapeHtml(r.id)}"
+                  aria-label="Ver detalles de ${escapeHtml(r.dispositivo)}">
+            <svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+          </button>
           <button class="icon-button approve" type="button"
-                  data-action="aprobada" data-id="${r.id}" ${dis}
-                  aria-label="Aprobar baja de ${r.dispositivo}">
+                  data-action="aprobada" data-id="${escapeHtml(r.id)}" ${dis}
+                  aria-label="Aprobar baja de ${escapeHtml(r.dispositivo)}">
             <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
           </button>
           <button class="icon-button reject" type="button"
-                  data-action="rechazada" data-id="${r.id}" ${dis}
-                  aria-label="Rechazar baja de ${r.dispositivo}">
+                  data-action="rechazada" data-id="${escapeHtml(r.id)}" ${dis}
+                  aria-label="Rechazar baja de ${escapeHtml(r.dispositivo)}">
             <svg viewBox="0 0 24 24"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg>
           </button>
         </div>`;
+    };
+
+    const openDetails = (id) => {
+      const request = requests.find(r => String(r.id) === String(id));
+      if (!request) return;
+
+      detailsSubtitle.textContent = `${request.dispositivo || 'Equipo'} - Folio ${request.id || 'N/A'}`;
+      const rows = [
+        ['ID de solicitud', request.id],
+        ['Estado', labels[request.estado] || request.estado],
+        ['Dispositivo', request.dispositivo],
+        ['Numero de serie', request.serie],
+        ['Solicitante', request.solicitante],
+        ['Area', request.area],
+        ['Fecha de solicitud', formatDate(request.fecha_solicitud)],
+        ['Fecha de resolucion', formatDate(request.fecha_resolucion)],
+        ['Evidencia o referencia', request.evidencia || request.evidencia_url],
+        ['Observaciones', request.observaciones],
+        ['Motivo de la baja', request.motivo, 'full']
+      ];
+
+      detailsContent.innerHTML = rows.map(([label, value, size]) => `
+        <section class="detail-item ${size === 'full' ? 'full' : ''}">
+          <span class="detail-label">${escapeHtml(label)}</span>
+          <p class="detail-value">${escapeHtml(displayValue(value))}</p>
+        </section>
+      `).join('');
+
+      detailsOverlay.classList.remove('hidden');
+      document.getElementById('closeDetailsButton').focus();
+    };
+
+    const closeDetails = () => {
+      detailsOverlay.classList.add('hidden');
     };
 
     const renderRequests = () => {
@@ -454,10 +650,10 @@
 
       tableBody.innerHTML = list.map(r => `
         <tr class="${rowClass[r.estado]}">
-          <td>${r.id}</td>
-          <td style="text-align:left">${r.dispositivo}</td>
-          <td>${r.serie}</td>
-          <td>${r.solicitante}</td>
+          <td>${escapeHtml(r.id)}</td>
+          <td style="text-align:left">${escapeHtml(r.dispositivo)}</td>
+          <td>${escapeHtml(r.serie)}</td>
+          <td>${escapeHtml(r.solicitante)}</td>
           <td><span class="status-badge ${badgeCls[r.estado]}">${labels[r.estado]}</span></td>
           <td>${actionButtons(r)}</td>
         </tr>
@@ -472,7 +668,19 @@
     tableBody.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-action]');
       if (!btn || btn.disabled) return;
+      if (btn.dataset.action === 'details') {
+        openDetails(btn.dataset.id);
+        return;
+      }
       setStatus(btn.dataset.id, btn.dataset.action);
+    });
+
+    document.getElementById('closeDetailsButton').addEventListener('click', closeDetails);
+    detailsOverlay.addEventListener('click', (e) => {
+      if (e.target === detailsOverlay) closeDetails();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !detailsOverlay.classList.contains('hidden')) closeDetails();
     });
 
     statusFilter.addEventListener('change', renderRequests);
