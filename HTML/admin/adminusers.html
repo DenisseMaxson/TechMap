@@ -122,6 +122,87 @@
     }
 
     /* ── Cards de usuarios ── */
+    .filter-bar {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) minmax(150px, 0.7fr) minmax(140px, 0.55fr) auto;
+      gap: 10px;
+      align-items: end;
+      margin-bottom: 14px;
+      border: 1px solid rgba(105,161,206,0.25);
+      border-radius: 14px;
+      background: rgba(55,100,180,0.16);
+      padding: 12px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      text-align: left;
+    }
+
+    .filter-label {
+      margin-bottom: 5px;
+      color: rgba(255,255,255,0.52);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+    }
+
+    .filter-input,
+    .filter-select {
+      width: 100%;
+      height: 34px;
+      border: 1px solid rgba(105,161,206,0.3);
+      border-radius: 8px;
+      outline: none;
+      background: rgba(17,22,73,0.55);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: 13px;
+      padding: 0 12px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .filter-input::placeholder { color: rgba(255,255,255,0.25); }
+    .filter-input:focus,
+    .filter-select:focus {
+      border-color: rgba(105,161,206,0.65);
+      box-shadow: 0 0 0 3px rgba(55,147,208,0.15);
+    }
+    .filter-select option { background: #1a2560; color: var(--white); }
+
+    .filter-clear {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 34px;
+      border: 1px solid rgba(140,140,200,0.3);
+      border-radius: 8px;
+      background: rgba(80,80,120,0.28);
+      color: rgba(255,255,255,0.72);
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .filter-clear:hover {
+      background: rgba(80,80,120,0.48);
+      color: var(--white);
+      border-color: rgba(255,255,255,0.3);
+    }
+    .filter-clear svg {
+      width: 13px;
+      height: 13px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
     .user-list {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -336,6 +417,7 @@
 
     @media (max-width: 760px) {
       .users-screen { overflow-y: auto; }
+      .filter-bar { grid-template-columns: 1fr; }
       .user-list { grid-template-columns: 1fr; }
       .form-grid { grid-template-columns: 1fr; }
       .field-group.full { grid-column: 1; }
@@ -378,6 +460,41 @@
 
     <!-- Contenido -->
     <section class="content">
+
+      <!-- Filtros -->
+      <div class="filter-bar" aria-label="Filtros de usuarios">
+        <label class="filter-group">
+          <span class="filter-label">Buscar</span>
+          <input class="filter-input" type="search" id="userSearch"
+                 placeholder="Nombre, empresa, rol o usuario">
+        </label>
+
+        <label class="filter-group">
+          <span class="filter-label">Empresa</span>
+          <select class="filter-select" id="companyFilter">
+            <option value="todos">Todas las empresas</option>
+          </select>
+        </label>
+
+        <label class="filter-group">
+          <span class="filter-label">Rol</span>
+          <select class="filter-select" id="roleFilter">
+            <option value="todos">Todos los roles</option>
+            <option value="ti">Responsable de TI</option>
+            <option value="contabilidad">Contabilidad</option>
+            <option value="jefe_area">Jefe de area</option>
+          </select>
+        </label>
+
+        <button class="filter-clear" type="button" id="clearFiltersButton">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/>
+            <path d="M18 9l-6 6"/>
+            <path d="M12 9l6 6"/>
+          </svg>
+          Limpiar
+        </button>
+      </div>
 
       <!-- Cards -->
       <div class="user-list" id="userList" aria-label="Lista de usuarios"></div>
@@ -468,6 +585,9 @@
     const userList     = document.getElementById('userList');
     const userForm     = document.getElementById('userForm');
     const companySelect = document.getElementById('companySelect');
+    const userSearch = document.getElementById('userSearch');
+    const companyFilter = document.getElementById('companyFilter');
+    const roleFilter = document.getElementById('roleFilter');
     let users = [], companies = [], selectedUserId = null;
 
     const escapeHtml = (v) => String(v ?? '').replace(/[&<>"']/g, (c) =>
@@ -497,23 +617,55 @@
       return `<span class="role-badge ${cls}">${label}</span>`;
     };
 
+    const normalize = (value) => String(value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
     const renderCompanies = () => {
       companySelect.innerHTML = '<option value="">Seleccionar empresa</option>';
+      companyFilter.innerHTML = '<option value="todos">Todas las empresas</option>';
       companies.forEach((c) => {
         const o = document.createElement('option');
         o.value = c.id;
         o.textContent = c.nombre;
         companySelect.appendChild(o);
+
+        const filterOption = document.createElement('option');
+        filterOption.value = c.id;
+        filterOption.textContent = c.nombre;
+        companyFilter.appendChild(filterOption);
+      });
+    };
+
+    const filteredUsers = () => {
+      const q = normalize(userSearch.value.trim());
+      const companyId = companyFilter.value;
+      const rol = roleFilter.value;
+
+      return users.filter((user) => {
+        const companyOk = companyId === 'todos' || String(user.empresa_id || '') === companyId;
+        const roleOk = rol === 'todos' || user.rol === rol;
+        const searchText = normalize([
+          user.nombre_completo,
+          user.nombre_empresa,
+          user.rol,
+          user.usuario,
+          user.correo,
+          user.estado
+        ].join(' '));
+        return companyOk && roleOk && (!q || searchText.includes(q));
       });
     };
 
     const renderUsers = () => {
+      const list = filteredUsers();
       userList.innerHTML = '';
-      if (!users.length) {
-        userList.innerHTML = '<p class="empty-message">No hay usuarios registrados.</p>';
+      if (!list.length) {
+        userList.innerHTML = '<p class="empty-message">No hay usuarios que coincidan con los filtros.</p>';
         return;
       }
-      users.forEach((user) => {
+      list.forEach((user) => {
         const card = document.createElement('button');
         card.className = `user-card${user.id === selectedUserId ? ' selected' : ''}`;
         card.type = 'button';
@@ -558,6 +710,13 @@
       renderUsers();
     };
 
+    const clearFilters = () => {
+      userSearch.value = '';
+      companyFilter.value = 'todos';
+      roleFilter.value = 'todos';
+      renderUsers();
+    };
+
     document.getElementById('addButton').addEventListener('click', async () => {
       if (!userForm.reportValidity()) return;
       if (!userForm.password.value) return alert('Agrega una contraseña para el usuario.');
@@ -592,6 +751,10 @@
     });
 
     document.getElementById('clearButton').addEventListener('click', clearForm);
+    userSearch.addEventListener('input', renderUsers);
+    companyFilter.addEventListener('change', renderUsers);
+    roleFilter.addEventListener('change', renderUsers);
+    document.getElementById('clearFiltersButton').addEventListener('click', clearFilters);
     loadData();
   </script>
 </body>
