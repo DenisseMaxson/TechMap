@@ -593,13 +593,28 @@
     const escapeHtml = (v) => String(v ?? '').replace(/[&<>"']/g, (c) =>
       ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
 
+    const session = JSON.parse(localStorage.getItem('techmap_session') || sessionStorage.getItem('techmap_session') || '{}');
+    if (!session.token) {
+      window.location.href = 'adminhome.html';
+    }
+
     const request = async (url, options = {}) => {
       const res  = await fetch(url, {
-        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.token}`,
+          ...(options.headers || {})
+        },
         ...options
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Error en la solicitud');
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          window.location.href = 'adminhome.html';
+          return {};
+        }
+        throw new Error(data.error || 'Error en la solicitud');
+      }
       return data;
     };
 

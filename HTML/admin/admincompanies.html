@@ -437,13 +437,28 @@
 
     const formData = () => Object.fromEntries(new FormData(companyForm).entries());
 
+    const session = JSON.parse(localStorage.getItem('techmap_session') || sessionStorage.getItem('techmap_session') || '{}');
+    if (!session.token) {
+      window.location.href = 'adminhome.html';
+    }
+
     const request = async (url, options = {}) => {
       const response = await fetch(url, {
-        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.token}`,
+          ...(options.headers || {})
+        },
         ...options
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || 'Error en la solicitud');
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          window.location.href = 'adminhome.html';
+          return {};
+        }
+        throw new Error(data.error || 'Error en la solicitud');
+      }
       return data;
     };
 

@@ -2,6 +2,12 @@ const db     = require('../DB/connection');
 const bcrypt = require('bcryptjs');
 const authToken = require('../UTILS/authToken');
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const validRoles = ['administrador', 'jefe_area', 'contabilidad', 'ti_contabilidad'];
+
+const validateEmail = (correo) => !correo || emailRegex.test(String(correo).trim());
+const validateRole = (rol) => typeof rol === 'string' && validRoles.includes(rol);
+
 const getAll = (req, res) => {
   const sql = `
     SELECT u.id, u.empresa_id, u.nombre_completo, u.correo, u.usuario, u.rol,
@@ -19,20 +25,42 @@ const insert = (req, res) => {
   const { empresa_id, nombre_completo, correo, usuario, password_hash, password, rol } = req.body;
   const userName     = usuario || correo || nombre_completo;
   const passwordValue = password || password_hash || '';
+
   if (!userName || !passwordValue || !rol) {
     return res.status(400).json({ error: 'Usuario, contraseña y rol son obligatorios' });
   }
-  const hashedPassword = bcrypt.hashSync(passwordValue, 10);
-  const sql = 'CALL sp_insert_usuario(?,?,?,?,?,?)';
-  db.query(sql, [empresa_id || null, nombre_completo, correo || null, userName, hashedPassword, rol], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
-    const id = result?.[0]?.[0]?.id;
-    res.json({ mensaje: 'Usuario creado', id });
+  if (!validateRole(rol)) {
+    return res.status(400).json({ error: `Rol inválido. Valores permitidos: ${validRoles.join(', ')}` });
+  }
+  if (!validateEmail(correo)) {
+    return res.status(400).json({ error: 'Correo inválido' });
+  }
+
+  const userCheckSql = 'SELECT id FROM usuarios WHERE usuario = ? OR correo = ? LIMIT 1';
+  db.query(userCheckSql, [userName, correo || ''], (checkErr, existing) => {
+    if (checkErr) return res.status(500).json({ error: checkErr.message });
+    if (existing?.length) return res.status(409).json({ error: 'Usuario o correo ya registrado' });
+
+    const hashedPassword = bcrypt.hashSync(passwordValue, 10);
+    const sql = 'CALL sp_insert_usuario(?,?,?,?,?,?)';
+    db.query(sql, [empresa_id || null, nombre_completo, correo || null, userName, hashedPassword, rol], (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      const id = result?.[0]?.[0]?.id;
+      res.json({ mensaje: 'Usuario creado', id });
+    });
   });
 };
 
 const update = (req, res) => {
   const { id, empresa_id, nombre_completo, correo, rol, estado, usuario, password } = req.body;
+  if (!id) return res.status(400).json({ error: 'ID de usuario es obligatorio' });
+  if (correo && !validateEmail(correo)) {
+    return res.status(400).json({ error: 'Correo inválido' });
+  }
+  if (rol && !validateRole(rol)) {
+    return res.status(400).json({ error: `Rol inválido. Valores permitidos: ${validRoles.join(', ')}` });
+  }
+
   const sql = 'CALL sp_update_usuario(?,?,?,?,?,?)';
   db.query(sql, [empresa_id || null, nombre_completo, correo || null, rol, estado, id], (err) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -85,13 +113,20 @@ const login = (req, res) => {
 
     db.query('UPDATE usuarios SET ultimo_acceso = NOW() WHERE id = ?', [user.id]);
     delete user.password_hash;
+    const expiresInSeconds = Number(process.env.AUTH_TOKEN_EXPIRES_SECONDS || 60 * 60);
     const token = authToken.sign({
       id: user.id,
       empresa_id: user.empresa_id,
       rol: user.rol,
       usuario: user.usuario
+    }, expiresInSeconds);
+
+    res.json({
+      mensaje: 'Inicio de sesión correcto',
+      usuario: user,
+      token,
+      expires_in: expiresInSeconds
     });
-    res.json({ mensaje: 'Inicio de sesión correcto', usuario: user, token });
   });
 };
 

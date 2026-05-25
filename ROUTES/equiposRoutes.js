@@ -1,6 +1,9 @@
 const express = require('express');
 const router  = express.Router();
+const authMiddleware = require('../UTILS/authMiddleware');
 const equipoController = require('../CONTROLLERS/equipoController');
+
+router.use(authMiddleware.authenticate);
 
 // Obtener lista de equipos por empresa
 // URL: http://localhost:3000/api/equipos/empresa/1
@@ -13,6 +16,9 @@ router.get('/bajas/empresa/:empresa_id', equipoController.getSolicitudesBaja);
 // URL: http://localhost:3000/api/equipos/dashboard/1
 router.get('/dashboard/:empresa_id', equipoController.getDashboardStats);
 
+// Historial de movimientos desde base de datos
+router.get('/historial/:empresa_id', equipoController.getHistorial);
+
 // Registrar un nuevo equipo (Los 11 campos técnicos)
 router.post('/', equipoController.insert);
 
@@ -21,7 +27,7 @@ router.post('/', equipoController.insert);
 router.post('/solicitar-baja', equipoController.solicitarBaja);
 
 // Resolver solicitud de baja validando empresa
-router.put('/bajas/resolver', equipoController.resolverBaja);
+router.put('/bajas/resolver', authMiddleware.authorize(['jefe_area', 'administrador']), equipoController.resolverBaja);
 
 // Actualizar datos de un equipo
 router.put('/', equipoController.update);

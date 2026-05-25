@@ -386,41 +386,37 @@
 
     const session = getSession();
     const empresaId = Number(session.empresa_id || 0);
-    const STORAGE_KEY = `techmap_equipos_empresa_${empresaId || 'sin_empresa'}`;
-
     let equipment = [];
 
-    const loadLocalEquipment = () => {
-      try {
-        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        return saved.length ? saved : fallbackEquipment;
-      } catch { return fallbackEquipment; }
-    };
-
     const loadEquipment = async () => {
-      if (!empresaId) {
-        equipment = loadLocalEquipment();
-        populateTypeFilter();
-        renderInventory();
+      if (!empresaId || !session.token) {
+        window.location.href = 'companylogin.html';
         return;
       }
+
       try {
         const response = await fetch(`${API_URL}/empresa/${empresaId}`, {
           headers: {
-            'Authorization': `Bearer ${session.token || ''}`,
+            'Authorization': `Bearer ${session.token}`,
             'x-empresa-id': String(empresaId),
             'x-user-id': String(session.id || '')
           }
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'No se pudo cargar inventario');
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            window.location.href = 'companylogin.html';
+            return;
+          }
+          throw new Error(data.error || 'No se pudo cargar inventario');
+        }
         equipment = data.map((item) => ({
           ...item,
           fecha_compra: item.fecha_compra || (item.fecha_adquisicion ? String(item.fecha_adquisicion).slice(0, 10) : '')
         }));
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(equipment));
-      } catch {
-        equipment = loadLocalEquipment();
+      } catch (error) {
+        equipment = [];
+        console.error('Error cargando inventario:', error);
       }
       populateTypeFilter();
       renderInventory();

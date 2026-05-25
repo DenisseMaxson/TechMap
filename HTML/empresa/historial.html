@@ -367,18 +367,13 @@
       catch { return {}; }
     };
     const session = getSession();
-    const HISTORY_KEY  = `techmap_historial_empresa_${session.empresa_id || 'sin_empresa'}`;
+    const API_URL = 'http://localhost:3000/api/equipos';
+    const empresaId = Number(session.empresa_id || 0);
     const historyTable = document.getElementById('historyTable');
     const emptyMessage = document.getElementById('emptyMessage');
     const searchInput  = document.getElementById('searchInput');
     const typeFilter   = document.getElementById('typeFilter');
     const recordCount  = document.getElementById('recordCount');
-
-    const fallbackHistory = [
-      { id:'MOV-001', fecha:'2026-05-16T09:10:00', tipo:'Alta',          equipo:'Dell Latitude',   numero_serie:'SN-DELL-001',  usuario:'Carlos Ramirez',   detalle:'Alta inicial del equipo.' },
-      { id:'MOV-002', fecha:'2026-05-16T10:25:00', tipo:'Modificacion',  equipo:'HP EliteDesk',    numero_serie:'SN-HP-002',    usuario:'Laura Mendez',     detalle:'Cambio de encargado del equipo.' },
-      { id:'MOV-003', fecha:'2026-05-16T11:40:00', tipo:'Solicitud baja',equipo:'Cisco Catalyst',  numero_serie:'SN-CISCO-003', usuario:'Roberto Sanchez',  detalle:'Solicitud de baja por fallas intermitentes.' }
-    ];
 
     const escapeHtml = (v) => String(v ?? '').replace(/[&<>"']/g, (c) =>
       ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
@@ -400,14 +395,34 @@
       return 'badge-default';
     };
 
-    const loadHistory = () => {
-      try {
-        const saved = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-        return saved.length ? saved : fallbackHistory;
-      } catch { return fallbackHistory; }
-    };
+    let history = [];
 
-    const history = loadHistory();
+    const loadHistory = async () => {
+      if (!empresaId || !session.token) {
+        window.location.href = 'companylogin.html';
+        return [];
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/historial/${empresaId}`, {
+          headers: {
+            Authorization: `Bearer ${session.token}`
+          }
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            window.location.href = 'companylogin.html';
+            return [];
+          }
+          throw new Error(data.error || 'No se pudo cargar historial');
+        }
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error('Error cargando historial:', error);
+        return [];
+      }
+    };
 
     const matchesSearch = (item, q) =>
       [item.tipo, item.equipo, item.numero_serie, item.usuario, item.detalle]
@@ -439,9 +454,14 @@
         : '';
     };
 
+    async function initHistory() {
+      history = await loadHistory();
+      renderHistory();
+    }
+
     searchInput.addEventListener('input', renderHistory);
     typeFilter.addEventListener('change', renderHistory);
-    renderHistory();
+    initHistory();
   </script>
 </body>
 </html>

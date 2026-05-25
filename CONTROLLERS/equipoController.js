@@ -21,7 +21,15 @@ const normalizeTipo = (tipo) => {
   return allowed.includes(normalized) ? normalized : 'otro';
 };
 
-const getAuth = (req) => authToken.verify(authToken.getTokenFromRequest(req)) || {};
+const ipRegex = /^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})$/;
+const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$/;
+const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+const isValidIp = (value) => !value || ipRegex.test(String(value).trim());
+const isValidMac = (value) => !value || macRegex.test(String(value).trim());
+const isValidDate = (value) => !value || dateRegex.test(String(value).trim());
+
+const getAuth = (req) => req.user || authToken.verify(authToken.getTokenFromRequest(req)) || {};
 const getEmpresaId = (req) => {
   const auth = getAuth(req);
   if (auth.rol && auth.rol !== 'administrador') return Number(auth.empresa_id);
@@ -35,7 +43,7 @@ const getUsuarioId = (req) => {
 const requireEmpresa = (req, res) => {
   const auth = getAuth(req);
   if (!auth.id) {
-    res.status(401).json({ error: 'Sesion requerida.' });
+    res.status(401).json({ error: 'Sesión requerida.' });
     return null;
   }
   const empresaId = getEmpresaId(req);
@@ -70,6 +78,19 @@ const insertEquipo = (req, res) => {
     lugar_compra, valor_contable, observaciones, descripcion
   } = req.body;
   const usuarioId = getUsuarioId(req);
+
+  if (!numero_serie || !nombre) {
+    return res.status(400).json({ error: 'Número de serie y nombre de equipo son obligatorios.' });
+  }
+  if (!isValidIp(direccion_ip)) {
+    return res.status(400).json({ error: 'Dirección IP inválida.' });
+  }
+  if (!isValidMac(direccion_mac)) {
+    return res.status(400).json({ error: 'Dirección MAC inválida.' });
+  }
+  if (!isValidDate(fecha_adquisicion) && !isValidDate(fecha_compra)) {
+    return res.status(400).json({ error: 'Fecha de adquisición o compra con formato inválido. Use AAAA-MM-DD.' });
+  }
 
   const sql = `
     INSERT INTO equipos (
@@ -120,6 +141,17 @@ const updateEquipo = (req, res) => {
     descripcion, estado
   } = req.body;
   const usuarioId = getUsuarioId(req);
+
+  if (!id) return res.status(400).json({ error: 'ID de equipo es obligatorio.' });
+  if (!isValidIp(direccion_ip)) {
+    return res.status(400).json({ error: 'Dirección IP inválida.' });
+  }
+  if (!isValidMac(direccion_mac)) {
+    return res.status(400).json({ error: 'Dirección MAC inválida.' });
+  }
+  if (!isValidDate(fecha_adquisicion) && !isValidDate(fecha_compra)) {
+    return res.status(400).json({ error: 'Fecha de adquisición o compra con formato inválido. Use AAAA-MM-DD.' });
+  }
 
   const sql = `
     UPDATE equipos
@@ -200,6 +232,34 @@ const getDashboardStats = (req, res) => {
       bajas: results[2][0],
       financiero: results[3][0]
     });
+  });
+};
+
+const getHistorial = (req, res) => {
+  const empresaId = requireEmpresa(req, res);
+  if (!empresaId) return;
+
+  const sql = `
+    SELECT hm.id,
+           hm.empresa_id,
+           hm.equipo_id,
+           hm.usuario_id,
+           u.nombre_completo AS usuario,
+           hm.tipo_movimiento AS tipo,
+           hm.descripcion AS detalle,
+           hm.fecha,
+           e.nombre AS equipo,
+           e.numero_serie
+    FROM historial_movimientos hm
+    LEFT JOIN usuarios u ON hm.usuario_id = u.id
+    LEFT JOIN equipos e ON hm.equipo_id = e.id AND e.empresa_id = hm.empresa_id
+    WHERE hm.empresa_id = ?
+    ORDER BY hm.fecha DESC, hm.id DESC
+  `;
+
+  db.query(sql, [empresaId], (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results);
   });
 };
 
@@ -373,43 +433,65 @@ const resolverBaja = (req, res) => {
   const usuarioId = getUsuarioId(req);
   const decision = estado === 'aprobada' ? 'aprobada' : estado === 'rechazada' ? 'rechazada' : null;
 
-  if (!decision) return res.status(400).json({ error: 'Estado invalido.' });
+  if (!decision) return res.status(400).json({ error: 'Estado inválido.' });
+  if (decision === 'rechazada' && !observaciones) {
+    return res.status(400).json({ error: 'Comentario obligatorio para rechazo.' });
+  }
 
-  const sql = `
-    UPDATE solicitudes_baja sb
-    INNER JOIN equipos e ON sb.equipo_id = e.id AND e.empresa_id = sb.empresa_id
-    SET sb.estado = ?,
-        sb.fecha_resolucion = NOW(),
-        sb.observaciones = ?,
-        e.estado = IF(? = 'aprobada', 'dado_de_baja', 'activo')
-    WHERE sb.id = ? AND sb.empresa_id = ? AND sb.estado = 'pendiente'
-  `;
+  db.query(
+    'SELECT equipo_id FROM solicitudes_baja WHERE id = ? AND empresa_id = ? AND estado = "pendiente"',
+    [id, empresaId],
+    (findErr, rows) => {
+      if (findErr) return res.status(500).json({ error: findErr.message });
+      if (!rows.length) return res.status(404).json({ error: 'Solicitud pendiente no encontrada para esta empresa.' });
 
-  db.query(sql, [decision, observaciones || null, decision, id, empresaId], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (!result.affectedRows) return res.status(404).json({ error: 'Solicitud pendiente no encontrada para esta empresa.' });
+      const equipoId = rows[0].equipo_id;
+      const sql = `
+        UPDATE solicitudes_baja sb
+        INNER JOIN equipos e ON sb.equipo_id = e.id AND e.empresa_id = sb.empresa_id
+        SET sb.estado = ?,
+            sb.fecha_resolucion = NOW(),
+            sb.observaciones = ?,
+            e.estado = IF(? = 'aprobada', 'dado_de_baja', 'activo')
+        WHERE sb.id = ? AND sb.empresa_id = ? AND sb.estado = 'pendiente'
+      `;
 
-    db.query(
-      `INSERT INTO aprobaciones_baja (solicitud_id, aprobador_id, rol_aprobador, decision, comentario)
-       VALUES (?, ?, 'jefe_area', ?, ?)
-       ON DUPLICATE KEY UPDATE decision = VALUES(decision), comentario = VALUES(comentario), fecha_decision = NOW()`,
-      [id, usuarioId || 1, decision, observaciones || null],
-      () => {}
-    );
+      db.query(sql, [decision, observaciones || null, decision, id, empresaId], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!result.affectedRows) return res.status(404).json({ error: 'Solicitud pendiente no encontrada para esta empresa.' });
 
-    db.query(
-      'INSERT INTO bitacora (usuario_id, empresa_id, accion, modulo, detalle) VALUES (?, ?, ?, ?, ?)',
-      [usuarioId, empresaId, decision === 'aprobada' ? 'aprobacion_baja' : 'rechazo_baja', 'aprobaciones', `Solicitud de baja ${id}: ${decision}`],
-      () => {}
-    );
+        db.query(
+          `INSERT INTO aprobaciones_baja (solicitud_id, aprobador_id, rol_aprobador, decision, comentario)
+           VALUES (?, ?, 'jefe_area', ?, ?)
+           ON DUPLICATE KEY UPDATE decision = VALUES(decision), comentario = VALUES(comentario), fecha_decision = NOW()`,
+          [id, usuarioId || 1, decision, observaciones || null],
+          () => {}
+        );
 
-    res.json({ mensaje: `Solicitud ${decision}.` });
-  });
+        db.query(
+          'INSERT INTO historial_movimientos (empresa_id, equipo_id, usuario_id, tipo_movimiento, descripcion) VALUES (?, ?, ?, ?, ?)',
+          [empresaId, equipoId, usuarioId, decision === 'aprobada' ? 'baja_aprobada' : 'baja_rechazada',
+            `Solicitud de baja ${id} ${decision}. Comentario: ${observaciones || 'Sin comentario'}`
+          ],
+          () => {}
+        );
+
+        db.query(
+          'INSERT INTO bitacora (usuario_id, empresa_id, accion, modulo, detalle) VALUES (?, ?, ?, ?, ?)',
+          [usuarioId, empresaId, decision === 'aprobada' ? 'aprobacion_baja' : 'rechazo_baja', 'aprobaciones', `Solicitud de baja ${id}: ${decision}`],
+          () => {}
+        );
+
+        res.json({ mensaje: `Solicitud ${decision}.` });
+      });
+    }
+  );
 };
 
 module.exports = {
   getEquiposByEmpresa,
   getDashboardStats,
+  getHistorial,
   insert: insertEquipo,
   update: updateEquipo,
   bajaLogica: deleteEquipo,
