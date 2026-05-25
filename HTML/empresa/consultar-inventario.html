@@ -344,7 +344,7 @@
   </main>
 
   <script>
-    const STORAGE_KEY    = 'techmap_equipos_empresa';
+    const API_URL        = 'http://localhost:3000/api/equipos';
     const inventoryTable = document.getElementById('inventoryTable');
     const emptyMessage   = document.getElementById('emptyMessage');
     const searchInput    = document.getElementById('searchInput');
@@ -379,14 +379,52 @@
       return `<span class="status-badge ${cls}">${escapeHtml(estado || 'Activo')}</span>`;
     };
 
-    const loadEquipment = () => {
+    const getSession = () => {
+      try { return JSON.parse(localStorage.getItem('techmap_session') || '{}'); }
+      catch { return {}; }
+    };
+
+    const session = getSession();
+    const empresaId = Number(session.empresa_id || 0);
+    const STORAGE_KEY = `techmap_equipos_empresa_${empresaId || 'sin_empresa'}`;
+
+    let equipment = [];
+
+    const loadLocalEquipment = () => {
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
         return saved.length ? saved : fallbackEquipment;
       } catch { return fallbackEquipment; }
     };
 
-    const equipment = loadEquipment();
+    const loadEquipment = async () => {
+      if (!empresaId) {
+        equipment = loadLocalEquipment();
+        populateTypeFilter();
+        renderInventory();
+        return;
+      }
+      try {
+        const response = await fetch(`${API_URL}/empresa/${empresaId}`, {
+          headers: {
+            'Authorization': `Bearer ${session.token || ''}`,
+            'x-empresa-id': String(empresaId),
+            'x-user-id': String(session.id || '')
+          }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'No se pudo cargar inventario');
+        equipment = data.map((item) => ({
+          ...item,
+          fecha_compra: item.fecha_compra || (item.fecha_adquisicion ? String(item.fecha_adquisicion).slice(0, 10) : '')
+        }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(equipment));
+      } catch {
+        equipment = loadLocalEquipment();
+      }
+      populateTypeFilter();
+      renderInventory();
+    };
 
     const populateTypeFilter = () => {
       const types = [...new Set(equipment.map(e => e.tipo).filter(Boolean))].sort();
@@ -432,8 +470,7 @@
 
     searchInput.addEventListener('input', renderInventory);
     typeFilter.addEventListener('change', renderInventory);
-    populateTypeFilter();
-    renderInventory();
+    loadEquipment();
   </script>
 </body>
 </html>

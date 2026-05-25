@@ -482,7 +482,7 @@
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || 'No se pudo iniciar sesión');
-        localStorage.setItem('techmap_session', JSON.stringify(data.usuario));
+        localStorage.setItem('techmap_session', JSON.stringify({ ...data.usuario, token: data.token }));
         window.location.href = 'opciones-jefe-area.html';
       } catch (error) {
         showToast(error.message);

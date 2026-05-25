@@ -355,9 +355,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
-    // Llaves locales (Se mantienen para no romper el rastro de historial local si lo usan)
-    const REQUESTS_KEY = 'techmap_solicitudes_baja';
-    const HISTORY_KEY   = 'techmap_historial_empresa';
+    const API_URL = 'http://localhost:3000/api/equipos';
 
     const requestForm     = document.getElementById('requestForm');
     const equipmentSelect = document.getElementById('equipmentSelect');
@@ -387,8 +385,28 @@
       catch { return {}; }
     };
 
-    // Puedes dejar que consuma del fallback o agregar un fetch inicial a tu endpoint 'GET /api/equipos' si ya lo tienes listo
-    const equipment = fallbackEquipment;
+    const session = getSession();
+    const empresaId = Number(session.empresa_id || 0);
+    const userId = Number(session.id || 0);
+    const REQUESTS_KEY = `techmap_solicitudes_baja_${empresaId || 'sin_empresa'}`;
+    const HISTORY_KEY = `techmap_historial_empresa_${empresaId || 'sin_empresa'}`;
+    let equipment = [];
+
+    const request = async (url, options = {}) => {
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.token || ''}`,
+          'x-empresa-id': String(empresaId),
+          'x-user-id': String(userId),
+          ...(options.headers || {})
+        },
+        ...options
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || data.message || 'Error en la solicitud');
+      return data;
+    };
 
     const saveHistory = (req) => {
       const session = getSession();
@@ -423,12 +441,30 @@
     };
 
     const populateEquipment = () => {
+      equipmentSelect.innerHTML = '<option value="">Selecciona un equipo</option>';
       equipment.forEach((item) => {
         const opt = document.createElement('option');
         opt.value = item.id;
         opt.textContent = `${item.nombre || 'Equipo'} — ${item.numero_serie || 'Sin serie'}`;
         equipmentSelect.appendChild(opt);
       });
+    };
+
+    const loadEquipment = async () => {
+      if (!empresaId) {
+        equipment = fallbackEquipment;
+        populateEquipment();
+        showToast('No hay empresa en la sesion. Se muestran equipos locales.', 'error');
+        return;
+      }
+
+      try {
+        equipment = await request(`${API_URL}/empresa/${empresaId}`);
+      } catch (error) {
+        equipment = fallbackEquipment;
+        showToast(`No se pudieron cargar equipos: ${error.message}`, 'error');
+      }
+      populateEquipment();
     };
 
     const selectedEquipment = () => equipment.find(e => String(e.id) === String(equipmentSelect.value));
@@ -467,14 +503,15 @@
         return;
       }
 
-      const item    = selectedEquipment();
-      const session = getSession();
+      const item = selectedEquipment();
 
       // Recolección estructurada para el Body JSON
       const datosBaja = {
         id_equipo:   parseInt(item.id),
+        empresa_id:  empresaId,
+        usuario_id:  userId,
         motivo:      document.getElementById('txtMotivo').value.trim(),
-        id_area:     parseInt(areaInput.getAttribute('data-id')),
+        evidencia:   document.getElementById('txtEvidencia').value.trim(),
         solicitante: session.nombre_completo || item.encargado_equipo || 'Usuario empresa'
       };
 
@@ -483,7 +520,10 @@
         const response = await fetch('http://localhost:3000/api/equipos/solicitar-baja', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.token || ''}`,
+            'x-empresa-id': String(empresaId),
+            'x-user-id': String(userId)
           },
           body: JSON.stringify(datosBaja)
         });
@@ -523,7 +563,7 @@
       }
     });
 
-    populateEquipment();
+    loadEquipment();
   </script>
 </body>
 </html>

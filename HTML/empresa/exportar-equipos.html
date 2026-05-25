@@ -338,7 +338,9 @@
 
     // 2. Función para descargar el PDF
     function descargarFichaTecnica(idEquipo) {
-      window.location.href = `http://localhost:3000/api/equipos/exportar/${idEquipo}`;
+      const session = getSession();
+      const empresaId = Number(session.empresa_id || 0);
+      window.location.href = `http://localhost:3000/api/equipos/exportar/${idEquipo}?empresa_id=${encodeURIComponent(empresaId)}&usuario_id=${encodeURIComponent(session.id || '')}&token=${encodeURIComponent(session.token || '')}`;
     }
 
     // 3. Renderizar los equipos en la pantalla
@@ -383,7 +385,12 @@
       });
     }
 
-    // DATOS DE PRUEBA (MOCK) - Elimina esto cuando conectes tu base de datos
+    const getSession = () => {
+      try { return JSON.parse(localStorage.getItem('techmap_session') || '{}'); }
+      catch { return {}; }
+    };
+
+    // DATOS DE PRUEBA (MOCK) - Se usan solo si no hay sesion o falla el backend
     const equiposMock = [
       { id: 1, nombre: "Servidor Principal", tipo: "Servidor", area: "Sistemas", direccion_ip: "192.168.1.10" },
       { id: 2, nombre: "PC Recepción", tipo: "Desktop", area: "Atención", direccion_ip: "192.168.1.15" },
@@ -392,7 +399,30 @@
     ];
     
     // Mostramos los de prueba inicialmente
-    renderizarEquipos(equiposMock);
+    const session = getSession();
+    const idEmpresa = Number(session.empresa_id || 0);
+
+    if (!idEmpresa) {
+      renderizarEquipos(equiposMock);
+    } else {
+      fetch(`http://localhost:3000/api/equipos/empresa/${idEmpresa}`, {
+        headers: {
+          'Authorization': `Bearer ${session.token || ''}`,
+          'x-empresa-id': String(idEmpresa),
+          'x-user-id': String(session.id || '')
+        }
+      })
+        .then(async (response) => {
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || 'No se pudieron cargar los equipos.');
+          return data;
+        })
+        .then(renderizarEquipos)
+        .catch((error) => {
+          console.error("Error al obtener equipos:", error);
+          renderizarEquipos(equiposMock);
+        });
+    }
 
     /* // 4. CÓDIGO REAL PARA CONECTAR AL BACKEND (Descomenta y usa este en producción)
     // Asumiendo que el ID de la empresa es el 1

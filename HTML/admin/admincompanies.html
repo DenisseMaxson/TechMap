@@ -511,7 +511,7 @@
     // Dentro del <script> de admincompanies.html
 document.getElementById('addButton').addEventListener('click', async () => {
   // 1. Recuperamos los datos que guardamos en el login real del Sr. Gerardo
-  const session = JSON.parse(sessionStorage.getItem('techmap_session') || '{}');
+  const session = JSON.parse(localStorage.getItem('techmap_session') || sessionStorage.getItem('techmap_session') || '{}');
 
   // 2. Empaquetamos los datos del formulario e inyectamos su rol de 'administrador'
   const payload = {

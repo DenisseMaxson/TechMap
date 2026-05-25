@@ -523,12 +523,12 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
-    const STORAGE_KEY    = 'techmap_equipos_empresa';
-    const HISTORY_KEY    = 'techmap_historial_empresa';
+    const API_URL        = 'http://localhost:3000/api/equipos';
     const equipmentList  = document.getElementById('equipmentList');
     const equipmentForm  = document.getElementById('equipmentForm');
     const toast          = document.getElementById('toast');
     let selectedEquipmentId = null;
+    let equipment = [];
     let toastTimer;
 
     const sampleEquipment = [
@@ -540,22 +540,72 @@
     const escapeHtml = (v) => String(v ?? '').replace(/[&<>"']/g, (c) =>
       ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
 
-    const loadEquipment = () => {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) { localStorage.setItem(STORAGE_KEY, JSON.stringify(sampleEquipment)); return [...sampleEquipment]; }
-      return JSON.parse(saved);
+    const getSession = () => {
+      try { return JSON.parse(localStorage.getItem('techmap_session') || '{}'); }
+      catch { return {}; }
     };
 
-    let equipment = loadEquipment();
-    const saveEquipment = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(equipment));
+    const session = getSession();
+    const empresaId = Number(session.empresa_id || 0);
+    const userId = Number(session.id || 0);
+    const STORAGE_KEY = `techmap_equipos_empresa_${empresaId || 'sin_empresa'}`;
+    const HISTORY_KEY = `techmap_historial_empresa_${empresaId || 'sin_empresa'}`;
+
     const formData = () => Object.fromEntries(new FormData(equipmentForm).entries());
-    const createId = () => `EQ-${Date.now().toString().slice(-6)}`;
     const currentUser = () => {
+      return session.nombre_completo || 'Usuario empresa';
+    };
+
+    const normalizeItem = (item) => ({
+      ...item,
+      fecha_compra: item.fecha_compra || (item.fecha_adquisicion ? String(item.fecha_adquisicion).slice(0, 10) : ''),
+      descripcion: item.descripcion || item.observaciones || ''
+    });
+
+    const request = async (url, options = {}) => {
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.token || ''}`,
+          'x-empresa-id': String(empresaId),
+          'x-user-id': String(userId),
+          ...(options.headers || {})
+        },
+        ...options
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || data.message || 'Error en la solicitud');
+      return data;
+    };
+
+    const cacheEquipment = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(equipment));
+
+    const loadLocalEquipment = () => {
       try {
-        return JSON.parse(localStorage.getItem('techmap_session') || '{}').nombre_completo || 'Usuario empresa';
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        return saved.length ? saved : sampleEquipment.map(normalizeItem);
       } catch {
-        return 'Usuario empresa';
+        return sampleEquipment.map(normalizeItem);
       }
+    };
+
+    const loadEquipment = async () => {
+      if (!empresaId) {
+        equipment = loadLocalEquipment();
+        renderEquipment();
+        showToast('No hay empresa en la sesion. Se muestran datos locales.', 'error');
+        return;
+      }
+
+      try {
+        const data = await request(`${API_URL}/empresa/${empresaId}`);
+        equipment = data.map(normalizeItem);
+        cacheEquipment();
+      } catch (error) {
+        equipment = loadLocalEquipment();
+        showToast(`No se pudo cargar la BD: ${error.message}`, 'error');
+      }
+      renderEquipment();
     };
 
     const addHistory = (tipo, item, detalle) => {
@@ -614,7 +664,8 @@
     const selectEquipment = (item) => {
       selectedEquipmentId = item.id;
       equipmentForm.nombre.value           = item.nombre           || '';
-      equipmentForm.tipo.value             = item.tipo             || '';
+      const tipoMap = { laptop:'Portatil', computadora:'PC', servidor:'Servidor', impresora:'Impresora', monitor:'Monitor', router:'Router', switch:'Switch', otro:'Otro' };
+      equipmentForm.tipo.value             = tipoMap[item.tipo] || item.tipo || '';
       equipmentForm.numero_serie.value     = item.numero_serie     || '';
       equipmentForm.modelo.value           = item.modelo           || '';
       equipmentForm.direccion_mac.value    = item.direccion_mac    || '';
@@ -635,25 +686,53 @@
       renderEquipment();
     };
 
-    document.getElementById('addButton').addEventListener('click', () => {
+    document.getElementById('addButton').addEventListener('click', async () => {
       if (!validateForm()) return;
-      const newEquipment = { id: createId(), ...formData() };
-      equipment = [newEquipment, ...equipment];
-      addHistory('Alta', newEquipment, `Se agrego el equipo ${newEquipment.nombre || 'sin nombre'}.`);
-      saveEquipment(); clearForm();
-      showToast('Equipo agregado correctamente.');
+      const payload = {
+        ...formData(),
+        empresa_id: empresaId,
+        registrado_por: userId,
+        fecha_adquisicion: equipmentForm.fecha_compra.value || null,
+        observaciones: equipmentForm.descripcion.value || null
+      };
+      try {
+        const result = await request(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const newEquipment = normalizeItem({ id: result.id, ...payload });
+        equipment = [newEquipment, ...equipment];
+        cacheEquipment();
+        addHistory('Alta', newEquipment, `Se agrego el equipo ${newEquipment.nombre || 'sin nombre'}.`);
+        clearForm();
+        showToast('Equipo agregado correctamente.');
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
     });
-    document.getElementById('editButton').addEventListener('click', () => {
+
+    document.getElementById('editButton').addEventListener('click', async () => {
       if (!selectedEquipmentId) return showToast('Selecciona un equipo para editar.', 'error');
       if (!validateForm()) return;
-      const updatedEquipment = { ...equipment.find((item) => item.id === selectedEquipmentId), ...formData() };
-      equipment = equipment.map((item) => item.id === selectedEquipmentId ? updatedEquipment : item);
-      addHistory('Modificacion', updatedEquipment, `Se actualizaron los datos de ${updatedEquipment.nombre || 'un equipo'}.`);
-      saveEquipment(); clearForm();
-      showToast('Equipo actualizado correctamente.');
+      const payload = {
+        id: selectedEquipmentId,
+        empresa_id: empresaId,
+        usuario_id: userId,
+        ...formData(),
+        fecha_adquisicion: equipmentForm.fecha_compra.value || null,
+        observaciones: equipmentForm.descripcion.value || null
+      };
+      try {
+        await request(API_URL, { method: 'PUT', body: JSON.stringify(payload) });
+        const updatedEquipment = normalizeItem({ ...equipment.find((item) => item.id === selectedEquipmentId), ...payload });
+        equipment = equipment.map((item) => item.id === selectedEquipmentId ? updatedEquipment : item);
+        cacheEquipment();
+        addHistory('Modificacion', updatedEquipment, `Se actualizaron los datos de ${updatedEquipment.nombre || 'un equipo'}.`);
+        clearForm();
+        showToast('Equipo actualizado correctamente.');
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
     });
     document.getElementById('clearButton').addEventListener('click', clearForm);
-    renderEquipment();
+    loadEquipment();
   </script>
 </body>
 </html>

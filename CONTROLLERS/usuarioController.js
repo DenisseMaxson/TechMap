@@ -1,5 +1,6 @@
 const db     = require('../DB/connection');
 const bcrypt = require('bcryptjs');
+const authToken = require('../UTILS/authToken');
 
 const getAll = (req, res) => {
   const sql = `
@@ -84,7 +85,13 @@ const login = (req, res) => {
 
     db.query('UPDATE usuarios SET ultimo_acceso = NOW() WHERE id = ?', [user.id]);
     delete user.password_hash;
-    res.json({ mensaje: 'Inicio de sesión correcto', usuario: user });
+    const token = authToken.sign({
+      id: user.id,
+      empresa_id: user.empresa_id,
+      rol: user.rol,
+      usuario: user.usuario
+    });
+    res.json({ mensaje: 'Inicio de sesión correcto', usuario: user, token });
   });
 };
 

@@ -6,6 +6,9 @@ const equipoController = require('../CONTROLLERS/equipoController');
 // URL: http://localhost:3000/api/equipos/empresa/1
 router.get('/empresa/:empresa_id', equipoController.getEquiposByEmpresa);
 
+// Obtener solicitudes de baja de una empresa
+router.get('/bajas/empresa/:empresa_id', equipoController.getSolicitudesBaja);
+
 // Obtener estadísticas para el Dashboard
 // URL: http://localhost:3000/api/equipos/dashboard/1
 router.get('/dashboard/:empresa_id', equipoController.getDashboardStats);
@@ -16,6 +19,9 @@ router.post('/', equipoController.insert);
 // 🚀 RUTA AGREGADA: Procesar la solicitud de baja y enviar correo al jefe
 // URL: http://localhost:3000/api/equipos/solicitar-baja
 router.post('/solicitar-baja', equipoController.solicitarBaja);
+
+// Resolver solicitud de baja validando empresa
+router.put('/bajas/resolver', equipoController.resolverBaja);
 
 // Actualizar datos de un equipo
 router.put('/', equipoController.update);

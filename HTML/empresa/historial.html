@@ -362,7 +362,12 @@
   </main>
 
   <script>
-    const HISTORY_KEY  = 'techmap_historial_empresa';
+    const getSession = () => {
+      try { return JSON.parse(localStorage.getItem('techmap_session') || '{}'); }
+      catch { return {}; }
+    };
+    const session = getSession();
+    const HISTORY_KEY  = `techmap_historial_empresa_${session.empresa_id || 'sin_empresa'}`;
     const historyTable = document.getElementById('historyTable');
     const emptyMessage = document.getElementById('emptyMessage');
     const searchInput  = document.getElementById('searchInput');

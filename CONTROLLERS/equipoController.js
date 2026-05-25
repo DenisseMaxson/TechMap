@@ -1,221 +1,420 @@
-const db = require('../DB/connection'); 
+const db = require('../DB/connection');
 const PDFDocument = require('pdfkit');
 const { enviarCorreoBajaPendiente } = require('../CONFIG/mailer');
+const authToken = require('../UTILS/authToken');
 
-// 1. Obtener todos los equipos de una empresa específica
+const normalizeTipo = (tipo) => {
+  const value = String(tipo || 'otro').toLowerCase();
+  const map = {
+    portatil: 'laptop',
+    'portátil': 'laptop',
+    pc: 'computadora',
+    desktop: 'computadora',
+    camara: 'otro',
+    'cámara': 'otro',
+    teclado: 'otro',
+    mouse: 'otro',
+    'lector de huellas': 'otro'
+  };
+  const normalized = map[value] || value;
+  const allowed = ['computadora', 'laptop', 'servidor', 'impresora', 'switch', 'router', 'monitor', 'telefono_ip', 'otro'];
+  return allowed.includes(normalized) ? normalized : 'otro';
+};
+
+const getAuth = (req) => authToken.verify(authToken.getTokenFromRequest(req)) || {};
+const getEmpresaId = (req) => {
+  const auth = getAuth(req);
+  if (auth.rol && auth.rol !== 'administrador') return Number(auth.empresa_id);
+  return Number(req.body?.empresa_id || req.params?.empresa_id || req.query?.empresa_id || req.get('x-empresa-id') || auth.empresa_id);
+};
+const getUsuarioId = (req) => {
+  const auth = getAuth(req);
+  return Number(auth.id || req.body?.usuario_id || req.body?.registrado_por || req.body?.solicitado_por || req.query?.usuario_id || req.get('x-user-id')) || null;
+};
+
+const requireEmpresa = (req, res) => {
+  const auth = getAuth(req);
+  if (!auth.id) {
+    res.status(401).json({ error: 'Sesion requerida.' });
+    return null;
+  }
+  const empresaId = getEmpresaId(req);
+  if (!Number.isInteger(empresaId) || empresaId <= 0) {
+    res.status(400).json({ error: 'empresa_id es obligatorio para aislar los datos por empresa.' });
+    return null;
+  }
+  return empresaId;
+};
+
 const getEquiposByEmpresa = (req, res) => {
-    const { empresa_id } = req.params;
-    const sql = 'SELECT * FROM equipos WHERE empresa_id = ? AND estado != "dado_de_baja"';
-    
-    db.query(sql, [empresa_id], (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
-    });
+  const empresaId = requireEmpresa(req, res);
+  if (!empresaId) return;
+
+  db.query(
+    'SELECT * FROM equipos WHERE empresa_id = ? AND estado != "dado_de_baja" ORDER BY fecha_registro DESC, id DESC',
+    [empresaId],
+    (err, results) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(results);
+    }
+  );
 };
 
-// 2. Insertar nuevo equipo (Los 11 campos técnicos)
 const insertEquipo = (req, res) => {
-    const { 
-        empresa_id, numero_serie, direccion_mac, direccion_ip, nombre, 
-        marca, modelo, tipo, area, ubicacion_fisica, encargado_equipo,
-        fecha_adquisicion, lugar_compra, valor_contable, registrado_por 
-    } = req.body;
+  const empresaId = requireEmpresa(req, res);
+  if (!empresaId) return;
 
-    const sql = 'CALL sp_insert_equipo(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
-    
-    db.query(sql, [
-        empresa_id, numero_serie, direccion_mac, direccion_ip, nombre, 
-        marca, modelo, tipo, area, ubicacion_fisica, encargado_equipo,
-        fecha_adquisicion, lugar_compra, valor_contable, registrado_por
-    ], (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
-        
-        res.json({ 
-            mensaje: 'Hardware registrado con éxito', 
-            id: result?.[0]?.[0]?.id 
-        });
-    });
+  const {
+    numero_serie, direccion_mac, direccion_ip, nombre, marca, modelo, tipo,
+    area, ubicacion_fisica, encargado_equipo, fecha_adquisicion, fecha_compra,
+    lugar_compra, valor_contable, observaciones, descripcion
+  } = req.body;
+  const usuarioId = getUsuarioId(req);
+
+  const sql = `
+    INSERT INTO equipos (
+      empresa_id, numero_serie, direccion_mac, direccion_ip, nombre,
+      marca, modelo, tipo, area, ubicacion_fisica, encargado_equipo,
+      fecha_adquisicion, lugar_compra, valor_contable, observaciones, registrado_por
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(sql, [
+    empresaId,
+    numero_serie,
+    direccion_mac || null,
+    direccion_ip || null,
+    nombre,
+    marca || null,
+    modelo || null,
+    normalizeTipo(tipo),
+    area || null,
+    ubicacion_fisica || null,
+    encargado_equipo || null,
+    fecha_adquisicion || fecha_compra || null,
+    lugar_compra || null,
+    valor_contable || null,
+    observaciones || descripcion || null,
+    usuarioId
+  ], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    db.query(
+      'INSERT INTO bitacora (usuario_id, empresa_id, accion, modulo, detalle) VALUES (?, ?, ?, ?, ?)',
+      [usuarioId, empresaId, 'alta_equipo', 'inventario', `Alta de equipo serie: ${numero_serie || result.insertId}`],
+      () => {}
+    );
+
+    res.json({ mensaje: 'Hardware registrado con exito', id: result.insertId });
+  });
 };
 
-// 3. Actualizar equipo
 const updateEquipo = (req, res) => {
-    const { 
-        id, nombre, direccion_ip, area, ubicacion_fisica, 
-        encargado_equipo, estado, usuario_id 
-    } = req.body;
+  const empresaId = requireEmpresa(req, res);
+  if (!empresaId) return;
 
-    const sql = 'CALL sp_update_equipo(?,?,?,?,?,?,?,?)';
-    
-    db.query(sql, [id, nombre, direccion_ip, area, ubicacion_fisica, encargado_equipo, estado, usuario_id], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ mensaje: 'Información de equipo actualizada' });
-    });
+  const {
+    id, nombre, direccion_mac, direccion_ip, modelo, tipo, area, ubicacion_fisica,
+    encargado_equipo, fecha_adquisicion, fecha_compra, lugar_compra, observaciones,
+    descripcion, estado
+  } = req.body;
+  const usuarioId = getUsuarioId(req);
+
+  const sql = `
+    UPDATE equipos
+    SET nombre = ?,
+        direccion_mac = ?,
+        direccion_ip = ?,
+        modelo = ?,
+        tipo = ?,
+        area = ?,
+        ubicacion_fisica = ?,
+        encargado_equipo = ?,
+        fecha_adquisicion = ?,
+        lugar_compra = ?,
+        observaciones = ?,
+        estado = COALESCE(?, estado)
+    WHERE id = ? AND empresa_id = ?
+  `;
+
+  db.query(sql, [
+    nombre,
+    direccion_mac || null,
+    direccion_ip || null,
+    modelo || null,
+    normalizeTipo(tipo),
+    area || null,
+    ubicacion_fisica || null,
+    encargado_equipo || null,
+    fecha_adquisicion || fecha_compra || null,
+    lugar_compra || null,
+    observaciones || descripcion || null,
+    estado || null,
+    id,
+    empresaId
+  ], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!result.affectedRows) return res.status(404).json({ error: 'Equipo no encontrado para esta empresa.' });
+
+    db.query(
+      'INSERT INTO bitacora (usuario_id, empresa_id, accion, modulo, detalle) VALUES (?, ?, ?, ?, ?)',
+      [usuarioId, empresaId, 'modificacion_equipo', 'inventario', `Actualizacion del equipo ID: ${id}`],
+      () => {}
+    );
+
+    res.json({ mensaje: 'Informacion de equipo actualizada' });
+  });
 };
 
-// 4. Baja lógica del equipo
 const deleteEquipo = (req, res) => {
-    const { id, usuario_id } = req.body;
-    const sql = 'CALL sp_delete_equipo(?,?)';
+  const empresaId = requireEmpresa(req, res);
+  if (!empresaId) return;
 
-    db.query(sql, [id, usuario_id], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ mensaje: 'Equipo dado de baja correctamente' });
-    });
+  const { id } = req.body;
+  const usuarioId = getUsuarioId(req);
+
+  db.query('UPDATE equipos SET estado = "dado_de_baja" WHERE id = ? AND empresa_id = ?', [id, empresaId], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!result.affectedRows) return res.status(404).json({ error: 'Equipo no encontrado para esta empresa.' });
+
+    db.query(
+      'INSERT INTO bitacora (usuario_id, empresa_id, accion, modulo, detalle) VALUES (?, ?, ?, ?, ?)',
+      [usuarioId, empresaId, 'baja_ejecutada', 'inventario', `Equipo ID: ${id} marcado como inactivo`],
+      () => {}
+    );
+
+    res.json({ mensaje: 'Equipo dado de baja correctamente' });
+  });
 };
 
-// 5. Obtener estadísticas para el Dashboard
 const getDashboardStats = (req, res) => {
-    const { empresa_id } = req.params;
-    const sql = 'CALL sp_get_dashboard_stats(?)';
+  const empresaId = requireEmpresa(req, res);
+  if (!empresaId) return;
 
-    db.query(sql, [empresa_id], (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-
-        res.json({
-            resumen: results[0][0],        
-            por_tipo: results[1],         
-            bajas: results[2][0],         
-            financiero: results[3][0]     
-        });
+  db.query('CALL sp_get_dashboard_stats(?)', [empresaId], (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({
+      resumen: results[0][0],
+      por_tipo: results[1],
+      bajas: results[2][0],
+      financiero: results[3][0]
     });
+  });
 };
 
-// 6. Exportar ficha técnica de un equipo específico en PDF
 const exportEquipoPDF = (req, res) => {
-    const { id } = req.params;
-    const sql = 'SELECT * FROM equipos WHERE id = ?';
+  const empresaId = requireEmpresa(req, res);
+  if (!empresaId) return;
 
-    db.query(sql, [id], (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        if (results.length === 0) return res.status(404).json({ error: 'Equipo no encontrado' });
+  db.query('SELECT * FROM equipos WHERE id = ? AND empresa_id = ?', [req.params.id, empresaId], (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!results.length) return res.status(404).json({ error: 'Equipo no encontrado para esta empresa' });
 
-        const equipo = results[0];
-        const doc = new PDFDocument({ margin: 50 });
+    const equipo = results[0];
+    const doc = new PDFDocument({ margin: 50 });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=Ficha_Tecnica_Equipo_${equipo.numero_serie || equipo.id}.pdf`);
+    doc.pipe(res);
 
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=Ficha_Tecnica_Equipo_${equipo.numero_serie || id}.pdf`);
+    doc.rect(0, 0, 612, 90).fill('#1b2476');
+    doc.fillColor('#ffffff').fontSize(22).text('TECHMAP', 50, 28);
+    doc.fontSize(11).text('Reporte oficial de control de activos fijos', 50, 58);
 
-        doc.pipe(res);
+    doc.fillColor('#243b97').fontSize(16).text(`Ficha tecnica: ${equipo.nombre || 'Sin nombre'}`, 50, 120);
+    doc.strokeColor('#2b61ad').lineWidth(1).moveTo(50, 145).lineTo(562, 145).stroke();
 
-        // Banner Superior Corporativo (Azul Oscuro)
-        doc.rect(0, 0, 612, 100).fill('#1b2476');
-        doc.fillColor('#ffffff').fontSize(22).text('TECHMAP', 50, 30, { stroke: false });
-        doc.fontSize(11).text('Reporte Oficial de Control de Activos fijos', 50, 60);
+    const rows = [
+      ['ID', equipo.id],
+      ['Nombre', equipo.nombre],
+      ['Tipo', equipo.tipo],
+      ['Marca', equipo.marca],
+      ['Modelo', equipo.modelo],
+      ['Numero de serie', equipo.numero_serie],
+      ['MAC', equipo.direccion_mac],
+      ['IP', equipo.direccion_ip],
+      ['Area', equipo.area],
+      ['Ubicacion', equipo.ubicacion_fisica],
+      ['Encargado', equipo.encargado_equipo],
+      ['Fecha adquisicion', equipo.fecha_adquisicion ? new Date(equipo.fecha_adquisicion).toLocaleDateString('es-MX') : 'No declarada'],
+      ['Lugar de compra', equipo.lugar_compra],
+      ['Valor contable', equipo.valor_contable ? `$${Number(equipo.valor_contable).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN` : 'No registrado'],
+      ['Estado', equipo.estado],
+      ['Observaciones', equipo.observaciones]
+    ];
 
-        // Título del reporte
-        doc.fillColor('#243b97').fontSize(16).text(`Ficha Técnica: ${equipo.nombre || 'Sin Nombre'}`, 50, 130);
-        doc.strokeColor('#2b61ad').lineWidth(1).moveTo(50, 155).lineTo(562, 155).stroke();
-
-        // SECCIÓN 1: Datos de Operación y Ubicación
-        doc.fillColor('#1b2476').fontSize(12).text('1. Datos de Operación y Ubicación', 50, 175);
-        doc.fillColor('#333333').fontSize(10);
-        
-        let y = 200;
-        const spacing = 20;
-        
-        doc.text(`Tipo de Dispositivo:`, 60, y); doc.text(`${equipo.tipo || 'No especificado'}`, 180, y); y += spacing;
-        doc.text(`Área Responsable:`, 60, y); doc.text(`${equipo.area || 'No asignada'}`, 180, y); y += spacing;
-        doc.text(`Ubicación Física:`, 60, y); doc.text(`${equipo.ubicacion_fisica || 'No registrada'}`, 180, y); y += spacing;
-        doc.text(`Encargado Actual:`, 60, y); doc.text(`${equipo.encargado_equipo || 'Sin encargado asignado'}`, 180, y); y += spacing;
-        doc.text(`Estado del Activo:`, 60, y); doc.text(`${equipo.estado || 'Activo'}`, 180, y);
-
-        // SECCIÓN 2: Especificaciones Técnicas (TI)
-        y += 35;
-        doc.fillColor('#1b2476').fontSize(12).text('2. Especificaciones de Infraestructura y TI', 50, y);
-        y += 25;
-        doc.fillColor('#333333').fontSize(10);
-        
-        doc.text(`Marca:`, 60, y); doc.text(`${equipo.marca || 'N/A'}`, 180, y); y += spacing;
-        doc.text(`Modelo:`, 60, y); doc.text(`${equipo.modelo || 'N/A'}`, 180, y); y += spacing;
-        doc.text(`Número de Serie:`, 60, y); doc.text(`${equipo.numero_serie || 'N/A'}`, 180, y); y += spacing;
-        doc.text(`Dirección MAC:`, 60, y); doc.text(`${equipo.direccion_mac || 'No configurada'}`, 180, y); y += spacing;
-        doc.text(`Dirección IP Local:`, 60, y); doc.text(`${equipo.direccion_ip || 'Dinámica / No asignada'}`, 180, y);
-
-        // SECCIÓN 3: Datos Financieros
-        y += 35;
-        doc.fillColor('#1b2476').fontSize(12).text('3. Registro Financiero y Adquisición', 50, y);
-        y += 25;
-        doc.fillColor('#333333').fontSize(10);
-        
-        const fechaFormateada = equipo.fecha_adquisicion 
-            ? new Date(equipo.fecha_adquisicion).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }) 
-            : 'No declarada';
-            
-        const valorMoneda = equipo.valor_contable 
-            ? `$${Number(equipo.valor_contable).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN` 
-            : '$0.00 MXN';
-
-        doc.text(`Fecha de Compra:`, 60, y); doc.text(`${fechaFormateada}`, 180, y); y += spacing;
-        doc.text(`Proveedor / Lugar:`, 60, y); doc.text(`${equipo.lugar_compra || 'No registrado'}`, 180, y); y += spacing;
-        doc.text(`Valor Contable original:`, 60, y); doc.text(`${valorMoneda}`, 180, y, { stroke: false }); y += spacing;
-        doc.text(`ID de Registro Interno:`, 60, y); doc.text(`${equipo.registrado_por || 'Sistema'}`, 180, y);
-
-        // Pie de Página
-        doc.strokeColor('#e0e0e0').lineWidth(0.5).moveTo(50, 720).lineTo(562, 720).stroke();
-        doc.fillColor('#999999').fontSize(8).text('Este documento constituye una representación digital de control interno de activos fijos de la empresa.', 50, 735, { align: 'center' });
-        doc.text(`ID Único de Auditoría de Hardware: ${equipo.id}`, 50, 747, { align: 'center' });
-
-        doc.end();
+    let y = 170;
+    doc.fillColor('#333333').fontSize(10);
+    rows.forEach(([label, value]) => {
+      if (y > 700) {
+        doc.addPage();
+        y = 50;
+      }
+      doc.font('Helvetica-Bold').text(`${label}:`, 60, y);
+      doc.font('Helvetica').text(String(value || 'No registrado'), 190, y, { width: 350 });
+      y += 22;
     });
+
+    doc.end();
+  });
 };
 
-// 7. Solicitar Baja
-// 7. Solicitar Baja
-const solicitarBaja = (req, res) => {
-    // Datos que tu formulario le manda al backend
-    const { id_equipo, motivo, solicitante, id_area } = req.body;
+const getSolicitudesBaja = (req, res) => {
+  const empresaId = requireEmpresa(req, res);
+  if (!empresaId) return;
 
-    // 1. Ejecutamos el procedimiento almacenado para actualizar estado y jalar correo
-    db.query('CALL sp_solicitar_baja(?, ?, ?)', [id_equipo, motivo, id_area], (err, results) => {
-        if (err) {
-            console.error('❌ Error en el procedimiento sp_solicitar_baja:', err);
-            return res.status(500).json({ success: false, message: 'Error interno al procesar la baja.' });
+  const sql = `
+    SELECT
+      sb.id,
+      sb.equipo_id,
+      e.nombre AS dispositivo,
+      e.numero_serie AS serie,
+      e.area,
+      u.nombre_completo AS solicitante,
+      sb.solicitado_por,
+      sb.motivo,
+      sb.evidencia_url AS evidencia,
+      sb.estado,
+      sb.fecha_solicitud,
+      sb.fecha_resolucion,
+      sb.observaciones
+    FROM solicitudes_baja sb
+    INNER JOIN equipos e ON sb.equipo_id = e.id AND e.empresa_id = sb.empresa_id
+    LEFT JOIN usuarios u ON sb.solicitado_por = u.id
+    WHERE sb.empresa_id = ?
+    ORDER BY sb.fecha_solicitud DESC, sb.id DESC
+  `;
+
+  db.query(sql, [empresaId], (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results);
+  });
+};
+
+const solicitarBaja = (req, res) => {
+  const empresaId = requireEmpresa(req, res);
+  if (!empresaId) return;
+
+  const { id_equipo, motivo, evidencia, evidencia_url } = req.body;
+  const usuarioId = getUsuarioId(req);
+
+  if (!usuarioId) return res.status(400).json({ success: false, message: 'usuario_id es obligatorio para registrar la solicitud.' });
+  if (!id_equipo || !motivo) return res.status(400).json({ success: false, message: 'Equipo y motivo son obligatorios.' });
+
+  db.beginTransaction((txErr) => {
+    if (txErr) return res.status(500).json({ success: false, message: txErr.message });
+
+    db.query('SELECT id, nombre, empresa_id FROM equipos WHERE id = ? AND empresa_id = ? AND estado != "dado_de_baja"', [id_equipo, empresaId], (findErr, equipos) => {
+      if (findErr || !equipos.length) {
+        return db.rollback(() => res.status(findErr ? 500 : 404).json({
+          success: false,
+          message: findErr?.message || 'Equipo no encontrado para esta empresa.'
+        }));
+      }
+
+      const equipo = equipos[0];
+      const insertSql = `
+        INSERT INTO solicitudes_baja (equipo_id, empresa_id, solicitado_por, motivo, evidencia_url, estado, fecha_solicitud)
+        VALUES (?, ?, ?, ?, ?, 'pendiente', NOW())
+      `;
+
+      db.query(insertSql, [id_equipo, empresaId, usuarioId, motivo, evidencia_url || evidencia || null], (insertErr, result) => {
+        if (insertErr) {
+          return db.rollback(() => res.status(500).json({ success: false, message: insertErr.message }));
         }
 
-        const datosDeRetorno = results?.[0]?.[0]; 
-        const correoJefe = datosDeRetorno?.email_jefe;
-        const nombreEquipo = datosDeRetorno?.nombre_equipo || "Equipo Registrado";
+        db.query('UPDATE equipos SET estado = "en_baja" WHERE id = ? AND empresa_id = ?', [id_equipo, empresaId], (updateErr) => {
+          if (updateErr) {
+            return db.rollback(() => res.status(500).json({ success: false, message: updateErr.message }));
+          }
 
-        // 2. GUARDAR EL HISTORIAL EN solicitudes_baja
-        // Jalamos el empresa_id directo desde la tabla equipos para no fallar
-        const sqlInsert = `
-            INSERT INTO solicitudes_baja (equipo_id, empresa_id, solicitado_por, motivo, estado, fecha_solicitud)
-            SELECT id, empresa_id, ?, ?, 'pendiente', NOW() 
-            FROM equipos WHERE id = ?
-        `;
+          db.query(
+            'INSERT INTO historial_movimientos (empresa_id, equipo_id, usuario_id, tipo_movimiento, descripcion) VALUES (?, ?, ?, ?, ?)',
+            [empresaId, id_equipo, usuarioId, 'solicitud_baja', `Solicitud de baja iniciada para ${equipo.nombre}. Motivo: ${motivo}`],
+            () => {}
+          );
 
-        db.query(sqlInsert, [solicitante, motivo, id_equipo], (errInsert) => {
-            if (errInsert) {
-                console.error('❌ Error guardando en solicitudes_baja:', errInsert);
-            } else {
-                console.log('✅ Solicitud registrada exitosamente en la base de datos.');
-            }
+          db.commit((commitErr) => {
+            if (commitErr) return db.rollback(() => res.status(500).json({ success: false, message: commitErr.message }));
 
-            // 3. Disparar el correo en segundo plano
-            if (correoJefe) {
-                enviarCorreoBajaPendiente(correoJefe, { id_equipo, nombre_equipo: nombreEquipo, motivo, solicitante })
-                    .then(() => console.log(`📧 Notificación enviada a: ${correoJefe}`))
-                    .catch(mailErr => console.error('❌ Error con Nodemailer:', mailErr));
-            } else {
-                console.log('⚠️ No se envió correo: Jefe no encontrado para esta empresa.');
-            }
+            db.query(
+              'SELECT correo FROM usuarios WHERE empresa_id = ? AND rol = "jefe_area" AND estado = "activo" LIMIT 1',
+              [empresaId],
+              (mailErr, users) => {
+                const correoJefe = !mailErr && users?.[0]?.correo;
+                if (correoJefe) {
+                  enviarCorreoBajaPendiente(correoJefe, {
+                    id_equipo,
+                    nombre_equipo: equipo.nombre,
+                    motivo,
+                    solicitante: usuarioId
+                  }).catch((err) => console.error('Error enviando correo de baja:', err));
+                }
+              }
+            );
 
-            // 4. Responder al Frontend (Aviso Verde)
-            return res.status(200).json({
-                success: true,
-                message: 'La solicitud de baja se registró y se notificó al jefe de área.'
+            res.status(200).json({
+              success: true,
+              id: result.insertId,
+              message: 'La solicitud de baja se registro para esta empresa.'
             });
+          });
         });
+      });
     });
+  });
 };
 
-// EXPORTACIONES MODIFICADAS
+const resolverBaja = (req, res) => {
+  const empresaId = requireEmpresa(req, res);
+  if (!empresaId) return;
+
+  const { id, estado, observaciones } = req.body;
+  const usuarioId = getUsuarioId(req);
+  const decision = estado === 'aprobada' ? 'aprobada' : estado === 'rechazada' ? 'rechazada' : null;
+
+  if (!decision) return res.status(400).json({ error: 'Estado invalido.' });
+
+  const sql = `
+    UPDATE solicitudes_baja sb
+    INNER JOIN equipos e ON sb.equipo_id = e.id AND e.empresa_id = sb.empresa_id
+    SET sb.estado = ?,
+        sb.fecha_resolucion = NOW(),
+        sb.observaciones = ?,
+        e.estado = IF(? = 'aprobada', 'dado_de_baja', 'activo')
+    WHERE sb.id = ? AND sb.empresa_id = ? AND sb.estado = 'pendiente'
+  `;
+
+  db.query(sql, [decision, observaciones || null, decision, id, empresaId], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!result.affectedRows) return res.status(404).json({ error: 'Solicitud pendiente no encontrada para esta empresa.' });
+
+    db.query(
+      `INSERT INTO aprobaciones_baja (solicitud_id, aprobador_id, rol_aprobador, decision, comentario)
+       VALUES (?, ?, 'jefe_area', ?, ?)
+       ON DUPLICATE KEY UPDATE decision = VALUES(decision), comentario = VALUES(comentario), fecha_decision = NOW()`,
+      [id, usuarioId || 1, decision, observaciones || null],
+      () => {}
+    );
+
+    db.query(
+      'INSERT INTO bitacora (usuario_id, empresa_id, accion, modulo, detalle) VALUES (?, ?, ?, ?, ?)',
+      [usuarioId, empresaId, decision === 'aprobada' ? 'aprobacion_baja' : 'rechazo_baja', 'aprobaciones', `Solicitud de baja ${id}: ${decision}`],
+      () => {}
+    );
+
+    res.json({ mensaje: `Solicitud ${decision}.` });
+  });
+};
+
 module.exports = {
-    getEquiposByEmpresa,
-    getDashboardStats,
-    insert: insertEquipo,
-    update: updateEquipo,
-    bajaLogica: deleteEquipo, // <-- REEMPLAZADO PARA EVITAR PALABRAS RESERVADAS
-    exportPDF: exportEquipoPDF,
-    solicitarBaja
+  getEquiposByEmpresa,
+  getDashboardStats,
+  insert: insertEquipo,
+  update: updateEquipo,
+  bajaLogica: deleteEquipo,
+  exportPDF: exportEquipoPDF,
+  solicitarBaja,
+  getSolicitudesBaja,
+  resolverBaja
 };
