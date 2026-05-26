@@ -274,27 +274,35 @@
     }
 
     .back-link {
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      gap: 8px;
-      color: rgba(255,255,255,0.92);
+      justify-content: center;
+      gap: 7px;
+      width: 100%;
+      min-height: clamp(38px, 4.5vw, 46px);
+      margin-top: 10px;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 11px;
+      background: transparent;
+      color: rgba(255,255,255,0.5);
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: clamp(13px, 1.1vw, 15px);
+      font-weight: 400;
       text-decoration: none;
-      font-size: 0.95rem;
-      margin-bottom: 22px;
-      font-weight: 500;
-      transition: color 0.2s ease;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
     }
-    .back-link:hover {
-      color: #dcebf9;
-    }
-    .back-link-icon {
-      width: 18px;
-      height: 18px;
+    .back-link svg {
+      width: 15px; height: 15px;
       stroke: currentColor;
       fill: none;
+      stroke-width: 1.8;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-width: 2;
+    }
+    .back-link:hover {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.85);
+      border-color: rgba(255,255,255,0.25);
     }
 
     @media (max-width: 520px) {
@@ -326,12 +334,7 @@
     <!-- Formulario -->
     <form class="admin-form" id="adminLoginForm">
 
-      <a class="back-link" href="../inicio/login.html" aria-label="Volver al inicio de sesión">
-        <svg class="back-link-icon" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-        Volver
-      </a>
+      
 
       <!-- Logo -->
       <div class="logo-mark" aria-hidden="true">
@@ -377,6 +380,12 @@
         </label>
 
         <button class="submit-button" type="submit">Iniciar sesión</button>
+        <a class="back-link" href="../inicio/login.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19 12H5M12 5l-7 7 7 7"/>
+          </svg>
+          Regresar
+        </a>
 
       </div>
     </form>
