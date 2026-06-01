@@ -367,12 +367,6 @@
     let toastTimer;
 
     // Arreglo de respaldo con IDs numéricos reales y sus id_area correspondientes
-    const fallbackEquipment = [
-      { id: 1, nombre: 'Dell Latitude',  numero_serie: 'SN-DELL-001',  area: 'TI',           id_area: 1, encargado_equipo: 'Tyler Joseph' },
-      { id: 2, nombre: 'HP EliteDesk',   numero_serie: 'SN-HP-002',    area: 'Contabilidad', id_area: 2, encargado_equipo: 'Denisse Valadez' },
-      { id: 3, nombre: 'Cisco Catalyst', numero_serie: 'SN-CISCO-003', area: 'Redes',        id_area: 3, encargado_equipo: 'Andrea Monreal' }
-    ];
-
     const showToast = (msg, type = 'success') => {
       clearTimeout(toastTimer);
       toast.textContent = msg;
@@ -388,8 +382,6 @@
     const session = getSession();
     const empresaId = Number(session.empresa_id || 0);
     const userId = Number(session.id || 0);
-    const REQUESTS_KEY = `techmap_solicitudes_baja_${empresaId || 'sin_empresa'}`;
-    const HISTORY_KEY = `techmap_historial_empresa_${empresaId || 'sin_empresa'}`;
     let equipment = [];
 
     const request = async (url, options = {}) => {
@@ -408,38 +400,6 @@
       return data;
     };
 
-    const saveHistory = (req) => {
-      const session = getSession();
-      const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-      history.unshift({
-        id: `MOV-${Date.now()}`,
-        fecha: new Date().toISOString(),
-        tipo: 'Solicitud baja',
-        equipo: req.dispositivo,
-        numero_serie: req.serie,
-        usuario: session.nombre_completo || req.solicitante,
-        detalle: `Solicitud de baja enviada: ${req.motivo}`
-      });
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 80)));
-    };
-
-    const saveLocalRequest = (req) => {
-      const saved = JSON.parse(localStorage.getItem(REQUESTS_KEY) || '[]');
-      saved.unshift({
-        id: String(Date.now()).slice(-6),
-        dispositivo: req.dispositivo,
-        serie: req.serie,
-        area: req.area,
-        solicitante: req.solicitante,
-        motivo: req.motivo,
-        evidencia: req.evidencia || 'Sin evidencia adjunta',
-        estado: 'pendiente',
-        fecha_solicitud: new Date().toISOString(),
-        observaciones: ''
-      });
-      localStorage.setItem(REQUESTS_KEY, JSON.stringify(saved.slice(0, 80)));
-    };
-
     const populateEquipment = () => {
       equipmentSelect.innerHTML = '<option value="">Selecciona un equipo</option>';
       equipment.forEach((item) => {
@@ -451,17 +411,15 @@
     };
 
     const loadEquipment = async () => {
-      if (!empresaId) {
-        equipment = fallbackEquipment;
-        populateEquipment();
-        showToast('No hay empresa en la sesion. Se muestran equipos locales.', 'error');
+      if (!empresaId || !session.token) {
+        window.location.href = 'companylogin.html';
         return;
       }
 
       try {
         equipment = await request(`${API_URL}/empresa/${empresaId}`);
       } catch (error) {
-        equipment = fallbackEquipment;
+        equipment = [];
         showToast(`No se pudieron cargar equipos: ${error.message}`, 'error');
       }
       populateEquipment();
@@ -531,18 +489,6 @@
         const resultado = await response.json();
 
         if (resultado.success) {
-          // Si guardó en BD, actualizamos historial local de apoyo
-          const localRequest = {
-            dispositivo: item.nombre,
-            serie: item.numero_serie,
-            area: item.area,
-            solicitante: datosBaja.solicitante,
-            motivo: datosBaja.motivo,
-            evidencia: document.getElementById('txtEvidencia').value.trim()
-          };
-          saveHistory(localRequest);
-          saveLocalRequest(localRequest);
-
           // Resetear los estados de la interfaz
           requestForm.reset();
           requestForm.classList.remove('was-validated');

@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const authToken = require('../UTILS/authToken');
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const validRoles = ['administrador', 'jefe_area', 'contabilidad', 'ti_contabilidad'];
+const validRoles = ['administrador', 'jefe_area', 'contabilidad', 'ti'];
 
 const validateEmail = (correo) => !correo || emailRegex.test(String(correo).trim());
 const validateRole = (rol) => typeof rol === 'string' && validRoles.includes(rol);

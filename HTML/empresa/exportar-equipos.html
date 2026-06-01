@@ -391,19 +391,12 @@
     };
 
     // DATOS DE PRUEBA (MOCK) - Se usan solo si no hay sesion o falla el backend
-    const equiposMock = [
-      { id: 1, nombre: "Servidor Principal", tipo: "Servidor", area: "Sistemas", direccion_ip: "192.168.1.10" },
-      { id: 2, nombre: "PC Recepción", tipo: "Desktop", area: "Atención", direccion_ip: "192.168.1.15" },
-      { id: 3, nombre: "Laptop Contabilidad", tipo: "Laptop", area: "Finanzas", direccion_ip: "192.168.1.22" },
-      { id: 4, nombre: "Router Cisco", tipo: "Redes", area: "Sistemas", direccion_ip: "192.168.1.1" }
-    ];
-    
     // Mostramos los de prueba inicialmente
     const session = getSession();
     const idEmpresa = Number(session.empresa_id || 0);
 
-    if (!idEmpresa) {
-      renderizarEquipos(equiposMock);
+    if (!idEmpresa || !session.token) {
+      window.location.href = 'companylogin.html';
     } else {
       fetch(`http://localhost:3000/api/equipos/empresa/${idEmpresa}`, {
         headers: {
@@ -420,25 +413,10 @@
         .then(renderizarEquipos)
         .catch((error) => {
           console.error("Error al obtener equipos:", error);
-          renderizarEquipos(equiposMock);
+          contenedor.innerHTML = '<p style="text-align:center; color:#ccc;">Error al cargar los equipos de la base de datos.</p>';
         });
     }
 
-    /* // 4. CÓDIGO REAL PARA CONECTAR AL BACKEND (Descomenta y usa este en producción)
-    // Asumiendo que el ID de la empresa es el 1
-    const idEmpresa = 1; 
-
-    fetch(`http://localhost:3000/api/equipos/empresa/${idEmpresa}`)
-      .then(response => response.json())
-      .then(data => {
-        // Renderizamos las tarjetas con los datos reales de la BD
-        renderizarEquipos(data);
-      })
-      .catch(error => {
-        console.error("Error al obtener equipos:", error);
-        contenedor.innerHTML = '<p style="text-align:center; color:#ccc;">Error al cargar los equipos de la base de datos.</p>';
-      });
-    */
   </script>
 </body>
 </html>

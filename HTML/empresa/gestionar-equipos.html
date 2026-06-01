@@ -531,12 +531,6 @@
     let equipment = [];
     let toastTimer;
 
-    const sampleEquipment = [
-      { id:'EQ-001', nombre:'Dell Latitude',   tipo:'Portatil', numero_serie:'SN-DELL-001', modelo:'Latitude 5520',  direccion_mac:'AA:BB:CC:11:22:33', direccion_ip:'192.168.1.25', area:'TI',          ubicacion_fisica:'Oficina TI Piso 2', encargado_equipo:'Tyler Joseph',   fecha_compra:'2022-03-15', lugar_compra:'Dell Mexico', descripcion:'Laptop de oficina en buen estado. Pantalla 15.6 FHD, 16GB RAM, SSD 512GB. Funciona correctamente.' },
-      { id:'EQ-002', nombre:'HP EliteDesk',    tipo:'PC',       numero_serie:'SN-HP-002',   modelo:'EliteDesk 800', direccion_mac:'AA:BB:CC:44:55:66', direccion_ip:'192.168.1.36', area:'Contabilidad', ubicacion_fisica:'Contabilidad',      encargado_equipo:'Denisse Valadez', fecha_compra:'2021-08-10', lugar_compra:'HP Store', descripcion:'Desktop de escritorio. Procesador i7, 8GB RAM. Utilizado para tareas de análisis contable.' },
-      { id:'EQ-003', nombre:'Cisco Catalyst',  tipo:'Switch',   numero_serie:'SN-CISCO-003',modelo:'Catalyst 2960', direccion_mac:'AA:BB:CC:77:88:99', direccion_ip:'192.168.1.2',  area:'Redes',        ubicacion_fisica:'Cuarto de redes',   encargado_equipo:'Andrea Monreal',  fecha_compra:'2020-01-20', lugar_compra:'Cisco Partner', descripcion:'Switch de red central. Soporta 48 puertos Gigabit. Configurado para VLAN. Mantenimiento preventivo requerido en próximos 3 meses.' }
-    ];
-
     const escapeHtml = (v) => String(v ?? '').replace(/[&<>"']/g, (c) =>
       ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
 
@@ -548,14 +542,8 @@
     const session = getSession();
     const empresaId = Number(session.empresa_id || 0);
     const userId = Number(session.id || 0);
-    const STORAGE_KEY = `techmap_equipos_empresa_${empresaId || 'sin_empresa'}`;
-    const HISTORY_KEY = `techmap_historial_empresa_${empresaId || 'sin_empresa'}`;
 
     const formData = () => Object.fromEntries(new FormData(equipmentForm).entries());
-    const currentUser = () => {
-      return session.nombre_completo || 'Usuario empresa';
-    };
-
     const normalizeItem = (item) => ({
       ...item,
       fecha_compra: item.fecha_compra || (item.fecha_adquisicion ? String(item.fecha_adquisicion).slice(0, 10) : ''),
@@ -578,48 +566,20 @@
       return data;
     };
 
-    const cacheEquipment = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(equipment));
-
-    const loadLocalEquipment = () => {
-      try {
-        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        return saved.length ? saved : sampleEquipment.map(normalizeItem);
-      } catch {
-        return sampleEquipment.map(normalizeItem);
-      }
-    };
-
     const loadEquipment = async () => {
-      if (!empresaId) {
-        equipment = loadLocalEquipment();
-        renderEquipment();
-        showToast('No hay empresa en la sesion. Se muestran datos locales.', 'error');
+      if (!empresaId || !session.token) {
+        window.location.href = 'companylogin.html';
         return;
       }
 
       try {
         const data = await request(`${API_URL}/empresa/${empresaId}`);
         equipment = data.map(normalizeItem);
-        cacheEquipment();
       } catch (error) {
-        equipment = loadLocalEquipment();
+        equipment = [];
         showToast(`No se pudo cargar la BD: ${error.message}`, 'error');
       }
       renderEquipment();
-    };
-
-    const addHistory = (tipo, item, detalle) => {
-      const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-      history.unshift({
-        id: `MOV-${Date.now()}`,
-        fecha: new Date().toISOString(),
-        tipo,
-        equipo: item?.nombre || 'Equipo',
-        numero_serie: item?.numero_serie || '',
-        usuario: currentUser(),
-        detalle
-      });
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 80)));
     };
 
     const showToast = (message, type = 'success') => {
@@ -699,8 +659,6 @@
         const result = await request(API_URL, { method: 'POST', body: JSON.stringify(payload) });
         const newEquipment = normalizeItem({ id: result.id, ...payload });
         equipment = [newEquipment, ...equipment];
-        cacheEquipment();
-        addHistory('Alta', newEquipment, `Se agrego el equipo ${newEquipment.nombre || 'sin nombre'}.`);
         clearForm();
         showToast('Equipo agregado correctamente.');
       } catch (error) {
@@ -723,8 +681,6 @@
         await request(API_URL, { method: 'PUT', body: JSON.stringify(payload) });
         const updatedEquipment = normalizeItem({ ...equipment.find((item) => item.id === selectedEquipmentId), ...payload });
         equipment = equipment.map((item) => item.id === selectedEquipmentId ? updatedEquipment : item);
-        cacheEquipment();
-        addHistory('Modificacion', updatedEquipment, `Se actualizaron los datos de ${updatedEquipment.nombre || 'un equipo'}.`);
         clearForm();
         showToast('Equipo actualizado correctamente.');
       } catch (error) {

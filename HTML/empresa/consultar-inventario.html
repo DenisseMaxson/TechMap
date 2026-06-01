@@ -351,14 +351,6 @@
     const typeFilter     = document.getElementById('typeFilter');
     const recordCount    = document.getElementById('recordCount');
 
-    const fallbackEquipment = [
-      { id:'EQ-001', nombre:'Dell Latitude',     tipo:'laptop',    numero_serie:'88181111', encargado_equipo:'Norman Reedus',   estado:'Activo', fecha_compra:'2026-07-14' },
-      { id:'EQ-002', nombre:'HP LaserJet',        tipo:'impresora', numero_serie:'88181112', encargado_equipo:'Denisse Valadez', estado:'Activo', fecha_compra:'2026-08-14' },
-      { id:'EQ-003', nombre:'Teclado Logitech',   tipo:'teclado',   numero_serie:'88181113', encargado_equipo:'Andrea Monreal',  estado:'Activo', fecha_compra:'2026-09-14' },
-      { id:'EQ-004', nombre:'Mouse Microsoft',    tipo:'mouse',     numero_serie:'88181114', encargado_equipo:'Draco Malfoy',    estado:'Activo', fecha_compra:'2026-10-14' },
-      { id:'EQ-005', nombre:'Monitor LG',         tipo:'monitor',   numero_serie:'88181115', encargado_equipo:'Higgs Monaghan',  estado:'Activo', fecha_compra:'2026-04-14' }
-    ];
-
     const escapeHtml = (v) => String(v ?? '').replace(/[&<>"']/g, (c) =>
       ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
 

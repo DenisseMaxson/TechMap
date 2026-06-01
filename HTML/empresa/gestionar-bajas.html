@@ -505,18 +505,6 @@
     const session = getSession();
     const empresaId = Number(session.empresa_id || 0);
     const userId = Number(session.id || 0);
-    const REQUESTS_KEY = `techmap_solicitudes_baja_${empresaId || 'sin_empresa'}`;
-    const HISTORY_KEY = `techmap_historial_empresa_${empresaId || 'sin_empresa'}`;
-    const initialRequests = [
-      { id:'001', dispositivo:'Dell Latitude',    serie:'88181111', solicitante:'Tyler Joseph',    area:'TI',           estado:'pendiente', fecha_solicitud:'2026-05-17T09:20:00', motivo:'La bateria ya no retiene carga y el equipo se apaga durante revisiones de soporte.', evidencia:'Reporte interno TI-145' },
-      { id:'002', dispositivo:'HP LaserJet',       serie:'88181112', solicitante:'Denisse Valadez', area:'Contabilidad', estado:'pendiente', fecha_solicitud:'2026-05-17T10:05:00', motivo:'Atascos constantes de papel y costo de reparacion superior al valor actual del equipo.', evidencia:'Cotizacion proveedor #9082' },
-      { id:'003', dispositivo:'Teclado Logitech',  serie:'88181113', solicitante:'Andrea Monreal',  area:'Redes',        estado:'pendiente', fecha_solicitud:'2026-05-18T11:15:00', motivo:'Varias teclas no responden despues de mantenimiento preventivo.', evidencia:'Sin evidencia adjunta' },
-      { id:'004', dispositivo:'Mouse Microsoft',   serie:'88181114', solicitante:'Draco Malfoy',    area:'Operaciones',  estado:'pendiente', fecha_solicitud:'2026-05-18T12:30:00', motivo:'Falla intermitente del sensor optico y desconexiones frecuentes.', evidencia:'Ticket MESA-221' },
-      { id:'005', dispositivo:'Monitor LG',        serie:'88181115', solicitante:'Higgs Monaghan',  area:'Direccion',    estado:'pendiente', fecha_solicitud:'2026-05-19T08:45:00', motivo:'Panel con lineas permanentes y brillo irregular que impide su uso continuo.', evidencia:'Fotografia en expediente' },
-      { id:'006', dispositivo:'Dell Latitude',     serie:'88181116', solicitante:'Rhea Ripley',     area:'Ventas',       estado:'pendiente', fecha_solicitud:'2026-05-19T13:00:00', motivo:'Equipo obsoleto sin soporte de actualizaciones requeridas por seguridad.', evidencia:'Revision inventario Q2' },
-      { id:'007', dispositivo:'Dell Latitude',     serie:'88181117', solicitante:'Danhausen',       area:'Soporte',      estado:'pendiente', fecha_solicitud:'2026-05-20T16:10:00', motivo:'Tarjeta madre danada; reparacion no viable por disponibilidad de refacciones.', evidencia:'Diagnostico tecnico DT-077' }
-    ];
-
     const normalizeRequest = (r) => ({
       ...r,
       id: String(r.id),
@@ -524,15 +512,6 @@
       serie: r.serie || r.numero_serie || '',
       evidencia: r.evidencia || r.evidencia_url || ''
     });
-
-    const loadLocalRequests = () => {
-      try {
-        const saved = JSON.parse(localStorage.getItem(REQUESTS_KEY) || '[]');
-        return saved.length ? saved.map(normalizeRequest) : initialRequests.map(r => ({ ...r }));
-      } catch {
-        return initialRequests.map(r => ({ ...r }));
-      }
-    };
 
     let requests = [];
     const tableBody   = document.getElementById('bajasTable');
@@ -577,10 +556,6 @@
       toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
     };
 
-    const saveRequests = () => {
-      localStorage.setItem(REQUESTS_KEY, JSON.stringify(requests));
-    };
-
     const requestApi = async (url, options = {}) => {
       const response = await fetch(url, {
         headers: {
@@ -598,50 +573,38 @@
     };
 
     const loadRequests = async () => {
-      if (!empresaId) {
-        requests = loadLocalRequests();
-        renderRequests();
-        showToast('No hay empresa en la sesion. Se muestran datos locales.', 'error');
+      if (!empresaId || !session.token) {
+        window.location.href = 'companylogin.html';
         return;
       }
 
       try {
         const data = await requestApi(`${API_URL}/bajas/empresa/${empresaId}`);
         requests = data.map(normalizeRequest);
-        saveRequests();
       } catch (error) {
-        requests = loadLocalRequests();
+        requests = [];
         showToast(`No se pudieron cargar bajas: ${error.message}`, 'error');
       }
       renderRequests();
     };
 
-    const addHistory = (request, estado) => {
-      const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-      history.unshift({
-        id: `MOV-${Date.now()}`,
-        fecha: new Date().toISOString(),
-        tipo: estado === 'aprobada' ? 'Aprobacion baja' : 'Rechazo baja',
-        equipo: request.dispositivo,
-        numero_serie: request.serie,
-        usuario: session.nombre_completo || 'Jefe de area',
-        detalle: `${estado === 'aprobada' ? 'Aprobada' : 'Rechazada'} la solicitud de baja de ${request.dispositivo}.`
-      });
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 80)));
-    };
-
     const setStatus = async (id, estado) => {
       const request = requests.find(r => r.id === id);
+      const observaciones = estado === 'rechazada'
+        ? prompt('Escribe el motivo del rechazo de la baja:')
+        : '';
+      if (estado === 'rechazada' && !String(observaciones || '').trim()) {
+        showToast('El motivo de rechazo es obligatorio.', 'error');
+        return;
+      }
       try {
         if (empresaId) {
           await requestApi(`${API_URL}/bajas/resolver`, {
             method: 'PUT',
-            body: JSON.stringify({ id, estado, empresa_id: empresaId, usuario_id: userId })
+            body: JSON.stringify({ id, estado, observaciones, empresa_id: empresaId, usuario_id: userId })
           });
         }
         requests = requests.map(r => r.id === id ? { ...r, estado, fecha_resolucion: new Date().toISOString() } : r);
-        saveRequests();
-        if (request) addHistory(request, estado);
         renderRequests();
         showToast(`Solicitud ${labels[estado].toLowerCase()}.`);
       } catch (error) {
@@ -747,12 +710,9 @@
     statusFilter.addEventListener('change', renderRequests);
 
     document.getElementById('resetButton').addEventListener('click', () => {
-      requests = empresaId ? [] : initialRequests.map(r => ({ ...r }));
-      if (empresaId) localStorage.removeItem(REQUESTS_KEY);
-      else saveRequests();
       statusFilter.value = 'todos';
       loadRequests();
-      showToast(empresaId ? 'Solicitudes recargadas desde la empresa.' : 'Solicitudes restauradas.');
+      showToast('Solicitudes recargadas desde la base de datos.');
     });
 
     loadRequests();
