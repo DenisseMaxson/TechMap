@@ -95,8 +95,8 @@ const insertEquipo = (req, res) => {
   if (!empresaId) return;
 
   const {
-    id, nombre, numero_serie, direccion_mac, direccion_ip, modelo, tipo, area, ubicacion_fisica,
-    encargado_equipo, fecha_adquisicion, fecha_compra, lugar_compra, observaciones,
+    id, nombre, numero_serie, direccion_mac, direccion_ip, marca, modelo, tipo, area, ubicacion_fisica,
+    encargado_equipo, fecha_adquisicion, fecha_compra, lugar_compra, observaciones, valor_contable,
     descripcion, estado
   } = req.body;
   const usuarioId = getUsuarioId(req);
