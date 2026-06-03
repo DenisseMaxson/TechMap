@@ -99,6 +99,7 @@ const insertEquipo = (req, res) => {
     encargado_equipo, fecha_adquisicion, fecha_compra, lugar_compra, observaciones, valor_contable,
     descripcion, estado
   } = req.body;
+  const conectado_red = String(req.body?.conectado_red || 'no').toLowerCase() === 'si';
   const usuarioId = getUsuarioId(req);
 
   if (!numero_serie || !nombre) {
@@ -109,6 +110,11 @@ const insertEquipo = (req, res) => {
   }
   if (!isValidMac(direccion_mac)) {
     return res.status(400).json({ error: 'Dirección MAC inválida.' });
+  }
+
+  if (conectado_red) {
+    if (!direccion_ip) return res.status(400).json({ error: 'Dirección IP es obligatoria cuando el equipo está conectado a la red.' });
+    if (!direccion_mac) return res.status(400).json({ error: 'Dirección MAC es obligatoria cuando el equipo está conectado a la red.' });
   }
   if (!isValidDate(fecha_adquisicion) && !isValidDate(fecha_compra)) {
     return res.status(400).json({ error: 'Fecha de adquisición o compra con formato inválido. Use AAAA-MM-DD.' });
@@ -173,6 +179,11 @@ const updateEquipo = (req, res) => {
   if (!id) return res.status(400).json({ error: 'ID de equipo es obligatorio.' });
   
   // (Mantén tus validaciones de IP, MAC y Fecha igual aquí abajo)
+  const conectado_red_upd = String(req.body?.conectado_red || 'no').toLowerCase() === 'si';
+  if (conectado_red_upd) {
+    if (!direccion_ip) return res.status(400).json({ error: 'Dirección IP es obligatoria cuando el equipo está conectado a la red.' });
+    if (!direccion_mac) return res.status(400).json({ error: 'Dirección MAC es obligatoria cuando el equipo está conectado a la red.' });
+  }
   if (!isValidIp(direccion_ip)) return res.status(400).json({ error: 'Dirección IP inválida.' });
   if (!isValidMac(direccion_mac)) return res.status(400).json({ error: 'Dirección MAC inválida.' });
   if (!isValidDate(fecha_adquisicion) && !isValidDate(fecha_compra)) {

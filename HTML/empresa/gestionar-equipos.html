@@ -469,6 +469,14 @@
           </label>
 
           <label class="field-group">
+            <span class="field-label">Conectado a la red</span>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <label style="font-size:13px;color:rgba(255,255,255,0.75)"><input type="radio" name="conectado_red" value="si"> Sí</label>
+              <label style="font-size:13px;color:rgba(255,255,255,0.75)"><input type="radio" name="conectado_red" value="no" checked> No</label>
+            </div>
+          </label>
+
+          <label class="field-group">
             <span class="field-label">Área</span>
             <input class="text-input" type="text" name="area" placeholder="Ej. TI, Contabilidad">
           </label>
@@ -544,6 +552,11 @@
     const userId = Number(session.id || 0);
 
     const formData = () => Object.fromEntries(new FormData(equipmentForm).entries());
+    const updateNetworkRequirement = () => {
+      const connected = equipmentForm.querySelector('input[name="conectado_red"]:checked')?.value === 'si';
+      equipmentForm.direccion_ip.required = connected;
+      equipmentForm.direccion_mac.required = connected;
+    };
     const normalizeItem = (item) => ({
       ...item,
       fecha_compra: item.fecha_compra || (item.fecha_adquisicion ? String(item.fecha_adquisicion).slice(0, 10) : ''),
@@ -630,6 +643,11 @@
       equipmentForm.modelo.value           = item.modelo           || '';
       equipmentForm.direccion_mac.value    = item.direccion_mac    || '';
       equipmentForm.direccion_ip.value     = item.direccion_ip     || '';
+      // Si el equipo tiene IP o MAC se asume que está conectado
+      const conectado = (item.direccion_ip || item.direccion_mac) ? 'si' : 'no';
+      const radio = equipmentForm.querySelector(`input[name="conectado_red"][value="${conectado}"]`);
+      if (radio) radio.checked = true;
+      updateNetworkRequirement();
       equipmentForm.area.value             = item.area             || '';
       equipmentForm.ubicacion_fisica.value = item.ubicacion_fisica || '';
       equipmentForm.encargado_equipo.value = item.encargado_equipo || '';
@@ -643,6 +661,9 @@
       selectedEquipmentId = null;
       equipmentForm.reset();
       equipmentForm.classList.remove('was-validated');
+      const radioNo = equipmentForm.querySelector('input[name="conectado_red"][value="no"]');
+      if (radioNo) radioNo.checked = true;
+      updateNetworkRequirement();
       renderEquipment();
     };
 
@@ -688,6 +709,9 @@
       }
     });
     document.getElementById('clearButton').addEventListener('click', clearForm);
+    // inicializa listeners y estado
+    equipmentForm.querySelectorAll('input[name="conectado_red"]').forEach(r => r.addEventListener('change', updateNetworkRequirement));
+    updateNetworkRequirement();
     loadEquipment();
   </script>
 </body>
