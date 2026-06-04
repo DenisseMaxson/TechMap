@@ -379,7 +379,7 @@
   <!-- Modal detalles de equipo -->
   <div class="tm-modal-overlay" id="detailModal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="tm-modal" role="document">
-      <button class="close-btn" id="modalClose" aria-label="Cerrar">✕</button>
+      <button class="close-btn" id="modalCloseBtn" aria-label="Cerrar">✕</button>
       <div class="tm-modal-content">
         <div class="modal-header" style="padding:12px 16px;">
           <div class="title" id="modalTitle">Detalles del equipo</div>
@@ -391,7 +391,7 @@
           <button class="tm-btn ghost" id="btnExport">Exportar PDF</button>
           <button class="tm-btn ghost" id="btnSolicitar">Solicitar baja</button>
           <button class="tm-btn primary" id="btnEditar">Editar</button>
-          <button class="tm-btn" id="modalClose">Cerrar</button>
+          <button class="tm-btn" id="modalCloseBtnFooter">Cerrar</button>
         </div>
       </div>
     </div>
@@ -527,7 +527,8 @@
     const modalOverlay = document.getElementById('detailModal');
     const modalBody = document.getElementById('modalBody');
     const modalTitle = document.getElementById('modalTitle');
-    const modalClose = document.getElementById('modalClose');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const modalCloseBtnFooter = document.getElementById('modalCloseBtnFooter');
     const btnEditar = document.getElementById('btnEditar');
     const btnExport = document.getElementById('btnExport');
     const btnSolicitar = document.getElementById('btnSolicitar');
@@ -542,7 +543,8 @@
       btnSolicitar.onclick = null;
     };
 
-    modalClose.addEventListener('click', closeModal);
+    modalCloseBtn.addEventListener('click', closeModal);
+    modalCloseBtnFooter.addEventListener('click', closeModal);
     modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
