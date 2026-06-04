@@ -97,9 +97,16 @@ const insertEquipo = (req, res) => {
   const {
     id, nombre, numero_serie, direccion_mac, direccion_ip, marca, modelo, tipo, area, ubicacion_fisica,
     encargado_equipo, fecha_adquisicion, fecha_compra, lugar_compra, observaciones, valor_contable,
-    descripcion, estado
+    descripcion, estado,
+    // Nuevos campos técnicos
+    sistema_operativo, procesador, memoria_ram, almacenamiento,
+    conectado_red, nombre_host, tipo_ip,
+    // Nuevos campos administrativos
+    proveedor, numero_factura, garantia_vigente, fecha_garantia_vencimiento, fecha_baja_estimada,
+    // Campos adicionales
+    etiqueta_qr_barras, jefe_area_correo, perifericos_asociados
   } = req.body;
-  const conectado_red = String(req.body?.conectado_red || 'no').toLowerCase() === 'si';
+  const conectado_red_flag = String(conectado_red || 'no').toLowerCase() === 'si';
   const usuarioId = getUsuarioId(req);
 
   if (!numero_serie || !nombre) {
@@ -112,7 +119,7 @@ const insertEquipo = (req, res) => {
     return res.status(400).json({ error: 'Dirección MAC inválida.' });
   }
 
-  if (conectado_red) {
+  if (conectado_red_flag) {
     if (!direccion_ip) return res.status(400).json({ error: 'Dirección IP es obligatoria cuando el equipo está conectado a la red.' });
     if (!direccion_mac) return res.status(400).json({ error: 'Dirección MAC es obligatoria cuando el equipo está conectado a la red.' });
   }
@@ -139,7 +146,25 @@ const insertEquipo = (req, res) => {
       lugar_compra: lugar_compra || null,
       valor_contable: valor_contable || null,
       observaciones: observaciones || descripcion || null,
-      registrado_por: usuarioId
+      registrado_por: usuarioId,
+      // Nuevos campos técnicos
+      sistema_operativo: sistema_operativo || null,
+      procesador: procesador || null,
+      memoria_ram: memoria_ram || null,
+      almacenamiento: almacenamiento || null,
+      conectado_red: conectado_red_flag,
+      nombre_host: nombre_host || null,
+      tipo_ip: tipo_ip || null,
+      // Nuevos campos administrativos
+      proveedor: proveedor || null,
+      numero_factura: numero_factura || null,
+      garantia_vigente: garantia_vigente !== undefined ? garantia_vigente : null,
+      fecha_garantia_vencimiento: fecha_garantia_vencimiento || null,
+      fecha_baja_estimada: fecha_baja_estimada || null,
+      // Campos adicionales
+      etiqueta_qr_barras: etiqueta_qr_barras || null,
+      jefe_area_correo: jefe_area_correo || null,
+      perifericos_asociados: perifericos_asociados || null
     });
 
     const placeholders = fields.map(() => '?').join(', ');
@@ -168,18 +193,23 @@ const updateEquipo = (req, res) => {
   const empresaId = requireEmpresa(req, res);
   if (!empresaId) return;
 
-  // 1. Incluimos TODOS los campos necesarios
   const {
     id, nombre, numero_serie, direccion_mac, direccion_ip, marca, modelo, tipo, area, ubicacion_fisica,
     encargado_equipo, fecha_adquisicion, fecha_compra, lugar_compra, observaciones,
-    descripcion, estado
+    descripcion, estado,
+    // Nuevos campos técnicos
+    sistema_operativo, procesador, memoria_ram, almacenamiento,
+    conectado_red, nombre_host, tipo_ip,
+    // Nuevos campos administrativos
+    proveedor, numero_factura, garantia_vigente, fecha_garantia_vencimiento, fecha_baja_estimada,
+    // Campos adicionales
+    etiqueta_qr_barras, jefe_area_correo, perifericos_asociados
   } = req.body;
   const usuarioId = getUsuarioId(req);
 
   if (!id) return res.status(400).json({ error: 'ID de equipo es obligatorio.' });
   
-  // (Mantén tus validaciones de IP, MAC y Fecha igual aquí abajo)
-  const conectado_red_upd = String(req.body?.conectado_red || 'no').toLowerCase() === 'si';
+  const conectado_red_upd = String(conectado_red || 'no').toLowerCase() === 'si';
   if (conectado_red_upd) {
     if (!direccion_ip) return res.status(400).json({ error: 'Dirección IP es obligatoria cuando el equipo está conectado a la red.' });
     if (!direccion_mac) return res.status(400).json({ error: 'Dirección MAC es obligatoria cuando el equipo está conectado a la red.' });
@@ -193,7 +223,6 @@ const updateEquipo = (req, res) => {
   getEquipoColumns((columnsErr, columns) => {
     if (columnsErr) return res.status(500).json({ error: columnsErr.message });
 
-    // 2. Mapeamos todo al objeto updateValues
     const updateValues = {
       nombre,
       numero_serie: numero_serie || null,
@@ -207,7 +236,25 @@ const updateEquipo = (req, res) => {
       encargado_equipo: encargado_equipo || null,
       fecha_adquisicion: fecha_adquisicion || fecha_compra || null,
       lugar_compra: lugar_compra || null,
-      observaciones: observaciones || descripcion || null
+      observaciones: observaciones || descripcion || null,
+      // Nuevos campos técnicos
+      sistema_operativo: sistema_operativo || null,
+      procesador: procesador || null,
+      memoria_ram: memoria_ram || null,
+      almacenamiento: almacenamiento || null,
+      conectado_red: conectado_red_upd,
+      nombre_host: nombre_host || null,
+      tipo_ip: tipo_ip || null,
+      // Nuevos campos administrativos
+      proveedor: proveedor || null,
+      numero_factura: numero_factura || null,
+      garantia_vigente: garantia_vigente !== undefined ? garantia_vigente : null,
+      fecha_garantia_vencimiento: fecha_garantia_vencimiento || null,
+      fecha_baja_estimada: fecha_baja_estimada || null,
+      // Campos adicionales
+      etiqueta_qr_barras: etiqueta_qr_barras || null,
+      jefe_area_correo: jefe_area_correo || null,
+      perifericos_asociados: perifericos_asociados || null
     };
 
     const setParts = [];
@@ -228,7 +275,16 @@ const updateEquipo = (req, res) => {
       if (err) return res.status(500).json({ error: err.message });
       if (!result.affectedRows) return res.status(404).json({ error: 'Equipo no encontrado.' });
 
-      // ... (Tus inserts de bitacora y historial se quedan igual)
+      db.query(
+        'INSERT INTO bitacora (usuario_id, empresa_id, accion, modulo, detalle) VALUES (?, ?, ?, ?, ?)',
+        [usuarioId, empresaId, 'edicion_equipo', 'inventario', `Equipo actualizado ID: ${id}`],
+        () => {}
+      );
+      db.query(
+        'INSERT INTO historial_movimientos (empresa_id, equipo_id, usuario_id, tipo_movimiento, descripcion) VALUES (?, ?, ?, ?, ?)',
+        [empresaId, id, usuarioId, 'actualizacion', `Equipo actualizado ID: ${id}`],
+        () => {}
+      );
       res.json({ mensaje: 'Informacion de equipo actualizada' });
     });
   });

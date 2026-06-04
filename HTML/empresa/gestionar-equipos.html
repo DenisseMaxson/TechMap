@@ -486,6 +486,83 @@
             <input class="text-input" type="text" name="ubicacion_fisica" placeholder="Ej. Oficina piso 2">
           </label>
 
+          <!-- 🔧 CAMPOS TÉCNICOS -->
+          <label class="field-group">
+            <span class="field-label">Sistema Operativo</span>
+            <input class="text-input" type="text" name="sistema_operativo" placeholder="Windows 11, Ubuntu 22.04, etc.">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Procesador</span>
+            <input class="text-input" type="text" name="procesador" placeholder="Intel i7, AMD Ryzen, etc.">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Memoria RAM</span>
+            <input class="text-input" type="text" name="memoria_ram" placeholder="8GB, 16GB, 32GB">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Almacenamiento</span>
+            <input class="text-input" type="text" name="almacenamiento" placeholder="SSD 512GB, HDD 1TB">
+          </label>
+
+          <!-- 🌐 CAMPOS DE RED -->
+          <label class="field-group">
+            <span class="field-label">Nombre de Host</span>
+            <input class="text-input" type="text" name="nombre_host" placeholder="ADMIN-PC-01">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Tipo de IP</span>
+            <select class="select-input" name="tipo_ip">
+              <option value="">Seleccionar</option>
+              <option value="estatica">Estática</option>
+              <option value="dinamica">Dinámica</option>
+            </select>
+          </label>
+
+          <!-- 💼 CAMPOS ADMINISTRATIVOS -->
+          <label class="field-group">
+            <span class="field-label">Proveedor</span>
+            <input class="text-input" type="text" name="proveedor" placeholder="Dell Autorizado, HP Direct">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Número de Factura</span>
+            <input class="text-input" type="text" name="numero_factura" placeholder="FAC-2025-001234">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">¿Garantía Vigente?</span>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <label style="font-size:13px;color:rgba(255,255,255,0.75)"><input type="radio" name="garantia_vigente" value="1"> Sí</label>
+              <label style="font-size:13px;color:rgba(255,255,255,0.75)"><input type="radio" name="garantia_vigente" value="0"> No</label>
+            </div>
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Fecha Vencimiento Garantía</span>
+            <input class="text-input" type="date" name="fecha_garantia_vencimiento">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Fecha Estimada de Baja</span>
+            <input class="text-input" type="date" name="fecha_baja_estimada">
+          </label>
+
+          <!-- 🏷️ IDENTIFICACIÓN Y RESPONSABILIDAD -->
+          <label class="field-group">
+            <span class="field-label">Etiqueta QR/Códigos Barras</span>
+            <input class="text-input" type="text" name="etiqueta_qr_barras" placeholder="TECH-2025-001234">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Jefe de Área (Correo)</span>
+            <input class="text-input" type="email" name="jefe_area_correo" placeholder="jefa@empresa.com">
+          </label>
+
+          <!-- CAMPOS EXISTENTES (actualizados) -->
           <label class="field-group">
             <span class="field-label">Encargado del equipo</span>
             <input class="text-input" type="text" name="encargado_equipo" placeholder="Nombre completo">
@@ -499,6 +576,11 @@
           <label class="field-group full">
             <span class="field-label">Dónde se compró</span>
             <input class="text-input" type="text" name="lugar_compra" placeholder="Ej. Dell México">
+          </label>
+
+          <label class="field-group full">
+            <span class="field-label">Periféricos Asociados</span>
+            <textarea class="text-input textarea-input" name="perifericos_asociados" placeholder="Monitor + Teclado + Mouse, Docking Station, etc." maxlength="1000"></textarea>
           </label>
 
           <label class="field-group full">
@@ -648,6 +730,31 @@
       const radio = equipmentForm.querySelector(`input[name="conectado_red"][value="${conectado}"]`);
       if (radio) radio.checked = true;
       updateNetworkRequirement();
+      
+      // 🔧 Nuevos campos técnicos
+      equipmentForm.sistema_operativo.value = item.sistema_operativo || '';
+      equipmentForm.procesador.value        = item.procesador        || '';
+      equipmentForm.memoria_ram.value       = item.memoria_ram       || '';
+      equipmentForm.almacenamiento.value    = item.almacenamiento    || '';
+      equipmentForm.nombre_host.value       = item.nombre_host       || '';
+      equipmentForm.tipo_ip.value           = item.tipo_ip           || '';
+      
+      // 💼 Nuevos campos administrativos
+      equipmentForm.proveedor.value         = item.proveedor         || '';
+      equipmentForm.numero_factura.value    = item.numero_factura    || '';
+      if (item.garantia_vigente !== null && item.garantia_vigente !== undefined) {
+        const garantiaRadio = equipmentForm.querySelector(`input[name="garantia_vigente"][value="${item.garantia_vigente ? '1' : '0'}"]`);
+        if (garantiaRadio) garantiaRadio.checked = true;
+      }
+      equipmentForm.fecha_garantia_vencimiento.value = item.fecha_garantia_vencimiento || '';
+      equipmentForm.fecha_baja_estimada.value        = item.fecha_baja_estimada        || '';
+      
+      // 🏷️ Nuevos campos adicionales
+      equipmentForm.etiqueta_qr_barras.value   = item.etiqueta_qr_barras   || '';
+      equipmentForm.jefe_area_correo.value     = item.jefe_area_correo     || '';
+      equipmentForm.perifericos_asociados.value = item.perifericos_asociados || '';
+      
+      // Campos existentes
       equipmentForm.area.value             = item.area             || '';
       equipmentForm.ubicacion_fisica.value = item.ubicacion_fisica || '';
       equipmentForm.encargado_equipo.value = item.encargado_equipo || '';
