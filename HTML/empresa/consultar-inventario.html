@@ -379,7 +379,7 @@
   <!-- Modal detalles de equipo -->
   <div class="tm-modal-overlay" id="detailModal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="tm-modal" role="document">
-      <button class="close-btn" id="modalClose" aria-label="Cerrar">✕</button>
+      <button class="close-btn" id="modalCloseIcon" aria-label="Cerrar">✕</button>
       <div class="tm-modal-content">
         <div class="modal-header" style="padding:12px 16px;">
           <div class="title" id="modalTitle">Detalles del equipo</div>
@@ -391,7 +391,7 @@
           <button class="tm-btn ghost" id="btnExport">Exportar PDF</button>
           <button class="tm-btn ghost" id="btnSolicitar">Solicitar baja</button>
           <button class="tm-btn primary" id="btnEditar">Editar</button>
-          <button class="tm-btn" id="modalClose">Cerrar</button>
+          <button class="tm-btn" id="modalCloseButton">Cerrar</button>
         </div>
       </div>
     </div>
@@ -527,7 +527,8 @@
     const modalOverlay = document.getElementById('detailModal');
     const modalBody = document.getElementById('modalBody');
     const modalTitle = document.getElementById('modalTitle');
-    const modalClose = document.getElementById('modalClose');
+    const modalCloseIcon = document.getElementById('modalCloseIcon');
+    const modalCloseButton = document.getElementById('modalCloseButton');
     const btnEditar = document.getElementById('btnEditar');
     const btnExport = document.getElementById('btnExport');
     const btnSolicitar = document.getElementById('btnSolicitar');
@@ -542,7 +543,8 @@
       btnSolicitar.onclick = null;
     };
 
-    modalClose.addEventListener('click', closeModal);
+    modalCloseIcon.addEventListener('click', closeModal);
+    modalCloseButton.addEventListener('click', closeModal);
     modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
@@ -551,24 +553,41 @@
       modalTitle.textContent = obj.nombre || 'Detalles del equipo';
       const rows = [];
       rows.push(htmlRow('ID', obj.id));
+      rows.push(htmlRow('Número de inventario', obj.numero_inventario));
+      rows.push(htmlRow('Etiqueta física', obj.etiqueta_fisica));
       rows.push(htmlRow('Nombre', obj.nombre));
-      rows.push(htmlRow('Número de serie', obj.numero_serie));
       rows.push(htmlRow('Tipo', obj.tipo));
+      rows.push(htmlRow('Sistema operativo', obj.sistema_operativo));
+      rows.push(htmlRow('Procesador', obj.procesador));
+      rows.push(htmlRow('Host', obj.nombre_host));
       rows.push(htmlRow('Marca', obj.marca));
       rows.push(htmlRow('Modelo', obj.modelo));
+      rows.push(htmlRow('Número de serie', obj.numero_serie));
       rows.push(htmlRow('Dirección MAC', obj.direccion_mac));
       rows.push(htmlRow('Dirección IP', obj.direccion_ip));
+      rows.push(htmlRow('Tipo de IP', obj.tipo_ip));
+      rows.push(htmlRow('Conectado a la red', obj.conectado_red || 'No'));
       rows.push(htmlRow('Área', obj.area));
       rows.push(htmlRow('Ubicación física', obj.ubicacion_fisica));
       rows.push(htmlRow('Encargado', obj.encargado_equipo));
+      rows.push(htmlRow('Usuario responsable', obj.usuario_responsable));
+      rows.push(htmlRow('Correo jefe de área', obj.correo_jefe_area));
       rows.push(htmlRow('Estado', obj.estado || 'Activo'));
       rows.push(htmlRow('Fecha de compra', formatDate(obj.fecha_compra)));
+      rows.push(htmlRow('Fecha de baja/renovación estimada', formatDate(obj.fecha_baja_renovacion)));
+      rows.push(htmlRow('Proveedor', obj.proveedor));
+      rows.push(htmlRow('Factura / Referencia', obj.referencia_factura));
+      rows.push(htmlRow('Garantía / soporte', obj.garantia));
+      rows.push(htmlRow('Costo de adquisición', obj.costo_adquisicion ? `$${Number(obj.costo_adquisicion).toLocaleString('es-MX', { minimumFractionDigits: 2 })}` : '—'));
       rows.push(htmlRow('Lugar de compra', obj.lugar_compra));
       rows.push(htmlRow('Observaciones', obj.descripcion || obj.observaciones));
       modalBody.innerHTML = `<table>${rows.join('')}</table>`;
       // set action handlers
       btnEditar.onclick = () => { window.location.href = `gestionar-equipos.html?id=${encodeURIComponent(obj.id)}`; };
-      btnExport.onclick = () => { window.open(`${API_URL}/export/${encodeURIComponent(obj.id)}`, '_blank'); };
+      btnExport.onclick = () => {
+        const token = encodeURIComponent(session.token || '');
+        window.open(`${API_URL}/exportar/${encodeURIComponent(obj.id)}?token=${token}`, '_blank');
+      };
       btnSolicitar.onclick = () => { window.location.href = `solicitar-baja.html?equipo=${encodeURIComponent(obj.id)}`; };
 
       modalOverlay.classList.add('show');

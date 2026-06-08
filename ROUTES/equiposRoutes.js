@@ -39,4 +39,8 @@ router.delete('/', equipoController.bajaLogica);
 // URL: http://localhost:3000/api/equipos/exportar/1
 router.get('/exportar/:id', equipoController.exportPDF);
 
+// Alias de compatibilidad para rutas antiguas o referencias erróneas
+// URL: http://localhost:3000/api/equipos/export/1
+router.get('/export/:id', equipoController.exportPDF);
+
 module.exports = router;

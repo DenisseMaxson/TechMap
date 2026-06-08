@@ -432,6 +432,11 @@
           </label>
 
           <label class="field-group">
+            <span class="field-label">Etiqueta física</span>
+            <input class="text-input" type="text" name="etiqueta_fisica" placeholder="Ej. ETQ-12345">
+          </label>
+
+          <label class="field-group">
             <span class="field-label">Tipo de equipo</span>
             <select class="select-input" name="tipo" required>
               <option value="">Seleccionar</option>
@@ -469,6 +474,15 @@
           </label>
 
           <label class="field-group">
+            <span class="field-label">Tipo de IP</span>
+            <select class="select-input" name="tipo_ip">
+              <option value="">Seleccionar</option>
+              <option value="Estatica">Estática</option>
+              <option value="Dinamica">Dinámica</option>
+            </select>
+          </label>
+
+          <label class="field-group">
             <span class="field-label">Conectado a la red</span>
             <div style="display:flex;gap:10px;align-items:center;">
               <label style="font-size:13px;color:rgba(255,255,255,0.75)"><input type="radio" name="conectado_red" value="si"> Sí</label>
@@ -492,8 +506,43 @@
           </label>
 
           <label class="field-group">
+            <span class="field-label">Usuario responsable</span>
+            <input class="text-input" type="text" name="usuario_responsable" placeholder="Nombre completo">
+          </label>
+
+          <label class="field-group full">
+            <span class="field-label">Correo del jefe de área</span>
+            <input class="text-input" type="email" name="correo_jefe_area" placeholder="jefe@empresa.com">
+          </label>
+
+          <label class="field-group">
             <span class="field-label">Fecha de compra</span>
             <input class="text-input" type="date" name="fecha_compra">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Fecha baja/renovación estimada</span>
+            <input class="text-input" type="date" name="fecha_baja_renovacion">
+          </label>
+
+          <label class="field-group full">
+            <span class="field-label">Proveedor</span>
+            <input class="text-input" type="text" name="proveedor" placeholder="Ej. Dell México">
+          </label>
+
+          <label class="field-group full">
+            <span class="field-label">Factura / Referencia</span>
+            <input class="text-input" type="text" name="referencia_factura" placeholder="Folio o factura">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Costo de adquisición</span>
+            <input class="text-input" type="number" step="0.01" min="0" name="costo_adquisicion" placeholder="0.00">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Garantía / soporte</span>
+            <input class="text-input" type="text" name="garantia" placeholder="Ej. 12 meses / Contrato 2026">
           </label>
 
           <label class="field-group full">
@@ -503,7 +552,7 @@
 
           <label class="field-group full">
             <span class="field-label">Descripción / Notas</span>
-            <textarea class="text-input textarea-input" name="descripcion" placeholder="Describe características especiales, estado actual, notas importantes, etc." maxlength="500"></textarea>
+            <textarea class="text-input textarea-input" name="descripcion" placeholder="Inventario de periféricos asociados, estado, observaciones, etc." maxlength="1000"></textarea>
           </label>
 
         </div>
@@ -624,10 +673,11 @@
         card.innerHTML = `
           <span class="type-badge">${escapeHtml(item.tipo || 'Otro')}</span>
           <span class="equipment-name">${escapeHtml(item.nombre || 'Dispositivo')}</span>
+          <span class="equipment-detail"><strong>Inventario:</strong> ${escapeHtml(item.numero_inventario || '—')}</span>
           <span class="equipment-detail"><strong>Serie:</strong> ${escapeHtml(item.numero_serie || '—')}</span>
           <span class="equipment-detail"><strong>Área:</strong> ${escapeHtml(item.area || '—')}</span>
-          <span class="equipment-detail"><strong>IP:</strong> ${escapeHtml(item.direccion_ip || '—')}</span>
           <span class="equipment-detail"><strong>Encargado:</strong> ${escapeHtml(item.encargado_equipo || '—')}</span>
+          <span class="equipment-detail"><strong>IP:</strong> ${escapeHtml(item.direccion_ip || '—')}</span>
         `;
         card.addEventListener('click', () => selectEquipment(item));
         equipmentList.appendChild(card);
@@ -636,24 +686,33 @@
 
     const selectEquipment = (item) => {
       selectedEquipmentId = item.id;
-      equipmentForm.nombre.value           = item.nombre           || '';
+      equipmentForm.nombre.value               = item.nombre               || '';
+      equipmentForm.etiqueta_fisica.value      = item.etiqueta_fisica      || '';
       const tipoMap = { laptop:'Portatil', computadora:'PC', servidor:'Servidor', impresora:'Impresora', monitor:'Monitor', router:'Router', switch:'Switch', otro:'Otro' };
-      equipmentForm.tipo.value             = tipoMap[item.tipo] || item.tipo || '';
-      equipmentForm.numero_serie.value     = item.numero_serie     || '';
-      equipmentForm.modelo.value           = item.modelo           || '';
-      equipmentForm.direccion_mac.value    = item.direccion_mac    || '';
-      equipmentForm.direccion_ip.value     = item.direccion_ip     || '';
+      equipmentForm.tipo.value                 = tipoMap[item.tipo] || item.tipo || '';
+      equipmentForm.numero_serie.value         = item.numero_serie         || '';
+      equipmentForm.modelo.value               = item.modelo               || '';
+      equipmentForm.direccion_mac.value        = item.direccion_mac        || '';
+      equipmentForm.direccion_ip.value         = item.direccion_ip         || '';
+      equipmentForm.tipo_ip.value              = item.tipo_ip              || '';
+      equipmentForm.area.value                 = item.area                 || '';
+      equipmentForm.ubicacion_fisica.value     = item.ubicacion_fisica     || '';
+      equipmentForm.encargado_equipo.value     = item.encargado_equipo     || '';
+      equipmentForm.usuario_responsable.value  = item.usuario_responsable  || '';
+      equipmentForm.correo_jefe_area.value     = item.correo_jefe_area     || '';
+      equipmentForm.fecha_compra.value         = item.fecha_compra         || '';
+      equipmentForm.fecha_baja_renovacion.value= item.fecha_baja_renovacion || '';
+      equipmentForm.proveedor.value            = item.proveedor            || '';
+      equipmentForm.referencia_factura.value   = item.referencia_factura   || '';
+      equipmentForm.costo_adquisicion.value    = item.costo_adquisicion    || '';
+      equipmentForm.garantia.value             = item.garantia             || '';
+      equipmentForm.lugar_compra.value         = item.lugar_compra         || '';
+      equipmentForm.descripcion.value          = item.descripcion          || item.observaciones || '';
       // Si el equipo tiene IP o MAC se asume que está conectado
       const conectado = (item.direccion_ip || item.direccion_mac) ? 'si' : 'no';
       const radio = equipmentForm.querySelector(`input[name="conectado_red"][value="${conectado}"]`);
       if (radio) radio.checked = true;
       updateNetworkRequirement();
-      equipmentForm.area.value             = item.area             || '';
-      equipmentForm.ubicacion_fisica.value = item.ubicacion_fisica || '';
-      equipmentForm.encargado_equipo.value = item.encargado_equipo || '';
-      equipmentForm.fecha_compra.value     = item.fecha_compra     || '';
-      equipmentForm.lugar_compra.value     = item.lugar_compra     || '';
-      equipmentForm.descripcion.value      = item.descripcion      || '';
       renderEquipment();
     };
 

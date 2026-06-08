@@ -56,8 +56,13 @@ CREATE TABLE usuarios (
 CREATE TABLE equipos (
   id               INT UNSIGNED   NOT NULL AUTO_INCREMENT,
   empresa_id       INT UNSIGNED   NOT NULL,
+  numero_inventario VARCHAR(100)      NULL,
+  etiqueta_fisica  VARCHAR(100)      NULL,
   numero_serie     VARCHAR(100)   NOT NULL,
   nombre           VARCHAR(150)   NOT NULL,
+  nombre_host      VARCHAR(120)      NULL,
+  sistema_operativo VARCHAR(120)      NULL,
+  procesador       VARCHAR(120)      NULL,
   marca            VARCHAR(80)        NULL,
   modelo           VARCHAR(80)        NULL,
   tipo             ENUM(
@@ -71,9 +76,15 @@ CREATE TABLE equipos (
                      'telefono_ip',
                      'otro'
                    )              NOT NULL DEFAULT 'otro',
+  tipo_ip          VARCHAR(20)       NULL,
+  conectado_red    ENUM('si','no')   NOT NULL DEFAULT 'no',
   ubicacion_fisica VARCHAR(150)       NULL,
   fecha_adquisicion DATE              NULL,
-  valor_contable   DECIMAL(12,2)      NULL,
+  fecha_baja_renovacion DATE          NULL,
+  proveedor        VARCHAR(150)      NULL,
+  referencia_factura VARCHAR(150)    NULL,
+  garantia         VARCHAR(200)      NULL,
+  costo_adquisicion DECIMAL(12,2)    NULL,
   estado           ENUM(
                      'activo',
                      'en_baja',
@@ -345,11 +356,27 @@ INSERT INTO bitacora (usuario_id, empresa_id, accion, modulo, detalle) VALUES
   
 -- Agrega estos campos a tu tabla actual de 'equipos'
 ALTER TABLE equipos 
+ADD COLUMN numero_inventario VARCHAR(100) NULL AFTER empresa_id,
+ADD COLUMN etiqueta_fisica VARCHAR(100) NULL AFTER numero_inventario,
 ADD COLUMN direccion_mac VARCHAR(17) UNIQUE AFTER numero_serie,
+ADD COLUMN nombre_host VARCHAR(120) NULL AFTER numero_serie,
+ADD COLUMN sistema_operativo VARCHAR(120) NULL AFTER nombre_host,
+ADD COLUMN procesador VARCHAR(120) NULL AFTER sistema_operativo,
 ADD COLUMN direccion_ip VARCHAR(15) AFTER direccion_mac,
+ADD COLUMN tipo_ip VARCHAR(20) NULL AFTER direccion_ip,
+ADD COLUMN conectado_red ENUM('si','no') NOT NULL DEFAULT 'no' AFTER tipo_ip,
 ADD COLUMN area VARCHAR(100) AFTER tipo,
 ADD COLUMN encargado_equipo VARCHAR(150) AFTER area,
-ADD COLUMN lugar_compra VARCHAR(200) AFTER fecha_adquisicion;
+ADD COLUMN usuario_responsable VARCHAR(150) NULL AFTER encargado_equipo,
+ADD COLUMN correo_jefe_area VARCHAR(120) NULL AFTER usuario_responsable,
+ADD COLUMN fecha_adquisicion DATE AFTER ubicacion_fisica,
+ADD COLUMN fecha_baja_renovacion DATE NULL AFTER fecha_adquisicion,
+ADD COLUMN proveedor VARCHAR(150) NULL AFTER fecha_baja_renovacion,
+ADD COLUMN referencia_factura VARCHAR(150) NULL AFTER proveedor,
+ADD COLUMN costo_adquisicion DECIMAL(12,2) NULL AFTER referencia_factura,
+ADD COLUMN garantia VARCHAR(200) NULL AFTER costo_adquisicion,
+ADD COLUMN lugar_compra VARCHAR(200) AFTER fecha_adquisicion,
+ADD COLUMN valor_contable DECIMAL(12,2) NULL AFTER lugar_compra;
 
 -- Índices clave para búsquedas rápidas de hardware
 CREATE INDEX idx_equipos_mac ON equipos (direccion_mac);

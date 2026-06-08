@@ -95,9 +95,12 @@ const insertEquipo = (req, res) => {
   if (!empresaId) return;
 
   const {
-    id, nombre, numero_serie, direccion_mac, direccion_ip, marca, modelo, tipo, area, ubicacion_fisica,
-    encargado_equipo, fecha_adquisicion, fecha_compra, lugar_compra, observaciones, valor_contable,
-    descripcion, estado
+    id, nombre, numero_inventario, etiqueta_fisica, numero_serie, nombre_host, sistema_operativo, procesador,
+    direccion_mac, direccion_ip, tipo, tipo_ip, area, ubicacion_fisica,
+    encargado_equipo, usuario_responsable, correo_jefe_area,
+    fecha_adquisicion, fecha_compra, fecha_baja_renovacion,
+    lugar_compra, proveedor, referencia_factura, garantia,
+    costo_adquisicion, valor_contable, observaciones, descripcion, estado
   } = req.body;
   const conectado_red = String(req.body?.conectado_red || 'no').toLowerCase() === 'si';
   const usuarioId = getUsuarioId(req);
@@ -119,24 +122,38 @@ const insertEquipo = (req, res) => {
   if (!isValidDate(fecha_adquisicion) && !isValidDate(fecha_compra)) {
     return res.status(400).json({ error: 'Fecha de adquisición o compra con formato inválido. Use AAAA-MM-DD.' });
   }
+  if (fecha_baja_renovacion && !isValidDate(fecha_baja_renovacion)) {
+    return res.status(400).json({ error: 'Fecha de baja/renovación estimada inválida. Use AAAA-MM-DD.' });
+  }
 
   getEquipoColumns((columnsErr, columns) => {
     if (columnsErr) return res.status(500).json({ error: columnsErr.message });
 
     const { fields, params } = pickExistingColumns(columns, {
       empresa_id: empresaId,
+      numero_inventario: numero_inventario || null,
+      etiqueta_fisica: etiqueta_fisica || null,
       numero_serie,
+      nombre_host: nombre_host || null,
+      sistema_operativo: sistema_operativo || null,
+      procesador: procesador || null,
       direccion_mac: direccion_mac || null,
       direccion_ip: direccion_ip || null,
-      nombre,
-      marca: marca || null,
-      modelo: modelo || null,
       tipo: normalizeTipo(tipo),
+      tipo_ip: tipo_ip || null,
+      conectado_red: conectado_red ? 'si' : 'no',
       area: area || null,
       ubicacion_fisica: ubicacion_fisica || null,
       encargado_equipo: encargado_equipo || null,
+      usuario_responsable: usuario_responsable || null,
+      correo_jefe_area: correo_jefe_area || null,
       fecha_adquisicion: fecha_adquisicion || fecha_compra || null,
+      fecha_baja_renovacion: fecha_baja_renovacion || null,
       lugar_compra: lugar_compra || null,
+      proveedor: proveedor || null,
+      referencia_factura: referencia_factura || null,
+      garantia: garantia || null,
+      costo_adquisicion: costo_adquisicion || null,
       valor_contable: valor_contable || null,
       observaciones: observaciones || descripcion || null,
       registrado_por: usuarioId
@@ -170,15 +187,18 @@ const updateEquipo = (req, res) => {
 
   // 1. Incluimos TODOS los campos necesarios
   const {
-    id, nombre, numero_serie, direccion_mac, direccion_ip, marca, modelo, tipo, area, ubicacion_fisica,
-    encargado_equipo, fecha_adquisicion, fecha_compra, lugar_compra, observaciones,
+    id, nombre, numero_inventario, etiqueta_fisica, numero_serie, nombre_host, sistema_operativo, procesador,
+    direccion_mac, direccion_ip, tipo, tipo_ip, area, ubicacion_fisica,
+    encargado_equipo, usuario_responsable, correo_jefe_area,
+    fecha_adquisicion, fecha_compra, fecha_baja_renovacion,
+    lugar_compra, proveedor, referencia_factura, garantia,
+    costo_adquisicion, valor_contable, observaciones,
     descripcion, estado
   } = req.body;
   const usuarioId = getUsuarioId(req);
 
   if (!id) return res.status(400).json({ error: 'ID de equipo es obligatorio.' });
   
-  // (Mantén tus validaciones de IP, MAC y Fecha igual aquí abajo)
   const conectado_red_upd = String(req.body?.conectado_red || 'no').toLowerCase() === 'si';
   if (conectado_red_upd) {
     if (!direccion_ip) return res.status(400).json({ error: 'Dirección IP es obligatoria cuando el equipo está conectado a la red.' });
@@ -189,6 +209,9 @@ const updateEquipo = (req, res) => {
   if (!isValidDate(fecha_adquisicion) && !isValidDate(fecha_compra)) {
     return res.status(400).json({ error: 'Fecha inválida. Use AAAA-MM-DD.' });
   }
+  if (fecha_baja_renovacion && !isValidDate(fecha_baja_renovacion)) {
+    return res.status(400).json({ error: 'Fecha de baja/renovación inválida. Use AAAA-MM-DD.' });
+  }
 
   getEquipoColumns((columnsErr, columns) => {
     if (columnsErr) return res.status(500).json({ error: columnsErr.message });
@@ -196,17 +219,32 @@ const updateEquipo = (req, res) => {
     // 2. Mapeamos todo al objeto updateValues
     const updateValues = {
       nombre,
+      numero_inventario: numero_inventario || null,
+      etiqueta_fisica: etiqueta_fisica || null,
       numero_serie: numero_serie || null,
+      nombre_host: nombre_host || null,
+      sistema_operativo: sistema_operativo || null,
+      procesador: procesador || null,
       marca: marca || null,
       modelo: modelo || null,
       direccion_mac: direccion_mac || null,
       direccion_ip: direccion_ip || null,
       tipo: normalizeTipo(tipo),
+      tipo_ip: tipo_ip || null,
+      conectado_red: conectado_red_upd ? 'si' : 'no',
       area: area || null,
       ubicacion_fisica: ubicacion_fisica || null,
       encargado_equipo: encargado_equipo || null,
+      usuario_responsable: usuario_responsable || null,
+      correo_jefe_area: correo_jefe_area || null,
       fecha_adquisicion: fecha_adquisicion || fecha_compra || null,
+      fecha_baja_renovacion: fecha_baja_renovacion || null,
       lugar_compra: lugar_compra || null,
+      proveedor: proveedor || null,
+      referencia_factura: referencia_factura || null,
+      garantia: garantia || null,
+      costo_adquisicion: costo_adquisicion || null,
+      valor_contable: valor_contable || null,
       observaciones: observaciones || descripcion || null
     };
 
@@ -326,18 +364,31 @@ const exportEquipoPDF = (req, res) => {
 
     const rows = [
       ['ID', equipo.id],
+      ['Número de inventario', equipo.numero_inventario],
+      ['Etiqueta física', equipo.etiqueta_fisica],
       ['Nombre', equipo.nombre],
       ['Tipo', equipo.tipo],
+      ['Sistema operativo', equipo.sistema_operativo],
+      ['Procesador', equipo.procesador],
+      ['Host', equipo.nombre_host],
       ['Marca', equipo.marca],
       ['Modelo', equipo.modelo],
-      ['Numero de serie', equipo.numero_serie],
+      ['Número de serie', equipo.numero_serie],
       ['MAC', equipo.direccion_mac],
       ['IP', equipo.direccion_ip],
-      ['Area', equipo.area],
-      ['Ubicacion', equipo.ubicacion_fisica],
+      ['Tipo de IP', equipo.tipo_ip],
+      ['Conectado a red', equipo.conectado_red],
+      ['Área', equipo.area],
+      ['Ubicación física', equipo.ubicacion_fisica],
       ['Encargado', equipo.encargado_equipo],
-      ['Fecha adquisicion', equipo.fecha_adquisicion ? new Date(equipo.fecha_adquisicion).toLocaleDateString('es-MX') : 'No declarada'],
-      ['Lugar de compra', equipo.lugar_compra],
+      ['Usuario responsable', equipo.usuario_responsable],
+      ['Correo jefe de área', equipo.correo_jefe_area],
+      ['Fecha adquisición', equipo.fecha_adquisicion ? new Date(equipo.fecha_adquisicion).toLocaleDateString('es-MX') : 'No declarada'],
+      ['Fecha baja/renovación estimada', equipo.fecha_baja_renovacion ? new Date(equipo.fecha_baja_renovacion).toLocaleDateString('es-MX') : 'No definida'],
+      ['Proveedor', equipo.proveedor],
+      ['Factura / Referencia', equipo.referencia_factura],
+      ['Garantía / soporte', equipo.garantia],
+      ['Costo de adquisición', equipo.costo_adquisicion ? `$${Number(equipo.costo_adquisicion).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN` : 'No registrado'],
       ['Valor contable', equipo.valor_contable ? `$${Number(equipo.valor_contable).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN` : 'No registrado'],
       ['Estado', equipo.estado],
       ['Observaciones', equipo.observaciones]
