@@ -96,7 +96,7 @@ const insertEquipo = (req, res) => {
 
   const {
     id, nombre, numero_inventario, etiqueta_fisica, numero_serie, nombre_host, sistema_operativo, procesador,
-    direccion_mac, direccion_ip, tipo, tipo_ip, area, ubicacion_fisica,
+    marca, modelo, direccion_mac, direccion_ip, tipo, tipo_ip, area, ubicacion_fisica,
     encargado_equipo, usuario_responsable, correo_jefe_area,
     fecha_adquisicion, fecha_compra, fecha_baja_renovacion,
     lugar_compra, proveedor, referencia_factura, garantia,
@@ -131,12 +131,15 @@ const insertEquipo = (req, res) => {
 
     const { fields, params } = pickExistingColumns(columns, {
       empresa_id: empresaId,
+      nombre,
       numero_inventario: numero_inventario || null,
       etiqueta_fisica: etiqueta_fisica || null,
       numero_serie,
       nombre_host: nombre_host || null,
       sistema_operativo: sistema_operativo || null,
       procesador: procesador || null,
+      marca: marca || null,
+      modelo: modelo || null,
       direccion_mac: direccion_mac || null,
       direccion_ip: direccion_ip || null,
       tipo: normalizeTipo(tipo),
@@ -155,6 +158,7 @@ const insertEquipo = (req, res) => {
       garantia: garantia || null,
       costo_adquisicion: costo_adquisicion || null,
       valor_contable: valor_contable || null,
+      estado: ['activo', 'en_baja', 'dado_de_baja'].includes(estado) ? estado : 'activo',
       observaciones: observaciones || descripcion || null,
       registrado_por: usuarioId
     });
@@ -188,7 +192,7 @@ const updateEquipo = (req, res) => {
   // 1. Incluimos TODOS los campos necesarios
   const {
     id, nombre, numero_inventario, etiqueta_fisica, numero_serie, nombre_host, sistema_operativo, procesador,
-    direccion_mac, direccion_ip, tipo, tipo_ip, area, ubicacion_fisica,
+    marca, modelo, direccion_mac, direccion_ip, tipo, tipo_ip, area, ubicacion_fisica,
     encargado_equipo, usuario_responsable, correo_jefe_area,
     fecha_adquisicion, fecha_compra, fecha_baja_renovacion,
     lugar_compra, proveedor, referencia_factura, garantia,

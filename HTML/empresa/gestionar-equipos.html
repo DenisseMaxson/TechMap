@@ -432,6 +432,11 @@
           </label>
 
           <label class="field-group">
+            <span class="field-label">Número de inventario</span>
+            <input class="text-input" type="text" name="numero_inventario" placeholder="Ej. INV-2026-001">
+          </label>
+
+          <label class="field-group">
             <span class="field-label">Etiqueta física</span>
             <input class="text-input" type="text" name="etiqueta_fisica" placeholder="Ej. ETQ-12345">
           </label>
@@ -459,8 +464,28 @@
           </label>
 
           <label class="field-group">
+            <span class="field-label">Marca</span>
+            <input class="text-input" type="text" name="marca" placeholder="Ej. Dell">
+          </label>
+
+          <label class="field-group">
             <span class="field-label">Modelo</span>
             <input class="text-input" type="text" name="modelo" placeholder="Ej. Latitude 5520">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Sistema operativo</span>
+            <input class="text-input" type="text" name="sistema_operativo" placeholder="Ej. Windows 11 Pro">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Procesador</span>
+            <input class="text-input" type="text" name="procesador" placeholder="Ej. Intel Core i5">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Nombre de host</span>
+            <input class="text-input" type="text" name="nombre_host" placeholder="Ej. ADMIN-PC-01">
           </label>
 
           <label class="field-group">
@@ -687,11 +712,16 @@
     const selectEquipment = (item) => {
       selectedEquipmentId = item.id;
       equipmentForm.nombre.value               = item.nombre               || '';
+      equipmentForm.numero_inventario.value    = item.numero_inventario    || '';
       equipmentForm.etiqueta_fisica.value      = item.etiqueta_fisica      || '';
       const tipoMap = { laptop:'Portatil', computadora:'PC', servidor:'Servidor', impresora:'Impresora', monitor:'Monitor', router:'Router', switch:'Switch', otro:'Otro' };
       equipmentForm.tipo.value                 = tipoMap[item.tipo] || item.tipo || '';
       equipmentForm.numero_serie.value         = item.numero_serie         || '';
+      equipmentForm.marca.value                = item.marca                || '';
       equipmentForm.modelo.value               = item.modelo               || '';
+      equipmentForm.sistema_operativo.value    = item.sistema_operativo    || '';
+      equipmentForm.procesador.value           = item.procesador           || '';
+      equipmentForm.nombre_host.value          = item.nombre_host          || '';
       equipmentForm.direccion_mac.value        = item.direccion_mac        || '';
       equipmentForm.direccion_ip.value         = item.direccion_ip         || '';
       equipmentForm.tipo_ip.value              = item.tipo_ip              || '';
@@ -708,8 +738,7 @@
       equipmentForm.garantia.value             = item.garantia             || '';
       equipmentForm.lugar_compra.value         = item.lugar_compra         || '';
       equipmentForm.descripcion.value          = item.descripcion          || item.observaciones || '';
-      // Si el equipo tiene IP o MAC se asume que está conectado
-      const conectado = (item.direccion_ip || item.direccion_mac) ? 'si' : 'no';
+      const conectado = item.conectado_red || ((item.direccion_ip || item.direccion_mac) ? 'si' : 'no');
       const radio = equipmentForm.querySelector(`input[name="conectado_red"][value="${conectado}"]`);
       if (radio) radio.checked = true;
       updateNetworkRequirement();

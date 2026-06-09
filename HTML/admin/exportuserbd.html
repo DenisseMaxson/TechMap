@@ -304,6 +304,21 @@
     const USERS_API     = 'http://localhost:3000/api/usuarios';
     const companyGrid   = document.getElementById('companyGrid');
 
+    const getSession = () => {
+      try {
+        return JSON.parse(localStorage.getItem('techmap_session') || sessionStorage.getItem('techmap_session') || '{}');
+      } catch {
+        return {};
+      }
+    };
+
+    const session = getSession();
+
+    const authHeaders = () => ({
+      'Authorization': `Bearer ${session.token || ''}`,
+      'Content-Type': 'application/json'
+    });
+
     const escapeHtml = (v) => String(v ?? '').replace(/[&<>"']/g, (c) =>
       ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
 
@@ -314,7 +329,7 @@
       </svg>`;
 
     const downloadFile = async (url, filename) => {
-      const response = await fetch(url);
+      const response = await fetch(url, { headers: authHeaders() });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.error || 'No se pudo exportar el archivo');
@@ -377,9 +392,16 @@
 
     const loadCompanies = async () => {
       companyGrid.innerHTML = '<p class="empty-message">Cargando empresas...</p>';
+      if (!session.token) {
+        window.location.href = '../inicio/login.html';
+        return;
+      }
       try {
-        const response = await fetch(COMPANIES_API);
-        if (!response.ok) throw new Error('No se pudieron cargar las empresas');
+        const response = await fetch(COMPANIES_API, { headers: authHeaders() });
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.error || 'No se pudieron cargar las empresas');
+        }
         renderCompanies(await response.json());
       } catch (error) {
         companyGrid.innerHTML = `<p class="empty-message">${error.message}</p>`;

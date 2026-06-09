@@ -427,6 +427,21 @@
     const referenceInput = document.getElementById('referenceInput');
     let pendingCompany = null;
 
+    const getSession = () => {
+      try {
+        return JSON.parse(localStorage.getItem('techmap_session') || sessionStorage.getItem('techmap_session') || '{}');
+      } catch {
+        return {};
+      }
+    };
+
+    const session = getSession();
+
+    const authHeaders = () => ({
+      'Authorization': `Bearer ${session.token || ''}`,
+      'Content-Type': 'application/json'
+    });
+
     const escapeHtml = (v) => String(v ?? '').replace(/[&<>"']/g, (c) =>
       ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
 
@@ -440,7 +455,7 @@
 
     const downloadFile = async (url, filename = 'backup.csv') => {
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, { headers: authHeaders() });
     
     // Si la respuesta no es 200, lanza el error para verlo en el alert
     if (!response.ok) {
@@ -491,9 +506,16 @@
 
     const loadCompanies = async () => {
       companyGrid.innerHTML = '<p class="empty-message">Cargando empresas...</p>';
+      if (!session.token) {
+        window.location.href = '../inicio/login.html';
+        return;
+      }
       try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error('No se pudieron cargar las empresas');
+        const response = await fetch(API_URL, { headers: authHeaders() });
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.error || 'No se pudieron cargar las empresas');
+        }
         renderCompanies(await response.json());
       } catch (error) {
         companyGrid.innerHTML = `<p class="empty-message">${error.message}</p>`;
