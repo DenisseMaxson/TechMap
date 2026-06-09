@@ -428,7 +428,7 @@
     <section class="summary-grid" aria-label="Resumen de mantenimientos">
       <div class="summary-item">
         <span class="summary-value" id="totalCount">0</span>
-        <span class="summary-label">Total</span>
+      <span class="summary-label">Servicios</span>
       </div>
       <div class="summary-item">
         <span class="summary-value" id="scheduledCount">0</span>
@@ -483,7 +483,7 @@
       </button>
     </section>
 
-    <p class="record-count" id="recordCount">0 mantenimientos encontrados</p>
+    <p class="record-count" id="recordCount">0 servicios encontrados</p>
 
     <section class="table-wrap" aria-label="Lista de mantenimientos">
       <table>
@@ -494,7 +494,7 @@
             <th style="width: 12%">Area</th>
             <th style="width: 10%">Tipo</th>
             <th style="width: 11%">Frecuencia</th>
-            <th style="width: 12%">Programado</th>
+            <th style="width: 12%">Fecha</th>
             <th style="width: 12%">Estado</th>
             <th style="width: 13%">Accion</th>
           </tr>
@@ -654,7 +654,8 @@
     const render = () => {
       updateSummary();
       const list = filteredMaintenances();
-      recordCount.textContent = `${list.length} mantenimientos encontrados`;
+      const label = statusFilter.value === 'todos' ? 'servicios encontrados' : `servicios ${statusFilter.value}s`;
+      recordCount.textContent = `${list.length} ${label}`;
       body.innerHTML = '';
 
       if (!list.length) {
@@ -695,6 +696,9 @@
 
       try {
         maintenances = await request(`${API_URL}/empresa/${empresaId}`);
+        if (statusFilter.value === 'todos' && maintenances.some((item) => item.estado === 'vencido')) {
+          statusFilter.value = 'vencido';
+        }
       } catch (error) {
         maintenances = [];
         showToast(error.message, 'error');
