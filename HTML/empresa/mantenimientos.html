@@ -276,9 +276,21 @@
     }
     tbody tr { background: rgba(17,23,79,0.32); transition: background 0.18s; }
     tbody tr:nth-child(even) { background: rgba(27,36,118,0.28); }
-    tbody tr:hover { background: rgba(88,180,236,0.18); }
+
+    /* ── Filas coloreadas por estado ── */
+    tbody tr.row-programado td { background: rgba(255,209,102,0.10); }
+    tbody tr.row-realizado  td { background: rgba(110,231,168,0.11); }
+    tbody tr.row-vencido    td { background: rgba(255,125,138,0.13); }
+    tbody tr.row-cancelado  td { background: rgba(255,255,255,0.05); }
+
+    /* Hover mantiene el color de estado con un plus de brillo */
+    tbody tr.row-programado:hover td { background: rgba(255,209,102,0.20); }
+    tbody tr.row-realizado:hover  td { background: rgba(110,231,168,0.21); }
+    tbody tr.row-vencido:hover    td { background: rgba(255,125,138,0.24); }
+    tbody tr.row-cancelado:hover  td { background: rgba(255,255,255,0.10); }
+
     td {
-      color: rgba(255,255,255,0.78);
+      color: rgba(255,255,255,0.88);
       font-size: 12px;
       line-height: 1.35;
       overflow-wrap: anywhere;
@@ -294,15 +306,16 @@
       min-width: 86px;
       padding: 4px 9px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.16);
+      border: 1px solid rgba(255,255,255,0.22);
       font-size: 11px;
-      font-weight: 500;
+      font-weight: 600;
       text-transform: capitalize;
+      letter-spacing: 0.03em;
     }
-    .status-programado { color: var(--warn); background: rgba(255,209,102,0.12); }
-    .status-realizado { color: var(--ok); background: rgba(110,231,168,0.12); }
-    .status-vencido { color: var(--bad); background: rgba(255,125,138,0.13); }
-    .status-cancelado { color: rgba(255,255,255,0.56); background: rgba(255,255,255,0.08); }
+    .status-programado { color: #ffd166; background: rgba(255,209,102,0.18); border-color: rgba(255,209,102,0.35); }
+    .status-realizado  { color: #6ee7a8; background: rgba(110,231,168,0.18); border-color: rgba(110,231,168,0.35); }
+    .status-vencido    { color: #ff7d8a; background: rgba(255,125,138,0.18); border-color: rgba(255,125,138,0.38); }
+    .status-cancelado  { color: rgba(255,255,255,0.62); background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.18); }
     .type-badge { color: rgba(255,255,255,0.82); background: rgba(88,180,236,0.14); }
 
     .modal-overlay {
@@ -428,7 +441,7 @@
     <section class="summary-grid" aria-label="Resumen de mantenimientos">
       <div class="summary-item">
         <span class="summary-value" id="totalCount">0</span>
-      <span class="summary-label">Servicios</span>
+        <span class="summary-label">Servicios</span>
       </div>
       <div class="summary-item">
         <span class="summary-value" id="scheduledCount">0</span>
@@ -664,8 +677,13 @@
       }
 
       list.forEach((item) => {
+        const estado = item.estado || 'programado';
         const tr = document.createElement('tr');
-        const done = item.estado === 'realizado' || item.estado === 'cancelado';
+
+        /* ── clase de fila según estado ── */
+        tr.className = `row-${escapeHtml(estado)}`;
+
+        const done = estado === 'realizado' || estado === 'cancelado';
         tr.innerHTML = `
           <td class="left">${escapeHtml(item.equipo || 'Equipo')}</td>
           <td>${escapeHtml(item.numero_serie || '-')}</td>
@@ -673,7 +691,11 @@
           <td><span class="type-badge">${escapeHtml(item.tipo || 'preventivo')}</span></td>
           <td>${escapeHtml(item.frecuencia || '-')}</td>
           <td>${escapeHtml(formatDate(item.fecha_programada))}</td>
-          <td><span class="status-badge status-${escapeHtml(item.estado || 'programado')}">${escapeHtml(item.estado || 'programado')}</span></td>
+          <td>
+            <span class="status-badge status-${escapeHtml(estado)}">
+              ${escapeHtml(estado)}
+            </span>
+          </td>
           <td>
             <button class="row-button" type="button" ${done ? 'disabled' : ''} data-id="${item.id}">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
