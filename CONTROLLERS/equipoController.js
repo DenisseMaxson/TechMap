@@ -456,63 +456,94 @@ const solicitarBaja = (req, res) => {
   if (!usuarioId) return res.status(400).json({ success: false, message: 'usuario_id es obligatorio para registrar la solicitud.' });
   if (!id_equipo || !motivo) return res.status(400).json({ success: false, message: 'Equipo y motivo son obligatorios.' });
 
-  db.beginTransaction((txErr) => {
-    if (txErr) return res.status(500).json({ success: false, message: txErr.message });
+  // Obtener conexión del pool para manejar transacciones
+  db.getConnection((connErr, connection) => {
+    if (connErr) return res.status(500).json({ success: false, message: 'Error al obtener conexión de BD.' });
 
-    db.query('SELECT id, nombre, empresa_id FROM equipos WHERE id = ? AND empresa_id = ? AND estado != "dado_de_baja"', [id_equipo, empresaId], (findErr, equipos) => {
-      if (findErr || !equipos.length) {
-        return db.rollback(() => res.status(findErr ? 500 : 404).json({
-          success: false,
-          message: findErr?.message || 'Equipo no encontrado para esta empresa.'
-        }));
+    connection.beginTransaction((txErr) => {
+      if (txErr) {
+        connection.release();
+        return res.status(500).json({ success: false, message: txErr.message });
       }
 
-      const equipo = equipos[0];
-      const insertSql = `
-        INSERT INTO solicitudes_baja (equipo_id, empresa_id, solicitado_por, motivo, evidencia_url, estado, fecha_solicitud)
-        VALUES (?, ?, ?, ?, ?, 'pendiente', NOW())
-      `;
-
-      db.query(insertSql, [id_equipo, empresaId, usuarioId, motivo, evidencia_url || evidencia || null], (insertErr, result) => {
-        if (insertErr) {
-          return db.rollback(() => res.status(500).json({ success: false, message: insertErr.message }));
+      connection.query('SELECT id, nombre, empresa_id FROM equipos WHERE id = ? AND empresa_id = ? AND estado != "dado_de_baja"', [id_equipo, empresaId], (findErr, equipos) => {
+        if (findErr || !equipos.length) {
+          return connection.rollback(() => {
+            connection.release();
+            res.status(findErr ? 500 : 404).json({
+              success: false,
+              message: findErr?.message || 'Equipo no encontrado para esta empresa.'
+            });
+          });
         }
 
-        db.query('UPDATE equipos SET estado = "en_baja" WHERE id = ? AND empresa_id = ?', [id_equipo, empresaId], (updateErr) => {
-          if (updateErr) {
-            return db.rollback(() => res.status(500).json({ success: false, message: updateErr.message }));
+        const equipo = equipos[0];
+        const insertSql = `
+          INSERT INTO solicitudes_baja (equipo_id, empresa_id, solicitado_por, motivo, evidencia_url, estado, fecha_solicitud)
+          VALUES (?, ?, ?, ?, ?, 'pendiente', NOW())
+        `;
+
+        connection.query(insertSql, [id_equipo, empresaId, usuarioId, motivo, evidencia_url || evidencia || null], (insertErr, result) => {
+          if (insertErr) {
+            return connection.rollback(() => {
+              connection.release();
+              res.status(500).json({ success: false, message: insertErr.message });
+            });
           }
 
-          db.query(
-            'INSERT INTO historial_movimientos (empresa_id, equipo_id, usuario_id, tipo_movimiento, descripcion) VALUES (?, ?, ?, ?, ?)',
-            [empresaId, id_equipo, usuarioId, 'solicitud_baja', `Solicitud de baja iniciada para ${equipo.nombre}. Motivo: ${motivo}`],
-            () => {}
-          );
+          connection.query('UPDATE equipos SET estado = "en_baja" WHERE id = ? AND empresa_id = ?', [id_equipo, empresaId], (updateErr) => {
+            if (updateErr) {
+              return connection.rollback(() => {
+                connection.release();
+                res.status(500).json({ success: false, message: updateErr.message });
+              });
+            }
 
-          db.commit((commitErr) => {
-            if (commitErr) return db.rollback(() => res.status(500).json({ success: false, message: commitErr.message }));
-
-            db.query(
-              'SELECT correo FROM usuarios WHERE empresa_id = ? AND rol = "jefe_area" AND estado = "activo" LIMIT 1',
-              [empresaId],
-              (mailErr, users) => {
-                const correoJefe = !mailErr && users?.[0]?.correo;
-                if (correoJefe) {
-                  enviarCorreoBajaPendiente(correoJefe, {
-                    id_equipo,
-                    nombre_equipo: equipo.nombre,
-                    motivo,
-                    solicitante: usuarioId
-                  }).catch((err) => console.error('Error enviando correo de baja:', err));
+            connection.query(
+              'INSERT INTO historial_movimientos (empresa_id, equipo_id, usuario_id, tipo_movimiento, descripcion) VALUES (?, ?, ?, ?, ?)',
+              [empresaId, id_equipo, usuarioId, 'solicitud_baja', `Solicitud de baja iniciada para ${equipo.nombre}. Motivo: ${motivo}`],
+              (histErr) => {
+                if (histErr) {
+                  return connection.rollback(() => {
+                    connection.release();
+                    return res.status(500).json({ success: false, message: histErr.message });
+                  });
                 }
+
+                connection.commit((commitErr) => {
+                  if (commitErr) {
+                    return connection.rollback(() => {
+                      connection.release();
+                      res.status(500).json({ success: false, message: commitErr.message });
+                    });
+                  }
+
+                  connection.release();
+
+                  db.query(
+                    'SELECT correo FROM usuarios WHERE empresa_id = ? AND rol = "jefe_area" AND estado = "activo" LIMIT 1',
+                    [empresaId],
+                    (mailErr, users) => {
+                      const correoJefe = !mailErr && users?.[0]?.correo;
+                      if (correoJefe) {
+                        enviarCorreoBajaPendiente(correoJefe, {
+                          id_equipo,
+                          nombre_equipo: equipo.nombre,
+                          motivo,
+                          solicitante: usuarioId
+                        }).catch((err) => console.error('Error enviando correo de baja:', err));
+                      }
+                    }
+                  );
+
+                  res.status(200).json({
+                    success: true,
+                    id: result.insertId,
+                    message: 'La solicitud de baja se registro para esta empresa.'
+                  });
+                });
               }
             );
-
-            res.status(200).json({
-              success: true,
-              id: result.insertId,
-              message: 'La solicitud de baja se registro para esta empresa.'
-            });
           });
         });
       });
