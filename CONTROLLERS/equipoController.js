@@ -2,6 +2,7 @@ const db = require('../DB/connection');
 const PDFDocument = require('pdfkit');
 const { enviarCorreoBajaPendiente } = require('../CONFIG/mailer');
 const authToken = require('../UTILS/authToken');
+const { logAction } = require('../UTILS/loggers');
 
 const normalizeTipo = (tipo) => {
   const value = String(tipo || 'otro').toLowerCase();
@@ -169,11 +170,7 @@ const insertEquipo = (req, res) => {
     db.query(sql, params, (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
 
-      db.query(
-        'INSERT INTO bitacora (usuario_id, empresa_id, accion, modulo, detalle) VALUES (?, ?, ?, ?, ?)',
-        [usuarioId, empresaId, 'alta_equipo', 'inventario', `Alta de equipo serie: ${numero_serie || result.insertId}`],
-        () => {}
-      );
+      logAction(usuarioId, empresaId, 'alta_equipo', 'inventario', `Alta de equipo: ${nombre} (Serie: ${numero_serie || result.insertId})`, req);
       db.query(
         'INSERT INTO historial_movimientos (empresa_id, equipo_id, usuario_id, tipo_movimiento, descripcion) VALUES (?, ?, ?, ?, ?)',
         [empresaId, result.insertId, usuarioId, 'alta', `Alta de equipo: ${nombre} - ${numero_serie}`],
@@ -270,7 +267,7 @@ const updateEquipo = (req, res) => {
       if (err) return res.status(500).json({ error: err.message });
       if (!result.affectedRows) return res.status(404).json({ error: 'Equipo no encontrado.' });
 
-      // ... (Tus inserts de bitacora y historial se quedan igual)
+      logAction(usuarioId, empresaId, 'actualizar_equipo', 'inventario', `Equipo actualizado: ID ${id}`, req);
       res.json({ mensaje: 'Informacion de equipo actualizada' });
     });
   });
@@ -287,11 +284,7 @@ const deleteEquipo = (req, res) => {
     if (err) return res.status(500).json({ error: err.message });
     if (!result.affectedRows) return res.status(404).json({ error: 'Equipo no encontrado para esta empresa.' });
 
-    db.query(
-      'INSERT INTO bitacora (usuario_id, empresa_id, accion, modulo, detalle) VALUES (?, ?, ?, ?, ?)',
-      [usuarioId, empresaId, 'baja_ejecutada', 'inventario', `Equipo ID: ${id} marcado como inactivo`],
-      () => {}
-    );
+    logAction(usuarioId, empresaId, 'baja_ejecutada', 'inventario', `Equipo dado de baja: ID ${id}`, req);
     db.query(
       'INSERT INTO historial_movimientos (empresa_id, equipo_id, usuario_id, tipo_movimiento, descripcion) VALUES (?, ?, ?, ?, ?)',
       [empresaId, id, usuarioId, 'baja_ejecutada', `Equipo ID: ${id} dado de baja`],
@@ -606,10 +599,13 @@ const resolverBaja = (req, res) => {
           () => {}
         );
 
-        db.query(
-          'INSERT INTO bitacora (usuario_id, empresa_id, accion, modulo, detalle) VALUES (?, ?, ?, ?, ?)',
-          [usuarioId, empresaId, decision === 'aprobada' ? 'aprobacion_baja' : 'rechazo_baja', 'aprobaciones', `Solicitud de baja ${id}: ${decision}`],
-          () => {}
+        logAction(
+          usuarioId,
+          empresaId,
+          decision === 'aprobada' ? 'aprobacion_baja' : 'rechazo_baja',
+          'aprobaciones',
+          `Solicitud de baja ${id}: ${decision}`,
+          req
         );
 
         res.json({ mensaje: `Solicitud ${decision}.` });

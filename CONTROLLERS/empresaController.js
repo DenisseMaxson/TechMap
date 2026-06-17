@@ -1,4 +1,5 @@
 const db = require('../DB/connection');
+const { logAction } = require('../UTILS/loggers');
 const { validateRFC } = require('../UTILS/validators');
 
 const normalizeRFC = (value) => String(value || '').trim().toUpperCase();
@@ -21,6 +22,7 @@ const insert = (req, res) => {
     telefono_principal, telefono_secundario, telefono_adicional,
     correo_contacto
   } = req.body;
+  const adminId = req.user?.id || null;
 
   const nombreNormalizado = normalizeText(nombre);
   const rfcNormalizado = normalizeRFC(rfc);
@@ -80,6 +82,7 @@ const insert = (req, res) => {
   ], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
     const id = result?.[0]?.[0]?.id;
+    logAction(adminId, id || null, 'crear_empresa', 'empresas', `Empresa registrada: ${nombre}`, req);
     res.json({ mensaje: 'Empresa registrada', id });
   });
 };
@@ -91,6 +94,7 @@ const update = (req, res) => {
     telefono_principal, telefono_secundario, telefono_adicional,
     correo_contacto
   } = req.body;
+  const adminId = req.user?.id || null;
 
   const nombreNormalizado = normalizeText(nombre);
   const rfcNormalizado = normalizeRFC(rfc);
@@ -157,8 +161,10 @@ const update = (req, res) => {
 // 4. ELIMINAR EMPRESA (Baja lógica)
 const deleteEmpresa = (req, res) => {
   const { id } = req.body;
+  const adminId = req.user?.id || null;
   db.query('CALL sp_delete_empresa(?)', [id], (err) => {
     if (err) return res.status(500).json({ error: err.message });
+    logAction(adminId, id || null, 'eliminar_empresa', 'empresas', `Empresa desactivada: ID ${id}`, req);
     res.json({ mensaje: 'Empresa eliminada' });
   });
 };

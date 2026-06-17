@@ -1,6 +1,7 @@
 const db     = require('../DB/connection');
 const bcrypt = require('bcryptjs');
 const authToken = require('../UTILS/authToken');
+const { logAction } = require('../UTILS/loggers');
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const validRoles = ['administrador', 'jefe_area', 'contabilidad', 'ti'];
@@ -25,6 +26,7 @@ const insert = (req, res) => {
   const { empresa_id, nombre_completo, correo, usuario, password_hash, password, rol } = req.body;
   const userName     = usuario || correo || nombre_completo;
   const passwordValue = password || password_hash || '';
+  const adminId = req.user?.id || null;
 
   if (!userName || !passwordValue || !rol) {
     return res.status(400).json({ error: 'Usuario, contraseña y rol son obligatorios' });
@@ -46,6 +48,7 @@ const insert = (req, res) => {
     db.query(sql, [empresa_id || null, nombre_completo, correo || null, userName, hashedPassword, rol], (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
       const id = result?.[0]?.[0]?.id;
+      logAction(adminId, empresa_id || null, 'crear_usuario', 'usuarios', `Usuario creado: ${userName}`, req);
       res.json({ mensaje: 'Usuario creado', id });
     });
   });
@@ -62,6 +65,7 @@ const update = (req, res) => {
   }
 
   const sql = 'CALL sp_update_usuario(?,?,?,?,?,?)';
+  const adminId = req.user?.id || null;
   db.query(sql, [empresa_id || null, nombre_completo, correo || null, rol, estado, id], (err) => {
     if (err) return res.status(500).json({ error: err.message });
     const updates = [];
@@ -70,11 +74,15 @@ const update = (req, res) => {
     if (usuario) { updates.push('usuario = ?');       values.push(usuario); }
     if (password) { updates.push('password_hash = ?'); values.push(bcrypt.hashSync(password, 10)); }
 
-    if (!updates.length) return res.json({ mensaje: 'Usuario actualizado' });
+    if (!updates.length) {
+      logAction(adminId, empresa_id || null, 'actualizar_usuario', 'usuarios', `Usuario actualizado: ID ${id}`, req);
+      return res.json({ mensaje: 'Usuario actualizado' });
+    }
 
     values.push(id);
     db.query(`UPDATE usuarios SET ${updates.join(', ')} WHERE id = ?`, values, (updateErr) => {
       if (updateErr) return res.status(500).json({ error: updateErr.message });
+      logAction(adminId, empresa_id || null, 'actualizar_usuario', 'usuarios', `Usuario actualizado: ID ${id}`, req);
       res.json({ mensaje: 'Usuario actualizado' });
     });
   });
@@ -96,7 +104,10 @@ const login = (req, res) => {
 
   db.query(sql, [usuario], async (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
-    if (!results.length) return res.status(401).json({ error: 'Credenciales incorrectas' });
+    if (!results.length) {
+      logAction(null, null, 'login_fallido', 'autenticacion', `Intento de acceso con usuario: ${usuario}`, req);
+      return res.status(401).json({ error: 'Credenciales incorrectas' });
+    }
 
     const user = results[0];
     let validPassword = false;
@@ -104,15 +115,20 @@ const login = (req, res) => {
     try { validPassword = await bcrypt.compare(password, user.password_hash); }
     catch { validPassword = false; }
 
-    if (!validPassword) return res.status(401).json({ error: 'Credenciales incorrectas' });
+    if (!validPassword) {
+      logAction(null, null, 'login_fallido', 'autenticacion', `Intento de acceso con usuario: ${usuario}`, req);
+      return res.status(401).json({ error: 'Credenciales incorrectas' });
+    }
 
     const allowedRoles = Array.isArray(roles_permitidos) ? roles_permitidos : [];
     if (allowedRoles.length && !allowedRoles.includes(user.rol)) {
+      logAction(user.id, user.empresa_id, 'login_denegado', 'autenticacion', `Acceso denegado para el usuario ${usuario} con rol ${user.rol}`, req);
       return res.status(403).json({ error: 'Tu usuario no tiene permiso para entrar aquí' });
     }
 
     db.query('UPDATE usuarios SET ultimo_acceso = NOW() WHERE id = ?', [user.id]);
     delete user.password_hash;
+    logAction(user.id, user.empresa_id, 'login', 'autenticacion', `Inicio de sesión correcto: ${user.usuario}`, req);
     const expiresInSeconds = Number(process.env.AUTH_TOKEN_EXPIRES_SECONDS || 60 * 60);
     const token = authToken.sign({
       id: user.id,
@@ -132,8 +148,10 @@ const login = (req, res) => {
 
 const deleteUsuario = (req, res) => {
   const { id } = req.body;
+  const adminId = req.user?.id || null;
   db.query('CALL sp_delete_usuario(?)', [id], (err) => {
     if (err) return res.status(500).json({ error: err.message });
+    logAction(adminId, null, 'eliminar_usuario', 'usuarios', `Usuario desactivado: ID ${id}`, req);
     res.json({ mensaje: 'Usuario desactivado' });
   });
 };
