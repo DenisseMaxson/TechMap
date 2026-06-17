@@ -371,7 +371,7 @@
 
           <label class="field-group">
             <span class="field-label">RFC *</span>
-            <input class="text-input" type="text" name="rfc" placeholder="Ej. TSS210301AB1" maxlength="13" required>
+            <input class="text-input" type="text" name="rfc" placeholder="Ej. TSS210301AB1" minlength="12" maxlength="13" pattern="[A-Za-z0-9]{12,13}" title="El RFC debe tener entre 12 y 13 caracteres alfanuméricos." required>
           </label>
 
           <label class="field-group full">
@@ -381,17 +381,17 @@
 
           <label class="field-group">
             <span class="field-label">Teléfono principal *</span>
-            <input class="text-input" type="tel" name="telefono_principal" placeholder="10 dígitos" required>
+            <input class="text-input" type="tel" name="telefono_principal" placeholder="10 dígitos" minlength="10" maxlength="10" pattern="[0-9]{10}" title="Debe contener exactamente 10 dígitos." required>
           </label>
 
           <label class="field-group">
             <span class="field-label">Teléfono secundario</span>
-            <input class="text-input" type="tel" name="telefono_secundario" placeholder="Opcional">
+            <input class="text-input" type="tel" name="telefono_secundario" placeholder="Opcional" minlength="10" maxlength="10" pattern="[0-9]{10}" title="Debe contener exactamente 10 dígitos si se completa.">
           </label>
 
           <label class="field-group full">
             <span class="field-label">Teléfono adicional</span>
-            <input class="text-input" type="tel" name="telefono_adicional" placeholder="Opcional">
+            <input class="text-input" type="tel" name="telefono_adicional" placeholder="Opcional" minlength="10" maxlength="10" pattern="[0-9]{10}" title="Debe contener exactamente 10 dígitos si se completa.">
           </label>
 
           <label class="field-group full">
@@ -436,6 +436,56 @@
       ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
 
     const formData = () => Object.fromEntries(new FormData(companyForm).entries());
+
+    const normalizePhone = (value) => String(value || '').replace(/\D/g, '');
+    const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(value || '');
+
+    const validateCompanyFields = () => {
+      const nombre = (companyForm.nombre.value || '').trim();
+      const rfc = (companyForm.rfc.value || '').trim().toUpperCase();
+      const telefonoPrincipal = normalizePhone(companyForm.telefono_principal.value);
+      const telefonoSecundario = normalizePhone(companyForm.telefono_secundario.value);
+      const telefonoAdicional = normalizePhone(companyForm.telefono_adicional.value);
+      const correo = (companyForm.correo_contacto.value || '').trim();
+
+      if (!nombre) {
+        alert('El nombre de la empresa es obligatorio.');
+        companyForm.nombre.focus();
+        return false;
+      }
+
+      if (!rfc || rfc.length < 12 || rfc.length > 13 || !/^[A-Z0-9]+$/.test(rfc)) {
+        alert('El RFC debe tener entre 12 y 13 caracteres alfanuméricos.');
+        companyForm.rfc.focus();
+        return false;
+      }
+
+      if (!telefonoPrincipal || telefonoPrincipal.length !== 10) {
+        alert('El teléfono principal debe tener exactamente 10 dígitos.');
+        companyForm.telefono_principal.focus();
+        return false;
+      }
+
+      if (telefonoSecundario && telefonoSecundario.length !== 10) {
+        alert('El teléfono secundario debe tener exactamente 10 dígitos si se completa.');
+        companyForm.telefono_secundario.focus();
+        return false;
+      }
+
+      if (telefonoAdicional && telefonoAdicional.length !== 10) {
+        alert('El teléfono adicional debe tener exactamente 10 dígitos si se completa.');
+        companyForm.telefono_adicional.focus();
+        return false;
+      }
+
+      if (!correo || !validateEmail(correo)) {
+        alert('El correo de contacto debe tener un formato válido (ejemplo: usuario@dominio.com).');
+        companyForm.correo_contacto.focus();
+        return false;
+      }
+
+      return true;
+    };
 
     const session = JSON.parse(localStorage.getItem('techmap_session') || sessionStorage.getItem('techmap_session') || '{}');
     if (!session.token) {
@@ -525,6 +575,8 @@
 
     // Dentro del <script> de admincompanies.html
 document.getElementById('addButton').addEventListener('click', async () => {
+  if (!validateCompanyFields()) return;
+
   // 1. Recuperamos los datos que guardamos en el login real del Sr. Gerardo
   const session = JSON.parse(localStorage.getItem('techmap_session') || sessionStorage.getItem('techmap_session') || '{}');
 
@@ -549,6 +601,7 @@ document.getElementById('addButton').addEventListener('click', async () => {
 
     document.getElementById('editButton').addEventListener('click', async () => {
       if (!selectedCompanyId) return alert('Selecciona una empresa para editar.');
+      if (!validateCompanyFields()) return;
       try {
         await request(`${API_URL}/update`, {
           method: 'PUT',

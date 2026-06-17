@@ -1,4 +1,10 @@
 const db = require('../DB/connection');
+const { validateRFC } = require('../UTILS/validators');
+
+const normalizeRFC = (value) => String(value || '').trim().toUpperCase();
+const normalizeText = (value) => String(value || '').trim();
+const normalizePhone = (value) => String(value || '').replace(/\D/g, '');
+const emailRegex = /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/;
 
 // 1. OBTENER TODAS LAS EMPRESAS
 const getAll = (req, res) => {
@@ -16,15 +22,61 @@ const insert = (req, res) => {
     correo_contacto
   } = req.body;
 
+  const nombreNormalizado = normalizeText(nombre);
+  const rfcNormalizado = normalizeRFC(rfc);
+  const ubicacionNormalizada = normalizeText(ubicacion);
+  const correoNormalizado = normalizeText(correo_contacto);
+  const telefonoPrincipalNormalizado = normalizePhone(telefono_principal);
+  const telefonoSecundarioNormalizado = normalizePhone(telefono_secundario);
+  const telefonoAdicionalNormalizado = normalizePhone(telefono_adicional);
+
+  if (!nombreNormalizado) {
+    return res.status(400).json({ error: 'El nombre de la empresa es obligatorio.' });
+  }
+
+  if (!rfcNormalizado || rfcNormalizado.length < 12 || rfcNormalizado.length > 13) {
+    return res.status(400).json({
+      error: 'El RFC debe tener entre 12 caracteres alfanuméricos.'
+    });
+  }
+
+  if (!ubicacionNormalizada) {
+    return res.status(400).json({ error: 'La ubicación es obligatoria.' });
+  }
+
+  if (!telefonoPrincipalNormalizado || telefonoPrincipalNormalizado.length !== 10) {
+    return res.status(400).json({ error: 'El teléfono principal debe tener exactamente 10 dígitos.' });
+  }
+
+  if (telefonoSecundarioNormalizado && telefonoSecundarioNormalizado.length !== 10) {
+    return res.status(400).json({ error: 'El teléfono secundario debe tener exactamente 10 dígitos.' });
+  }
+
+  if (telefonoAdicionalNormalizado && telefonoAdicionalNormalizado.length !== 10) {
+    return res.status(400).json({ error: 'El teléfono adicional debe tener exactamente 10 dígitos.' });
+  }
+
+  if (!correoNormalizado || !emailRegex.test(correoNormalizado)) {
+    return res.status(400).json({
+      error: 'El correo de contacto debe tener un formato válido (ejemplo: usuario@dominio.com).'
+    });
+  }
+
+  if (!/^[A-Z0-9]+$/.test(rfcNormalizado) || !validateRFC(rfcNormalizado)) {
+    return res.status(400).json({
+      error: 'El RFC contiene caracteres inválidos o no cumple con el formato requerido.'
+    });
+  }
+
   const sql = 'CALL sp_insert_empresa(?,?,?,?,?,?,?)';
   db.query(sql, [
-    nombre,
-    rfc,                
-    ubicacion,          
-    telefono_principal, 
-    telefono_secundario  || null, 
-    telefono_adicional   || null, 
-    correo_contacto     
+    nombreNormalizado,
+    rfcNormalizado,
+    ubicacionNormalizada,
+    telefonoPrincipalNormalizado,
+    telefonoSecundarioNormalizado || null,
+    telefonoAdicionalNormalizado || null,
+    correoNormalizado
   ], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
     const id = result?.[0]?.[0]?.id;
@@ -40,15 +92,61 @@ const update = (req, res) => {
     correo_contacto
   } = req.body;
 
+  const nombreNormalizado = normalizeText(nombre);
+  const rfcNormalizado = normalizeRFC(rfc);
+  const ubicacionNormalizada = normalizeText(ubicacion);
+  const correoNormalizado = normalizeText(correo_contacto);
+  const telefonoPrincipalNormalizado = normalizePhone(telefono_principal);
+  const telefonoSecundarioNormalizado = normalizePhone(telefono_secundario);
+  const telefonoAdicionalNormalizado = normalizePhone(telefono_adicional);
+
+  if (!nombreNormalizado) {
+    return res.status(400).json({ error: 'El nombre de la empresa es obligatorio.' });
+  }
+
+  if (!rfcNormalizado || rfcNormalizado.length < 12 || rfcNormalizado.length > 13) {
+    return res.status(400).json({
+      error: 'El RFC debe tener entre 12 y 13 caracteres alfanuméricos.'
+    });
+  }
+
+  if (!ubicacionNormalizada) {
+    return res.status(400).json({ error: 'La ubicación es obligatoria.' });
+  }
+
+  if (!telefonoPrincipalNormalizado || telefonoPrincipalNormalizado.length !== 10) {
+    return res.status(400).json({ error: 'El teléfono principal debe tener exactamente 10 dígitos.' });
+  }
+
+  if (telefonoSecundarioNormalizado && telefonoSecundarioNormalizado.length !== 10) {
+    return res.status(400).json({ error: 'El teléfono secundario debe tener exactamente 10 dígitos.' });
+  }
+
+  if (telefonoAdicionalNormalizado && telefonoAdicionalNormalizado.length !== 10) {
+    return res.status(400).json({ error: 'El teléfono adicional debe tener exactamente 10 dígitos.' });
+  }
+
+  if (!correoNormalizado || !emailRegex.test(correoNormalizado)) {
+    return res.status(400).json({
+      error: 'El correo de contacto debe tener un formato válido (ejemplo: usuario@dominio.com).'
+    });
+  }
+
+  if (!/^[A-Z0-9]+$/.test(rfcNormalizado) || !validateRFC(rfcNormalizado)) {
+    return res.status(400).json({
+      error: 'El RFC contiene caracteres inválidos o no cumple con el formato requerido.'
+    });
+  }
+
   const sql = 'CALL sp_update_empresa(?,?,?,?,?,?,?,?)';
   db.query(sql, [
-    nombre,
-    rfc,                
-    ubicacion,          
-    telefono_principal, 
-    telefono_secundario  || null, 
-    telefono_adicional   || null, 
-    correo_contacto,    
+    nombreNormalizado,
+    rfcNormalizado,
+    ubicacionNormalizada,
+    telefonoPrincipalNormalizado,
+    telefonoSecundarioNormalizado || null,
+    telefonoAdicionalNormalizado || null,
+    correoNormalizado,
     id
   ], (err) => {
     if (err) return res.status(500).json({ error: err.message });
