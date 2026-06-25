@@ -4,7 +4,7 @@ const authToken = require('../UTILS/authToken');
 const { logAction } = require('../UTILS/loggers');
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const validRoles = ['administrador', 'jefe_area', 'contabilidad', 'ti'];
+const validRoles = ['administrador', 'jefe_area', 'contabilidad', 'ti', 'compras'];
 
 const validateEmail = (correo) => !correo || emailRegex.test(String(correo).trim());
 const validateRole = (rol) => typeof rol === 'string' && validRoles.includes(rol);

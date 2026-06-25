@@ -483,6 +483,7 @@
             <option value="ti">Responsable de TI</option>
             <option value="contabilidad">Contabilidad</option>
             <option value="jefe_area">Jefe de area</option>
+            <option value="compras">Compras</option>
           </select>
         </label>
 
@@ -517,6 +518,7 @@
               <option value="ti">Responsable de TI</option>
               <option value="contabilidad">Contabilidad</option>
               <option value="jefe_area">Jefe de área</option>
+              <option value="compras">Compras</option>
             </select>
           </label>
 
@@ -627,6 +629,7 @@
         contabilidad: ['contabilidad', 'Contabilidad'],
         jefe_area: ['jefe_area', 'Jefe de área'],
         administrador: ['administrador', 'Administrador'],
+        compras: ['compras', 'Compras']
       };
       const [cls, label] = map[rol] || ['default', rol || 'Sin rol'];
       return `<span class="role-badge ${cls}">${label}</span>`;
