@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechMap - Compras</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg:    #3385bd;
+      --dark:  #1d6093;
+      --mid:   #2698d5;
+      --light: #58b4ec;
+      --white: #ffffff;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+    }
+
+    .company-screen {
+      position: relative;
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+      justify-content: center;
+      overflow: hidden;
+      background: linear-gradient(135deg, #1d6093 0%, #3385bd 55%, #58b4ec 100%);
+    }
+
+    /* ── Partículas ── */
+    .particles {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(88,180,236,0.18);
+      animation: floatUp var(--d,8s) ease-in-out infinite var(--delay,0s);
+    }
+    @keyframes floatUp {
+      0%   { transform: translateY(0) scale(1);       opacity: 0; }
+      20%  { opacity: 0.8; }
+      80%  { opacity: 0.4; }
+      100% { transform: translateY(-90px) scale(1.1); opacity: 0; }
+    }
+
+    /* ── Ondas ── */
+    .waves {
+      position: absolute;
+      inset: auto 0 0 0;
+      width: 100%;
+      height: 52%;
+      z-index: 1;
+    }
+
+    /* ── Formulario ── */
+    .company-form {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      width: min(520px, 88vw);
+      flex-direction: column;
+      align-items: center;
+      padding-top: clamp(28px, 7vh, 64px);
+      text-align: center;
+      animation: fadeDown 0.85s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-22px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Logo ── */
+    .logo-mark {
+      position: relative;
+      width: clamp(50px, 5.5vw, 68px);
+      height: clamp(42px, 4.8vw, 58px);
+      margin-bottom: 14px;
+      filter: drop-shadow(0 0 12px rgba(88,180,236,0.45));
+    }
+    .monitor {
+      position: absolute;
+      left: 5%; top: 2%;
+      width: 92%; height: 80%;
+      border: 2.5px solid var(--white);
+      border-radius: 3px;
+    }
+    .monitor::after {
+      content: "";
+      position: absolute;
+      right: 8%; bottom: 10%;
+      width: 5%; height: 7%;
+      background: var(--white);
+      border-radius: 1px;
+    }
+    .stand {
+      position: absolute;
+      left: 39%; top: 80%;
+      width: 24%; height: 14%;
+      background: var(--white);
+    }
+    .base {
+      position: absolute;
+      left: 27%; top: 92%;
+      width: 50%; height: 8%;
+      background: var(--white);
+      border-radius: 4px 4px 0 0;
+    }
+    .pin {
+      position: absolute;
+      left: 35%; top: 12%;
+      width: 32%; height: 48%;
+    }
+    .pin::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border: 2.5px solid var(--white);
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+    }
+    .pin::after {
+      content: "";
+      position: absolute;
+      left: 38%; top: 26%;
+      width: 22%; height: 18%;
+      border: 2px solid var(--white);
+      border-radius: 50%;
+    }
+
+    /* ── Títulos ── */
+    .company-title {
+      font-size: clamp(20px, 2.2vw, 28px);
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--white);
+      text-shadow: 0 2px 20px rgba(30,114,167,0.4);
+    }
+
+    /* Badge de rol */
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 10px;
+      padding: 4px 14px;
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      background: rgba(29,96,147,0.45);
+      font-size: clamp(12px, 1.1vw, 14px);
+      font-weight: 400;
+      color: rgba(255,255,255,0.8);
+      backdrop-filter: blur(6px);
+    }
+    .role-badge svg {
+      width: 14px; height: 14px;
+      stroke: rgba(255,255,255,0.7);
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* ── Divisor ── */
+    .divider {
+      width: min(340px, 68vw);
+      height: 1px;
+      margin-top: clamp(20px, 4.5vh, 32px);
+      border: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    }
+
+    /* ── Card del formulario ── */
+    .form-card {
+      width: 100%;
+      margin-top: clamp(20px, 4vh, 30px);
+      background: rgba(29,96,147,0.25);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 20px;
+      padding: clamp(22px, 4vh, 32px) clamp(24px, 4vw, 44px);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      animation: fadeUp 0.85s 0.2s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Campos ── */
+    .field-group {
+      width: 100%;
+      text-align: left;
+    }
+    .field-group + .field-group {
+      margin-top: clamp(16px, 3vh, 24px);
+    }
+
+    .field-label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: clamp(12px, 1vw, 14px);
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.65);
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px; height: 18px;
+      stroke: rgba(255,255,255,0.4);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+
+    .text-input {
+      width: 100%;
+      height: clamp(42px, 5vw, 50px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 11px;
+      outline: none;
+      background: rgba(29,60,100,0.45);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: clamp(14px, 1.2vw, 16px);
+      padding: 0 16px 0 42px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .text-input::placeholder { color: rgba(255,255,255,0.22); }
+    .text-input:focus {
+      border-color: rgba(88,180,236,0.65);
+      box-shadow: 0 0 0 3px rgba(88,180,236,0.18);
+    }
+
+    /* ── Botones ── */
+    .submit-button {
+      width: 100%;
+      min-height: clamp(42px, 5vw, 50px);
+      margin-top: clamp(22px, 4vh, 32px);
+      border: 1.5px solid rgba(255,255,255,0.28);
+      border-radius: 11px;
+      background: rgba(29,96,147,0.6);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: clamp(14px, 1.3vw, 17px);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      transition: background 0.22s, border-color 0.22s, transform 0.18s;
+    }
+    .submit-button:hover {
+      background: rgba(38,115,172,0.8);
+      border-color: rgba(255,255,255,0.45);
+      transform: translateY(-2px);
+    }
+    .submit-button:active { transform: translateY(0); }
+
+    .back-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      width: 100%;
+      min-height: clamp(38px, 4.5vw, 46px);
+      margin-top: 10px;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 11px;
+      background: transparent;
+      color: rgba(255,255,255,0.5);
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: clamp(13px, 1.1vw, 15px);
+      font-weight: 400;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .back-link svg {
+      width: 15px; height: 15px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .back-link:hover {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.85);
+      border-color: rgba(255,255,255,0.25);
+    }
+
+    @media (max-width: 520px) {
+      body { overflow-y: auto; }
+      .company-screen { min-height: 100vh; overflow-y: auto; }
+      .company-form { width: 90vw; padding-top: 6vh; }
+      .waves { height: 56%; }
+      .form-card { padding: 20px 18px; }
+    }
+    .company-form.was-validated :invalid {
+      box-shadow: 0 0 0 3px rgba(255,110,110,0.32);
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 10;
+      max-width: min(340px, calc(100vw - 36px));
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      background: rgba(132,42,58,0.94);
+      color: #ffffff;
+      padding: 13px 15px;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+  <main class="company-screen" aria-label="Inicio de sesión compras">
+
+    <div class="particles" id="particles" aria-hidden="true"></div>
+
+    <svg class="waves" viewBox="0 0 1366 420" preserveAspectRatio="none" aria-hidden="true">
+      <path fill="#1e72a7"
+        d="M0 76 C154 101 293 126 453 115 C625 104 748 46 899 70
+           C1035 91 1134 97 1366 82 L1366 420 L0 420 Z"/>
+      <path fill="#2698d5"
+        d="M0 190 C181 178 372 170 509 196 C670 227 785 262 977 254
+           C1137 247 1245 225 1366 204 L1366 420 L0 420 Z"/>
+      <path fill="#58b4ec"
+        d="M0 318 C170 293 324 284 491 302 C679 321 768 372 956 374
+           C1115 376 1231 350 1366 322 L1366 420 L0 420 Z"/>
+    </svg>
+
+    <form class="company-form" id="loginForm">
+
+      <div class="logo-mark" aria-hidden="true">
+        <div class="monitor"></div>
+        <div class="pin"></div>
+        <div class="stand"></div>
+        <div class="base"></div>
+      </div>
+
+      <h1 class="company-title">Bienvenido, empresa</h1>
+
+      <span class="role-badge">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="9" cy="21" r="1"/>
+          <circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
+        Compras
+      </span>
+
+      <hr class="divider">
+
+      <div class="form-card">
+
+        <label class="field-group">
+          <span class="field-label">Usuario</span>
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            </svg>
+            <input class="text-input" type="text" name="usuario"
+                   placeholder="Ingresa tu usuario"
+                   autocomplete="username" required>
+          </div>
+        </label>
+
+        <label class="field-group">
+          <span class="field-label">Contraseña</span>
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="5" y="11" width="14" height="10" rx="2"/>
+              <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+              <circle cx="12" cy="16" r="1.2" fill="rgba(255,255,255,0.4)" stroke="none"/>
+            </svg>
+            <input class="text-input" type="password" name="contrasena"
+                   placeholder="Ingresa tu contraseña"
+                   autocomplete="current-password" required>
+          </div>
+        </label>
+
+        <button class="submit-button" type="submit">Iniciar sesión</button>
+
+        <a class="back-link" href="companylogin.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19 12H5M12 5l-7 7 7 7"/>
+          </svg>
+          Regresar
+        </a>
+
+      </div>
+    </form>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // Partículas
+    const pc = document.getElementById('particles');
+    for (let i = 0; i < 16; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = 5 + Math.random() * 16;
+      p.style.cssText = `
+        left:${Math.random()*100}%;
+        bottom:${Math.random()*48}%;
+        width:${size}px; height:${size}px;
+        --d:${6+Math.random()*8}s;
+        --delay:-${Math.random()*8}s;
+      `;
+      pc.appendChild(p);
+    }
+
+    // Login
+    const LOGIN_API = 'http://localhost:3000/api/usuarios/login';
+    const loginForm = document.getElementById('loginForm');
+    const toast = document.getElementById('toast');
+    let toastTimer;
+
+    const showToast = (message) => {
+      clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.classList.add('show');
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+    };
+
+    loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      loginForm.classList.add('was-validated');
+      if (!loginForm.checkValidity()) {
+        showToast('Ingresa usuario y contraseña.');
+        return;
+      }
+      try {
+        const response = await fetch(LOGIN_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            usuario: loginForm.usuario.value.trim(),
+            password: loginForm.contrasena.value,
+            roles_permitidos: ['compras'] // Rol actualizado
+          })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'No se pudo iniciar sesión');
+        localStorage.setItem('techmap_session', JSON.stringify({ ...data.usuario, token: data.token }));
+        // Redirección actualizada
+        window.location.href = 'opciones-compras.html';
+      } catch (error) {
+        showToast(error.message);
+      }
+    });
+  </script>
+</body>
+</html>
