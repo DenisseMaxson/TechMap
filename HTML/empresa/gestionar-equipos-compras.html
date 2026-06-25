@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechMap - Gestionar Equipos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg:    #3385bd;
+      --dark:  #1b2476;
+      --mid:   #2e4aa9;
+      --blue:  #2b61ad;
+      --light: #58b4ec;
+      --white: #ffffff;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+    }
+
+    .equipment-screen {
+      position: relative;
+      min-height: 100vh;
+      overflow: hidden;
+      padding-bottom: 32px;
+      background: linear-gradient(135deg, #1d6093 0%, #3385bd 55%, #58b4ec 100%);
+    }
+
+    /* ── Ondas ── */
+    .waves {
+      position: fixed;
+      inset: auto 0 0 0;
+      width: 100%;
+      height: 62%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Top bar ── */
+    .top-bar {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 42px 1fr 42px;
+      align-items: center;
+      width: min(640px, calc(100vw - 40px));
+      margin: 20px auto 0;
+      animation: fadeDown 0.7s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .top-link {
+      display: inline-flex;
+      width: 38px;
+      height: 38px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      background: rgba(29,96,147,0.35);
+      color: var(--white);
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .top-link:hover {
+      background: rgba(29,96,147,0.6);
+      border-color: rgba(255,255,255,0.38);
+    }
+    .top-icon {
+      width: 20px; height: 20px;
+      fill: rgba(255,255,255,0.85);
+    }
+    .back-icon {
+      fill: none;
+      stroke: rgba(255,255,255,0.85);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 2;
+    }
+
+    .page-title {
+      text-align: center;
+      font-size: clamp(17px, 1.8vw, 22px);
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    /* ── Divisor ── */
+    .divider {
+      position: relative;
+      z-index: 2;
+      width: min(640px, calc(100vw - 40px));
+      height: 1px;
+      margin: 10px auto 16px;
+      border: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+    }
+
+    /* ── Contenido ── */
+    .content {
+      position: relative;
+      z-index: 2;
+      width: min(640px, calc(100vw - 40px));
+      margin: 0 auto;
+      animation: fadeUp 0.75s 0.15s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Cards de equipos ── */
+    .equipment-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      min-height: 96px;
+      margin-bottom: 18px;
+    }
+
+    .equipment-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-height: 106px;
+      border: 1px solid rgba(169,200,239,0.35);
+      border-radius: 14px;
+      background: rgba(169,200,239,0.14);
+      color: var(--white);
+      padding: 12px 14px;
+      text-align: left;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      overflow: hidden;
+      transition: background 0.2s, border-color 0.2s, transform 0.18s;
+    }
+    .equipment-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--blue), var(--light));
+      border-radius: 14px 14px 0 0;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .equipment-card:hover {
+      background: rgba(169,200,239,0.24);
+      border-color: rgba(169,200,206,0.55);
+      transform: translateY(-2px);
+    }
+    .equipment-card:hover::before { opacity: 1; }
+    .equipment-card.selected {
+      background: rgba(169,200,239,0.28);
+      border-color: rgba(255,255,255,0.45);
+      box-shadow: 0 0 0 2px rgba(88,180,236,0.35);
+    }
+    .equipment-card.selected::before { opacity: 1; }
+
+    /* Badge de tipo */
+    .type-badge {
+      display: inline-block;
+      margin-bottom: 4px;
+      padding: 1px 8px;
+      border-radius: 20px;
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: rgba(29,96,147,0.5);
+      border: 1px solid rgba(88,180,236,0.4);
+      color: rgba(255,255,255,0.85);
+    }
+
+    .equipment-name {
+      display: block;
+      font-size: clamp(12px, 1.2vw, 14px);
+      font-weight: 600;
+      color: var(--white);
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .equipment-detail {
+      display: block;
+      font-size: clamp(9px, 0.85vw, 11px);
+      color: rgba(255,255,255,0.62);
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .equipment-detail strong {
+      font-weight: 500;
+      color: rgba(255,255,255,0.82);
+    }
+
+    .empty-message {
+      grid-column: 1 / -1;
+      align-self: center;
+      padding: 18px;
+      border-radius: 12px;
+      background: rgba(169,200,239,0.12);
+      border: 1px solid rgba(169,200,239,0.25);
+      color: rgba(255,255,255,0.55);
+      text-align: center;
+      font-size: 13px;
+      font-weight: 300;
+    }
+
+    /* ── Formulario ── */
+    .equipment-form {
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 16px;
+      background: rgba(29,96,147,0.25);
+      padding: 16px clamp(16px, 3vw, 28px) 18px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .form-section-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 12px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 20px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+    .field-group.full { grid-column: 1 / -1; }
+
+    .field-label {
+      font-size: clamp(10px, 0.85vw, 12px);
+      font-weight: 400;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.04em;
+    }
+
+    .text-input,
+    .select-input {
+      width: 100%;
+      height: 32px;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 8px;
+      outline: none;
+      background: rgba(29,60,100,0.45);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: clamp(11px, 0.95vw, 13px);
+      padding: 0 10px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .text-input::placeholder { color: rgba(255,255,255,0.2); }
+    .text-input:focus,
+    .select-input:focus {
+      border-color: rgba(88,180,236,0.65);
+      box-shadow: 0 0 0 3px rgba(88,180,236,0.15);
+    }
+    .select-input option {
+      background: #1a3a6a;
+      color: var(--white);
+    }
+
+    .textarea-input {
+      height: auto !important;
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: clamp(11px, 0.95vw, 13px);
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .equipment-form.was-validated :invalid {
+      border-color: rgba(255,110,110,0.8);
+      box-shadow: 0 0 0 3px rgba(255,110,110,0.18);
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 10;
+      max-width: min(340px, calc(100vw - 36px));
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      background: rgba(17,23,79,0.94);
+      color: #ffffff;
+      padding: 13px 15px;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: rgba(22,110,82,0.94); }
+    .toast.error { background: rgba(132,42,58,0.94); }
+
+    /* ── Botones de acción ── */
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .action-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 34px;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 9px;
+      background: rgba(29,96,147,0.35);
+      color: var(--white);
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: clamp(11px, 0.95vw, 13px);
+      font-weight: 500;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    }
+    .action-button:hover {
+      background: rgba(55,147,208,0.42);
+      border-color: rgba(255,255,255,0.35);
+      transform: translateY(-1px);
+    }
+    .action-button:active { transform: translateY(0); }
+
+    .action-button.btn-edit   { border-color: rgba(88,180,236,0.35); }
+    .action-button.btn-add    { background: rgba(22,110,82,0.35);  border-color: rgba(80,200,140,0.35); }
+    .action-button.btn-add:hover { background: rgba(22,110,82,0.55); }
+    .action-button.btn-clear  { background: rgba(80,80,120,0.28);  border-color: rgba(140,140,200,0.3); }
+
+    .btn-icon {
+      width: 13px; height: 13px;
+      stroke: rgba(255,255,255,0.8);
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 720px) {
+      .equipment-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 520px) {
+      .top-bar, .divider, .content { width: min(420px, calc(100vw - 28px)); }
+      .equipment-list, .form-grid, .actions { grid-template-columns: 1fr; }
+      .field-group.full { grid-column: 1; }
+    }
+  </style>
+</head>
+<body>
+  <main class="equipment-screen" aria-label="Gestionar equipos">
+
+    <!-- Ondas -->
+    <svg class="waves" viewBox="0 0 624 405" preserveAspectRatio="none" aria-hidden="true">
+      <path fill="#2b61ad"
+        d="M0 196 C94 205 166 223 254 184 C328 152 383 139 459 185
+           C515 219 560 220 624 184 L624 405 L0 405 Z"/>
+      <path fill="#2e4aa9"
+        d="M0 302 C76 326 129 314 191 273 C256 230 322 286 389 306
+           C463 328 541 317 624 300 L624 405 L0 405 Z"/>
+      <path fill="#1b2476"
+        d="M0 352 C104 357 197 345 277 343 C378 341 454 363 624 344
+           L624 405 L0 405 Z"/>
+    </svg>
+
+    <!-- Top bar -->
+    <header class="top-bar">
+      <a class="top-link" href="opciones-compras.html" aria-label="Regresar">
+        <svg class="top-icon back-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </a>
+      <h1 class="page-title">Gestionar Equipos</h1>
+      <a class="top-link" href="perfil-empresa.html" aria-label="Perfil">
+        <svg class="top-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 12c2.35 0 4.25-1.9 4.25-4.25S14.35 3.5 12 3.5s-4.25 1.9-4.25 4.25S9.65 12 12 12Zm0 2c-3.95 0-7.5 2.02-7.5 4.25V20h15v-1.75C19.5 16.02 15.95 14 12 14Z"/>
+        </svg>
+      </a>
+    </header>
+
+    <hr class="divider">
+
+    <section class="content">
+
+      <!-- Lista de cards -->
+      <div class="equipment-list" id="equipmentList" aria-label="Lista de equipos"></div>
+
+      <!-- Formulario -->
+      <form class="equipment-form" id="equipmentForm">
+        <p class="form-section-label">Datos del equipo</p>
+        <div class="form-grid">
+
+          <label class="field-group">
+            <span class="field-label">Nombre</span>
+            <input class="text-input" type="text" name="nombre" placeholder="Ej. Dell Latitude" required>
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Número de inventario</span>
+            <input class="text-input" type="text" name="numero_inventario" placeholder="Ej. INV-2026-001">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Etiqueta física</span>
+            <input class="text-input" type="text" name="etiqueta_fisica" placeholder="Ej. ETQ-12345">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Tipo de equipo</span>
+            <select class="select-input" name="tipo" required>
+              <option value="">Seleccionar</option>
+              <option value="Portatil">Portátil</option>
+              <option value="PC">PC</option>
+              <option value="Servidor">Servidor</option>
+              <option value="Impresora">Impresora</option>
+              <option value="Monitor">Monitor</option>
+              <option value="Router">Router</option>
+              <option value="Switch">Switch</option>
+              <option value="Camara">Camara</option>
+              <option value="Lector de huellas">Lector de huellas</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Número de serie</span>
+            <input class="text-input" type="text" name="numero_serie" placeholder="SN-XXXX-000" required>
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Marca</span>
+            <input class="text-input" type="text" name="marca" placeholder="Ej. Dell">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Modelo</span>
+            <input class="text-input" type="text" name="modelo" placeholder="Ej. Latitude 5520">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Sistema operativo</span>
+            <input class="text-input" type="text" name="sistema_operativo" placeholder="Ej. Windows 11 Pro">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Procesador</span>
+            <input class="text-input" type="text" name="procesador" placeholder="Ej. Intel Core i5">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Nombre de host</span>
+            <input class="text-input" type="text" name="nombre_host" placeholder="Ej. ADMIN-PC-01">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Dirección MAC</span>
+            <input class="text-input" type="text" name="direccion_mac" placeholder="AA:BB:CC:DD:EE:FF">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Dirección IP</span>
+            <input class="text-input" type="text" name="direccion_ip" placeholder="192.168.1.10">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Tipo de IP</span>
+            <select class="select-input" name="tipo_ip">
+              <option value="">Seleccionar</option>
+              <option value="Estatica">Estática</option>
+              <option value="Dinamica">Dinámica</option>
+            </select>
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Conectado a la red</span>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <label style="font-size:13px;color:rgba(255,255,255,0.75)"><input type="radio" name="conectado_red" value="si"> Sí</label>
+              <label style="font-size:13px;color:rgba(255,255,255,0.75)"><input type="radio" name="conectado_red" value="no" checked> No</label>
+            </div>
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Área</span>
+            <input class="text-input" type="text" name="area" placeholder="Ej. TI, Contabilidad">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Ubicación física</span>
+            <input class="text-input" type="text" name="ubicacion_fisica" placeholder="Ej. Oficina piso 2">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Encargado del equipo</span>
+            <input class="text-input" type="text" name="encargado_equipo" placeholder="Nombre completo">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Usuario responsable</span>
+            <input class="text-input" type="text" name="usuario_responsable" placeholder="Nombre completo">
+          </label>
+
+          <label class="field-group full">
+            <span class="field-label">Correo del jefe de área</span>
+            <input class="text-input" type="email" name="correo_jefe_area" placeholder="jefe@empresa.com">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Fecha de compra</span>
+            <input class="text-input" type="date" name="fecha_compra">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Fecha baja/renovación estimada</span>
+            <input class="text-input" type="date" name="fecha_baja_renovacion">
+          </label>
+
+          <label class="field-group full">
+            <span class="field-label">Proveedor</span>
+            <input class="text-input" type="text" name="proveedor" placeholder="Ej. Dell México">
+          </label>
+
+          <label class="field-group full">
+            <span class="field-label">Factura / Referencia</span>
+            <input class="text-input" type="text" name="referencia_factura" placeholder="Folio o factura">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Costo de adquisición</span>
+            <input class="text-input" type="number" step="0.01" min="0" name="costo_adquisicion" placeholder="0.00">
+          </label>
+
+          <label class="field-group">
+            <span class="field-label">Garantía / soporte</span>
+            <input class="text-input" type="text" name="garantia" placeholder="Ej. 12 meses / Contrato 2026">
+          </label>
+
+          <label class="field-group full">
+            <span class="field-label">Dónde se compró</span>
+            <input class="text-input" type="text" name="lugar_compra" placeholder="Ej. Dell México">
+          </label>
+
+          <label class="field-group full">
+            <span class="field-label">Descripción / Notas</span>
+            <textarea class="text-input textarea-input" name="descripcion" placeholder="Inventario de periféricos asociados, estado, observaciones, etc." maxlength="1000"></textarea>
+          </label>
+
+        </div>
+      </form>
+
+      <!-- Acciones -->
+      <div class="actions" aria-label="Acciones de equipo">
+        <button class="action-button btn-edit" type="button" id="editButton">
+          <svg class="btn-icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Editar
+        </button>
+        <button class="action-button btn-add" type="button" id="addButton">
+          <svg class="btn-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+          Agregar
+        </button>
+        <button class="action-button btn-clear" type="button" id="clearButton">
+          <svg class="btn-icon" viewBox="0 0 24 24"><path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+          Limpiar
+        </button>
+      </div>
+
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const API_URL        = 'http://localhost:3000/api/equipos';
+    const equipmentList  = document.getElementById('equipmentList');
+    const equipmentForm  = document.getElementById('equipmentForm');
+    const toast          = document.getElementById('toast');
+    let selectedEquipmentId = null;
+    let equipment = [];
+    let toastTimer;
+
+    const escapeHtml = (v) => String(v ?? '').replace(/[&<>"']/g, (c) =>
+      ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
+
+    const getSession = () => {
+      try { return JSON.parse(localStorage.getItem('techmap_session') || '{}'); }
+      catch { return {}; }
+    };
+
+    const session = getSession();
+    const empresaId = Number(session.empresa_id || 0);
+    const userId = Number(session.id || 0);
+
+    const formData = () => Object.fromEntries(new FormData(equipmentForm).entries());
+    const updateNetworkRequirement = () => {
+      const connected = equipmentForm.querySelector('input[name="conectado_red"]:checked')?.value === 'si';
+      equipmentForm.direccion_ip.required = connected;
+      equipmentForm.direccion_mac.required = connected;
+    };
+    const normalizeItem = (item) => ({
+      ...item,
+      fecha_compra: item.fecha_compra || (item.fecha_adquisicion ? String(item.fecha_adquisicion).slice(0, 10) : ''),
+      descripcion: item.descripcion || item.observaciones || ''
+    });
+
+    const request = async (url, options = {}) => {
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.token || ''}`,
+          'x-empresa-id': String(empresaId),
+          'x-user-id': String(userId),
+          ...(options.headers || {})
+        },
+        ...options
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || data.message || 'Error en la solicitud');
+      return data;
+    };
+
+    const loadEquipment = async () => {
+      if (!empresaId || !session.token) {
+        window.location.href = 'companylogin.html';
+        return;
+      }
+
+      try {
+        const data = await request(`${API_URL}/empresa/${empresaId}`);
+        equipment = data.map(normalizeItem);
+      } catch (error) {
+        equipment = [];
+        showToast(`No se pudo cargar la BD: ${error.message}`, 'error');
+      }
+      renderEquipment();
+    };
+
+    const showToast = (message, type = 'success') => {
+      clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+    };
+
+    const validateForm = () => {
+      equipmentForm.classList.add('was-validated');
+      if (!equipmentForm.checkValidity()) {
+        showToast('Revisa los campos marcados antes de continuar.', 'error');
+        return false;
+      }
+      return true;
+    };
+
+    const renderEquipment = () => {
+      equipmentList.innerHTML = '';
+      if (!equipment.length) {
+        equipmentList.innerHTML = '<p class="empty-message">No hay equipos registrados.</p>';
+        return;
+      }
+      equipment.forEach((item) => {
+        const card = document.createElement('button');
+        card.className = `equipment-card${item.id === selectedEquipmentId ? ' selected' : ''}`;
+        card.type = 'button';
+        card.innerHTML = `
+          <span class="type-badge">${escapeHtml(item.tipo || 'Otro')}</span>
+          <span class="equipment-name">${escapeHtml(item.nombre || 'Dispositivo')}</span>
+          <span class="equipment-detail"><strong>Inventario:</strong> ${escapeHtml(item.numero_inventario || '—')}</span>
+          <span class="equipment-detail"><strong>Serie:</strong> ${escapeHtml(item.numero_serie || '—')}</span>
+          <span class="equipment-detail"><strong>Área:</strong> ${escapeHtml(item.area || '—')}</span>
+          <span class="equipment-detail"><strong>Encargado:</strong> ${escapeHtml(item.encargado_equipo || '—')}</span>
+          <span class="equipment-detail"><strong>IP:</strong> ${escapeHtml(item.direccion_ip || '—')}</span>
+        `;
+        card.addEventListener('click', () => selectEquipment(item));
+        equipmentList.appendChild(card);
+      });
+    };
+
+    const selectEquipment = (item) => {
+      selectedEquipmentId = item.id;
+      equipmentForm.nombre.value               = item.nombre               || '';
+      equipmentForm.numero_inventario.value    = item.numero_inventario    || '';
+      equipmentForm.etiqueta_fisica.value      = item.etiqueta_fisica      || '';
+      const tipoMap = { laptop:'Portatil', computadora:'PC', servidor:'Servidor', impresora:'Impresora', monitor:'Monitor', router:'Router', switch:'Switch', otro:'Otro' };
+      equipmentForm.tipo.value                 = tipoMap[item.tipo] || item.tipo || '';
+      equipmentForm.numero_serie.value         = item.numero_serie         || '';
+      equipmentForm.marca.value                = item.marca                || '';
+      equipmentForm.modelo.value               = item.modelo               || '';
+      equipmentForm.sistema_operativo.value    = item.sistema_operativo    || '';
+      equipmentForm.procesador.value           = item.procesador           || '';
+      equipmentForm.nombre_host.value          = item.nombre_host          || '';
+      equipmentForm.direccion_mac.value        = item.direccion_mac        || '';
+      equipmentForm.direccion_ip.value         = item.direccion_ip         || '';
+      equipmentForm.tipo_ip.value              = item.tipo_ip              || '';
+      equipmentForm.area.value                 = item.area                 || '';
+      equipmentForm.ubicacion_fisica.value     = item.ubicacion_fisica     || '';
+      equipmentForm.encargado_equipo.value     = item.encargado_equipo     || '';
+      equipmentForm.usuario_responsable.value  = item.usuario_responsable  || '';
+      equipmentForm.correo_jefe_area.value     = item.correo_jefe_area     || '';
+      equipmentForm.fecha_compra.value         = item.fecha_compra         || '';
+      equipmentForm.fecha_baja_renovacion.value= item.fecha_baja_renovacion || '';
+      equipmentForm.proveedor.value            = item.proveedor            || '';
+      equipmentForm.referencia_factura.value   = item.referencia_factura   || '';
+      equipmentForm.costo_adquisicion.value    = item.costo_adquisicion    || '';
+      equipmentForm.garantia.value             = item.garantia             || '';
+      equipmentForm.lugar_compra.value         = item.lugar_compra         || '';
+      equipmentForm.descripcion.value          = item.descripcion          || item.observaciones || '';
+      const conectado = item.conectado_red || ((item.direccion_ip || item.direccion_mac) ? 'si' : 'no');
+      const radio = equipmentForm.querySelector(`input[name="conectado_red"][value="${conectado}"]`);
+      if (radio) radio.checked = true;
+      updateNetworkRequirement();
+      renderEquipment();
+    };
+
+    const clearForm = () => {
+      selectedEquipmentId = null;
+      equipmentForm.reset();
+      equipmentForm.classList.remove('was-validated');
+      const radioNo = equipmentForm.querySelector('input[name="conectado_red"][value="no"]');
+      if (radioNo) radioNo.checked = true;
+      updateNetworkRequirement();
+      renderEquipment();
+    };
+
+    document.getElementById('addButton').addEventListener('click', async () => {
+      if (!validateForm()) return;
+      const payload = {
+        ...formData(),
+        empresa_id: empresaId,
+        registrado_por: userId,
+        fecha_adquisicion: equipmentForm.fecha_compra.value || null,
+        observaciones: equipmentForm.descripcion.value || null
+      };
+      try {
+        const result = await request(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const newEquipment = normalizeItem({ id: result.id, ...payload });
+        equipment = [newEquipment, ...equipment];
+        clearForm();
+        showToast('Equipo agregado correctamente.');
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
+    });
+
+    document.getElementById('editButton').addEventListener('click', async () => {
+      if (!selectedEquipmentId) return showToast('Selecciona un equipo para editar.', 'error');
+      if (!validateForm()) return;
+      const payload = {
+        id: selectedEquipmentId,
+        empresa_id: empresaId,
+        usuario_id: userId,
+        ...formData(),
+        fecha_adquisicion: equipmentForm.fecha_compra.value || null,
+        observaciones: equipmentForm.descripcion.value || null
+      };
+      try {
+        await request(API_URL, { method: 'PUT', body: JSON.stringify(payload) });
+        const updatedEquipment = normalizeItem({ ...equipment.find((item) => item.id === selectedEquipmentId), ...payload });
+        equipment = equipment.map((item) => item.id === selectedEquipmentId ? updatedEquipment : item);
+        clearForm();
+        showToast('Equipo actualizado correctamente.');
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
+    });
+    document.getElementById('clearButton').addEventListener('click', clearForm);
+    // inicializa listeners y estado
+    equipmentForm.querySelectorAll('input[name="conectado_red"]').forEach(r => r.addEventListener('change', updateNetworkRequirement));
+    updateNetworkRequirement();
+    loadEquipment();
+  </script>
+</body>
+</html>
