@@ -104,73 +104,20 @@
     /* ── Logo ── */
     .logo-mark {
       position: relative;
-      width: clamp(96px, 11vw, 136px);
-      height: clamp(82px, 9.5vw, 116px);
-      margin-bottom: 12px;
+      width: clamp(190px, 24vw, 320px);
+      margin-bottom: 18px;
       filter: drop-shadow(0 0 16px rgba(55,147,208,0.45));
     }
-    .monitor {
-      position: absolute;
-      left: 5%; top: 2%;
-      width: 92%; height: 80%;
-      border: clamp(3px, 0.4vw, 5px) solid var(--white);
-      border-radius: 4px;
-    }
-    .monitor::after {
-      content: "";
-      position: absolute;
-      right: 8%; bottom: 10%;
-      width: 5%; height: 7%;
-      background: var(--white);
-      border-radius: 1px;
-    }
-    .stand {
-      position: absolute;
-      left: 39%; top: 80%;
-      width: 24%; height: 14%;
-      background: var(--white);
-    }
-    .base {
-      position: absolute;
-      left: 27%; top: 92%;
-      width: 50%; height: 8%;
-      background: var(--white);
-      border-radius: 6px 6px 0 0;
-    }
-    .pin {
-      position: absolute;
-      left: 35%; top: 12%;
-      width: 32%; height: 48%;
-    }
-    .pin::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border: clamp(3px, 0.4vw, 5px) solid var(--white);
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-    }
-    .pin::after {
-      content: "";
-      position: absolute;
-      left: 38%; top: 26%;
-      width: 22%; height: 18%;
-      border: clamp(2px, 0.28vw, 4px) solid var(--white);
-      border-radius: 50%;
+
+    .logo-mark img {
+      width: 100%;
+      height: auto;
+      display: block;
     }
 
     /* ── Textos ── */
-    .brand-name {
-      font-size: clamp(40px, 6vw, 78px);
-      font-weight: 800;
-      letter-spacing: -1px;
-      line-height: 1;
-      color: var(--white);
-      text-shadow: 0 2px 28px rgba(55,147,208,0.5);
-    }
-
     .welcome {
-      margin-top: 16px;
+      margin-top: 0;
       font-size: clamp(20px, 2vw, 28px);
       font-weight: 300;
       color: rgba(255,255,255,0.9);
@@ -312,14 +259,10 @@
 
     <!-- Contenido -->
     <section class="login-content">
-      <div class="logo-mark" aria-hidden="true">
-        <div class="monitor"></div>
-        <div class="pin"></div>
-        <div class="stand"></div>
-        <div class="base"></div>
+      <div class="logo-mark">
+        <img src="../../TechMapLogo.png" alt="TechMap">
       </div>
 
-      <h1 class="brand-name">TechMap</h1>
       <p class="welcome">Bienvenido</p>
       <p class="login-label">Iniciar sesión como</p>
 
